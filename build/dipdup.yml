@@ -1,0 +1,22 @@
+version: 0.0.1
+
+log_level: ${LOG_LEVEL:-info}
+
+indexer:
+  name: ${INDEXER_NAME:-dipdup_starknet_indexer}
+  base_url: ${STARKNET_BASE_URL:-https://starknet-mainnet.public.blastapi.io}
+  threads_count: ${INDEXER_THREADS_COUNT:-10}
+  start_level: ${INDEXER_START_LEVEL:-0}
+  timeout: ${INDEXER_REQUEST_TIMEOUT:-10}
+
+grpc:
+  server:
+    bind: ${GRPC_BIND:-127.0.0.1:7779}
+
+database:
+  kind: postgres
+  host: ${POSTGRES_HOST:-db}
+  port: ${POSTGRES_PORT:-5432}
+  user: ${POSTGRES_USER:-dipdup}
+  password: ${POSTGRES_PASSWORD:-changeme}
+  database: ${POSTGRES_DB:-starknet}

@@ -1,0 +1,40 @@
+version: "3.6"
+
+services:
+  indexer:
+    image: dipdup-io/straknet-indexer:latest
+    build:
+        dockerfile: build/Dockerfile
+        context: .
+    env_file:
+      - .env
+    restart: always
+    environment:
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-changeme}
+    depends_on:
+      - db
+    logging: &straknet-dipdup-logging
+      options:
+        max-size: 10m
+        max-file: "5"
+
+  db:
+    image: postgres:15
+    restart: always
+    volumes:
+      - db:/var/lib/postgres/data
+    ports:
+      - 127.0.0.1:5432:5432
+    environment: 
+      - POSTGRES_USER=${POSTGRES_USER-dipdup}
+      - POSTGRES_DB=${POSTGRES_DB:-straknet}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-changeme}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    logging: *straknet-dipdup-logging
+
+volumes:
+  db:

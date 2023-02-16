@@ -1,2 +1,2 @@
-# starknet-indexer
+# Starknet indexer
 Basic starknet indexer
