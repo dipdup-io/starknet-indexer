@@ -1,0 +1,29 @@
+[
+    {
+        "name": "onERC721Received",
+        "type": "event",
+        "keys": [],
+        "data": [
+            {
+                "name": "operator",
+                "type": "felt"
+            },
+            {
+                "name": "from_",
+                "type": "felt"
+            },
+            {
+                "name": "tokenId",
+                "type": "Uint256"
+            },
+            {
+                "name": "dataLen",
+                "type": "felt"
+            },
+            {
+                "name": "data",
+                "type": "felt*"
+            }
+        ]
+    }
+]

@@ -1,0 +1,176 @@
+[
+    {
+        "name": "AccountCallArray",
+        "size": 4,
+        "members": [
+            {
+                "name": "to",
+                "type": "felt",
+                "offset": 0
+            },
+            {
+                "name": "selector",
+                "type": "felt",
+                "offset": 1
+            },
+            {
+                "name": "data_offset",
+                "type": "felt",
+                "offset": 2
+            },
+            {
+                "name": "data_len",
+                "type": "felt",
+                "offset": 3
+            }
+        ],
+        "type": "struct"
+    },
+    {
+        "type": "function",
+        "name": "__execute__",
+        "inputs": [
+            {
+                "name": "call_array_len",
+                "type": "felt"
+            },
+            {
+                "name": "call_array",
+                "type": "AccountCallArray*"
+            },
+            {
+                "name": "calldata_len",
+                "type": "felt"
+            },
+            {
+                "name": "calldata",
+                "type": "felt*"
+            },
+            {
+                "name": "nonce",
+                "type": "felt"
+            }
+        ],
+        "outputs": [
+            {
+                "name": "response_len",
+                "type": "felt"
+            },
+            {
+                "name": "response",
+                "type": "felt*"
+            }
+        ]
+    },
+    {
+        "type": "function",
+        "name": "get_impl_version",
+        "stateMutability": "view",
+        "inputs": [],
+        "outputs": [
+            {
+                "name": "res",
+                "type": "felt"
+            }
+        ]
+    },
+    {
+        "type": "function",
+        "name": "get_nonce",
+        "stateMutability": "view",
+        "inputs": [],
+        "outputs": [
+            {
+                "name": "res",
+                "type": "felt"
+            }
+        ]
+    },
+    {
+        "type": "function",
+        "name": "get_public_key",
+        "stateMutability": "view",
+        "inputs": [],
+        "outputs": [
+            {
+                "name": "res",
+                "type": "felt"
+            }
+        ]
+    },
+    {
+        "type": "function",
+        "name": "initializer",
+        "inputs": [
+            {
+                "name": "public_key",
+                "type": "felt"
+            }
+        ],
+        "outputs": []
+    },
+    {
+        "type": "function",
+        "name": "is_valid_signature",
+        "stateMutability": "view",
+        "inputs": [
+            {
+                "name": "hash",
+                "type": "felt"
+            },
+            {
+                "name": "signature_len",
+                "type": "felt"
+            },
+            {
+                "name": "signature",
+                "type": "felt*"
+            }
+        ],
+        "outputs": [
+            {
+                "name": "is_valid",
+                "type": "felt"
+            }
+        ]
+    },
+    {
+        "type": "function",
+        "name": "set_public_key",
+        "inputs": [
+            {
+                "name": "new_public_key",
+                "type": "felt"
+            }
+        ],
+        "outputs": []
+    },
+    {
+        "type": "function",
+        "name": "supportsInterface",
+        "stateMutability": "view",
+        "inputs": [
+            {
+                "name": "interfaceId",
+                "type": "felt"
+            }
+        ],
+        "outputs": [
+            {
+                "name": "success",
+                "type": "felt"
+            }
+        ]
+    },
+    {
+        "type": "function",
+        "name": "upgrade",
+        "inputs": [
+            {
+                "name": "new_implementation",
+                "type": "felt"
+            }
+        ],
+        "outputs": []
+    }
+]

@@ -1,0 +1,43 @@
+[
+    {
+        "type": "function",
+        "name": "name",
+        "stateMutability": "view",
+        "outputs": [
+            {
+                "name": "name",
+                "type": "felt"
+            }
+        ],
+        "inputs": []
+    },
+    {
+        "type": "function",
+        "name": "symbol",
+        "stateMutability": "view",
+        "outputs": [
+            {
+                "name": "symbol",
+                "type": "felt"
+            }
+        ],
+        "inputs": []
+    },
+    {
+        "type": "function",
+        "name": "tokenURI",
+        "stateMutability": "view",
+        "outputs": [
+            {
+                "name": "tokenURI",
+                "type": "felt"
+            }
+        ],
+        "inputs": [
+            {
+                "name": "tokenId",
+                "type": "Uint256"
+            }
+        ]
+    }
+]

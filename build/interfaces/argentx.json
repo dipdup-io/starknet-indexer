@@ -1,0 +1,17 @@
+[
+    {
+        "type": "function",
+        "name": "initialize",
+        "inputs": [
+            {
+                "name": "signer",
+                "type": "felt"
+            },
+            {
+                "name": "guardian",
+                "type": "felt"
+            }
+        ],
+        "outputs": []
+    }
+]
