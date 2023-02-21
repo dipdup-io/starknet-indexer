@@ -53,36 +53,3 @@ It is very easy to start building on DipDup, as it's Python-based, accompanied w
 DipDup is a framework, and it gently guides you towards the right path by restricting file organisation, by providing to-be-implemented stubs and other hints.
 
 DipDup significantly reduces boilerplate associated with querying and decoding data, handling network and chain issues. What left is just core logic you need to implement.
-
-## Project milestones
-
-Our project has two major milestones:
-- Implement a minimal DipDup vertical for the StarkNet rollup chain
-- Add support for StarkNet to the DipDup framework
-
-### Milestone 1
-
-**ETA**: end of Q2
-**Deliverables**: a generic indexer providing high-level data representation via GraphQL API
-
-Requirements:
-- open-source, documented self-deployment setup
-- index blocks, handle reorgs (rollbacks)
-- index contract classes and instances, handle proxies
-- index transactions: declare, deploy, invoke, l1_handler; decode calldata
-- index events; decode event payloads
-- index ERC token transfers
-- expose GraphQL API
-
-### Milestone 2
-
-**ETA**: circa mid-Q3
-**Deliverables**: DipDup-compatible datasource and full support for Cairo contracts in DipDup framework
-
-Requirements:
-- expose DipDup-compatible API set (for code generation and selective querying) via gRPC
-- add support for the new gRPC datasource to the DipDup framework
-- provide `operations`, `events`, and `token_transfers` index kinds at the framework level
-- allow to filter by contract class in addition to filtering by contract address
-- provide a template that can be used via scaffolding CLI
-- provide an extensive documentation and quickstart example
