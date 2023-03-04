@@ -1,6 +1,8 @@
 package storage
 
-import starknet "github.com/dipdup-io/starknet-go-api/pkg/api"
+import (
+	"github.com/dipdup-io/starknet-go-api/pkg/data"
+)
 
 // TransactionType -
 type TransactionType int
@@ -17,15 +19,15 @@ const (
 // NewTransactionType -
 func NewTransactionType(value string) TransactionType {
 	switch value {
-	case starknet.TransactionTypeInvoke:
+	case data.TransactionTypeInvoke:
 		return TransactionTypeInvoke
-	case starknet.TransactionTypeDeclare:
+	case data.TransactionTypeDeclare:
 		return TransactionTypeDeclare
-	case starknet.TransactionTypeDeploy:
+	case data.TransactionTypeDeploy:
 		return TransactionTypeDeploy
-	case starknet.TransactionTypeDeployAccount:
+	case data.TransactionTypeDeployAccount:
 		return TransactionTypeDeployAccount
-	case starknet.TransactionTypeL1Handler:
+	case data.TransactionTypeL1Handler:
 		return TransactionTypeL1Handler
 	default:
 		return TransactionTypeUnknown
@@ -36,16 +38,16 @@ func NewTransactionType(value string) TransactionType {
 func (t TransactionType) String() string {
 	switch t {
 	case TransactionTypeDeclare:
-		return starknet.TransactionTypeDeclare
+		return data.TransactionTypeDeclare
 	case TransactionTypeDeploy:
-		return starknet.TransactionTypeDeploy
+		return data.TransactionTypeDeploy
 	case TransactionTypeDeployAccount:
-		return starknet.TransactionTypeDeployAccount
+		return data.TransactionTypeDeployAccount
 	case TransactionTypeInvoke:
-		return starknet.TransactionTypeInvoke
+		return data.TransactionTypeInvoke
 	case TransactionTypeL1Handler:
-		return starknet.TransactionTypeL1Handler
+		return data.TransactionTypeL1Handler
 	default:
-		return "UNKNOWN"
+		return Unknown
 	}
 }

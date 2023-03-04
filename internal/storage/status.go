@@ -1,5 +1,7 @@
 package storage
 
+import "github.com/dipdup-io/starknet-go-api/pkg/data"
+
 // Status -
 type Status int
 
@@ -16,17 +18,17 @@ const (
 // NewStatus -
 func NewStatus(value string) Status {
 	switch value {
-	case "NOT_RECEIVED":
+	case data.StatusNotReceived:
 		return StatusNotReceived
-	case "RECEIVED":
+	case data.StatusReceived:
 		return StatusReceived
-	case "PENDING":
+	case data.StatusPending:
 		return StatusPending
-	case "REJECTED":
+	case data.StatusRejected:
 		return StatusRejected
-	case "ACCEPTED_ON_L2":
+	case data.StatusAcceptedOnL2:
 		return StatusAcceptedOnL2
-	case "ACCEPTED_ON_L1":
+	case data.StatusAcceptedOnL1:
 		return StatusAcceptedOnL1
 	default:
 		return StatusUnknown
@@ -37,18 +39,18 @@ func NewStatus(value string) Status {
 func (s Status) String() string {
 	switch s {
 	case StatusNotReceived:
-		return "NOT_RECEIVED"
+		return data.StatusNotReceived
 	case StatusReceived:
-		return "RECEIVED"
+		return data.StatusReceived
 	case StatusPending:
-		return "PENDING"
+		return data.StatusPending
 	case StatusRejected:
-		return "REJECTED"
+		return data.StatusRejected
 	case StatusAcceptedOnL2:
-		return "ACCEPTED_ON_L2"
+		return data.StatusAcceptedOnL2
 	case StatusAcceptedOnL1:
-		return "ACCEPTED_ON_L1"
+		return data.StatusAcceptedOnL1
 	default:
-		return "UNKNOWN"
+		return Unknown
 	}
 }

@@ -8,7 +8,8 @@ import (
 
 type state struct {
 	block *models.Block
-	mx    *sync.RWMutex
+
+	mx *sync.RWMutex
 }
 
 func newState(block *models.Block) *state {
@@ -27,14 +28,6 @@ func (state *state) Height() uint64 {
 	defer state.mx.RUnlock()
 
 	return state.block.Height
-}
-
-// Hash -
-func (state *state) Hash() string {
-	state.mx.RLock()
-	defer state.mx.RUnlock()
-
-	return state.block.Hash
 }
 
 // Set -

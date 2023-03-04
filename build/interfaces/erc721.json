@@ -1,0 +1,224 @@
+[
+    {
+        "type": "function",
+        "name": "approve",
+        "outputs": [],
+        "inputs": [
+            {
+                "name": "to",
+                "type": "felt"
+            },
+            {
+                "name": "tokenId",
+                "type": "Uint256"
+            }
+        ]
+    },
+    {
+        "type": "function",
+        "name": "balanceOf",
+        "stateMutability": "view",
+        "outputs": [
+            {
+                "name": "balance",
+                "type": "Uint256"
+            }
+        ],
+        "inputs": [
+            {
+                "name": "owner",
+                "type": "felt"
+            }
+        ]
+    },
+    {
+        "type": "function",
+        "name": "getApproved",
+        "stateMutability": "view",
+        "outputs": [
+            {
+                "name": "approved",
+                "type": "felt"
+            }
+        ],
+        "inputs": [
+            {
+                "name": "tokenId",
+                "type": "Uint256"
+            }
+        ]
+    },
+    {
+        "type": "function",
+        "name": "isApprovedForAll",
+        "stateMutability": "view",
+        "outputs": [
+            {
+                "name": "approved",
+                "type": "felt"
+            }
+        ],
+        "inputs": [
+            {
+                "name": "owner",
+                "type": "felt"
+            },
+            {
+                "name": "operator",
+                "type": "felt"
+            }
+        ]
+    },
+    {
+        "type": "function",
+        "name": "ownerOf",
+        "stateMutability": "view",
+        "outputs": [
+            {
+                "name": "owner",
+                "type": "felt"
+            }
+        ],
+        "inputs": [
+            {
+                "name": "tokenId",
+                "type": "Uint256"
+            }
+        ]
+    },
+    {
+        "type": "function",
+        "name": "safeTransferFrom",
+        "outputs": [],
+        "inputs": [
+            {
+                "name": "from_",
+                "type": "felt"
+            },
+            {
+                "name": "to",
+                "type": "felt"
+            },
+            {
+                "name": "tokenId",
+                "type": "Uint256"
+            },
+            {
+                "name": "data_len",
+                "type": "felt"
+            },
+            {
+                "name": "data",
+                "type": "felt*"
+            }
+        ]
+    },
+    {
+        "type": "function",
+        "name": "setApprovalForAll",
+        "outputs": [],
+        "inputs": [
+            {
+                "name": "operator",
+                "type": "felt"
+            },
+            {
+                "name": "approved",
+                "type": "felt"
+            }
+        ]
+    },
+    {
+        "type": "function",
+        "name": "transferFrom",
+        "outputs": [],
+        "inputs": [
+            {
+                "name": "from_",
+                "type": "felt"
+            },
+            {
+                "name": "to",
+                "type": "felt"
+            },
+            {
+                "name": "tokenId",
+                "type": "Uint256"
+            }
+        ]
+    },
+    {
+        "name": "Approval",
+        "type": "event",
+        "keys": [],
+        "data": [
+            {
+                "name": "owner",
+                "type": "felt"
+            },
+            {
+                "name": "approved",
+                "type": "felt"
+            },
+            {
+                "name": "tokenId",
+                "type": "Uint256"
+            }
+        ]
+    },
+    {
+        "name": "ApprovalForAll",
+        "type": "event",
+        "keys": [],
+        "data": [
+            {
+                "name": "owner",
+                "type": "felt"
+            },
+            {
+                "name": "operator",
+                "type": "felt"
+            },
+            {
+                "name": "approved",
+                "type": "felt"
+            }
+        ]
+    },
+    {
+        "name": "Transfer",
+        "type": "event",
+        "keys": [],
+        "data": [
+            {
+                "name": "from_",
+                "type": "felt"
+            },
+            {
+                "name": "to",
+                "type": "felt"
+            },
+            {
+                "name": "tokenId",
+                "type": "Uint256"
+            }
+        ]
+    },
+    {
+        "type": "function",
+        "name": "supportsInterface",
+        "stateMutability": "view",
+        "outputs": [
+            {
+                "name": "success",
+                "type": "felt"
+            }
+        ],
+        "inputs": [
+            {
+                "name": "interfaceId",
+                "type": "felt"
+            }
+        ]
+    }
+]

@@ -24,6 +24,12 @@ type Storage struct {
 	Deploy        models.IDeploy
 	DeployAccount models.IDeployAccount
 	L1Handler     models.IL1Handler
+	Internal      models.IInternal
+	Message       models.IMessage
+	Event         models.IEvent
+	Address       models.IAddress
+	Class         models.IClass
+	StorageDiff   models.IStorageDiff
 }
 
 // Create -
@@ -42,6 +48,12 @@ func Create(ctx context.Context, cfg config.Database) (Storage, error) {
 		Deploy:        NewDeploy(strg.Connection()),
 		DeployAccount: NewDeployAccount(strg.Connection()),
 		L1Handler:     NewL1Handler(strg.Connection()),
+		Internal:      NewInternal(strg.Connection()),
+		Message:       NewMessage(strg.Connection()),
+		Event:         NewEvent(strg.Connection()),
+		Address:       NewAddress(strg.Connection()),
+		Class:         NewClass(strg.Connection()),
+		StorageDiff:   NewStorageDiff(strg.Connection()),
 	}
 
 	return s, nil
@@ -49,6 +61,9 @@ func Create(ctx context.Context, cfg config.Database) (Storage, error) {
 
 func initDatabase(ctx context.Context, conn *database.PgGo) error {
 	for _, data := range []storage.Model{
+		&models.Address{},
+		&models.Class{},
+		&models.StorageDiff{},
 		&models.Block{},
 		&models.InvokeV0{},
 		&models.InvokeV1{},
@@ -56,6 +71,9 @@ func initDatabase(ctx context.Context, conn *database.PgGo) error {
 		&models.Deploy{},
 		&models.DeployAccount{},
 		&models.L1Handler{},
+		&models.Internal{},
+		&models.Event{},
+		&models.Message{},
 	} {
 		if err := conn.DB().WithContext(ctx).Model(data).CreateTable(&orm.CreateTableOptions{
 			IfNotExists: true,
@@ -71,11 +89,6 @@ func initDatabase(ctx context.Context, conn *database.PgGo) error {
 
 func createIndices(ctx context.Context, conn *database.PgGo) error {
 	return conn.DB().RunInTransaction(ctx, func(tx *pg.Tx) error {
-		// Blocks
-		if _, err := tx.ExecContext(ctx, `CREATE INDEX IF NOT EXISTS blocks_height ON blocks (height)`); err != nil {
-			return err
-		}
-
 		return nil
 	})
 }

@@ -1,6 +1,8 @@
 package storage
 
 import (
+	"context"
+
 	"github.com/dipdup-net/indexer-sdk/pkg/storage"
 	"github.com/shopspring/decimal"
 )
@@ -8,6 +10,8 @@ import (
 // IDeployAccount -
 type IDeployAccount interface {
 	storage.Table[*DeployAccount]
+
+	ByHeight(ctx context.Context, height, limit, offset uint64) ([]DeployAccount, error)
 }
 
 // DeployAccount -
@@ -16,20 +20,24 @@ type DeployAccount struct {
 	tableName struct{} `pg:"deploy_account"`
 
 	ID                  uint64
-	BlockID             uint64
-	Height              uint64
+	Height              uint64 `pg:",use_zero"`
+	ClassID             uint64
+	ContractID          uint64
 	Time                int64
 	Status              Status `pg:",use_zero"`
-	Internal            bool   `pg:",use_zero"`
-	Hash                string
-	ContractAddressSalt string
-	ClassHash           string
+	Hash                []byte
+	ContractAddressSalt []byte
 	MaxFee              decimal.Decimal `pg:",type:numeric,use_zero"`
 	Nonce               decimal.Decimal `pg:",type:numeric,use_zero"`
-	ConstructorCalldata []string
-	Signature           []string
+	Signature           []string        `pg:",array"`
+	ConstructorCalldata []string        `pg:",array"`
+	ParsedCalldata      map[string]any
 
-	Block Block `pg:"rel:has-one"`
+	Class     Class      `pg:"rel:has-one"`
+	Contract  Address    `pg:"rel:has-one"`
+	Internals []Internal `pg:"rel:has-many"`
+	Messages  []Message  `pg:"rel:has-many"`
+	Events    []Event    `pg:"rel:has-many"`
 }
 
 // TableName -

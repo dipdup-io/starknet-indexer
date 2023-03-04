@@ -4,10 +4,13 @@ log_level: ${LOG_LEVEL:-info}
 
 indexer:
   name: ${INDEXER_NAME:-dipdup_starknet_indexer}
-  base_url: ${STARKNET_BASE_URL:-https://starknet-mainnet.public.blastapi.io}
+  feeder_gateway: ${STARKNET_FEEDER_GATEWAY:-https://alpha-mainnet.starknet.io/feeder_gateway}
+  gateway: ${STARKNET_GATEWAY:-https://alpha-mainnet.starknet.io/gateway}
   threads_count: ${INDEXER_THREADS_COUNT:-10}
   start_level: ${INDEXER_START_LEVEL:-0}
   timeout: ${INDEXER_REQUEST_TIMEOUT:-10}
+  requests_per_second: ${STARKNET_RPS:-2}
+  class_interfaces_dir: ${INDEXER_CLASS_INTERFACES_DIR:-./interfaces/}
 
 grpc:
   server:

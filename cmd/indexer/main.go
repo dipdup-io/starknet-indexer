@@ -62,7 +62,20 @@ func main() {
 		return
 	}
 
-	indexer := indexer.New(cfg.Indexer, postgres.Blocks, postgres.Transactable)
+	indexer := indexer.New(
+		cfg.Indexer,
+		postgres.Address,
+		postgres.Blocks,
+		postgres.Declare,
+		postgres.Deploy,
+		postgres.DeployAccount,
+		postgres.InvokeV0,
+		postgres.InvokeV1,
+		postgres.L1Handler,
+		postgres.Class,
+		postgres.StorageDiff,
+		postgres.Transactable,
+	)
 
 	indexer.Start(ctx)
 
