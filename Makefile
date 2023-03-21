@@ -4,6 +4,9 @@ export $(shell sed 's/=.*//' .env)
 indexer:
 	cd cmd/indexer && go run . -c ../../build/dipdup.yml
 
+tester:
+	cd cmd/tester && go run . -c ../../build/dipdup.yml
+
 build-proto:
 	protoc \
 		-I=${GOPATH}/src \

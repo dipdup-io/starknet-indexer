@@ -10,3 +10,8 @@ import (
 type Heightable[T storage.Model] interface {
 	ByHeight(ctx context.Context, height, limit, offset uint64) ([]T, error)
 }
+
+// Rollback -
+type Rollback interface {
+	Rollback(ctx context.Context, indexerName string, height uint64) error
+}

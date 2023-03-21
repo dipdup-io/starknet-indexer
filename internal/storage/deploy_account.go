@@ -2,6 +2,7 @@ package storage
 
 import (
 	"context"
+	"time"
 
 	"github.com/dipdup-net/indexer-sdk/pkg/storage"
 	"github.com/shopspring/decimal"
@@ -17,14 +18,15 @@ type IDeployAccount interface {
 // DeployAccount -
 type DeployAccount struct {
 	// nolint
-	tableName struct{} `pg:"deploy_account"`
+	tableName struct{} `pg:"deploy_account,partition_by:RANGE(time)"`
 
-	ID                  uint64
+	ID                  uint64 `pg:"id,type:bigint,pk,notnull"`
 	Height              uint64 `pg:",use_zero"`
 	ClassID             uint64
 	ContractID          uint64
-	Time                int64
-	Status              Status `pg:",use_zero"`
+	Position            int       `pg:",use_zero"`
+	Time                time.Time `pg:",pk"`
+	Status              Status    `pg:",use_zero"`
 	Hash                []byte
 	ContractAddressSalt []byte
 	MaxFee              decimal.Decimal `pg:",type:numeric,use_zero"`
@@ -38,6 +40,8 @@ type DeployAccount struct {
 	Internals []Internal `pg:"rel:has-many"`
 	Messages  []Message  `pg:"rel:has-many"`
 	Events    []Event    `pg:"rel:has-many"`
+	Transfers []Transfer `pg:"rel:has-many"`
+	Fee       *Fee       `pg:"rel:has-one"`
 }
 
 // TableName -

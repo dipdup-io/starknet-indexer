@@ -7,13 +7,14 @@ import (
 
 	"github.com/dipdup-io/starknet-indexer/internal/starknet"
 	models "github.com/dipdup-io/starknet-indexer/internal/storage"
+	"github.com/dipdup-io/starknet-indexer/internal/storage/postgres"
 	"github.com/dipdup-io/starknet-indexer/pkg/indexer/cache"
 	"github.com/dipdup-io/starknet-indexer/pkg/indexer/config"
 	"github.com/dipdup-io/starknet-indexer/pkg/indexer/parser"
+	"github.com/dipdup-io/starknet-indexer/pkg/indexer/parser/generator"
 	"github.com/dipdup-io/starknet-indexer/pkg/indexer/receiver"
 	"github.com/dipdup-io/starknet-indexer/pkg/indexer/store"
 	"github.com/dipdup-net/indexer-sdk/pkg/modules"
-	"github.com/dipdup-net/indexer-sdk/pkg/storage"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
 )
@@ -35,68 +36,63 @@ type Indexer struct {
 	declares       models.IDeclare
 	deploys        models.IDeploy
 	deployAccounts models.IDeployAccount
-	invokeV0       models.IInvokeV0
-	invokeV1       models.IInvokeV1
+	invoke         models.IInvoke
 	l1Handlers     models.IL1Handler
 	storageDiffs   models.IStorageDiff
+	proxy          models.IProxy
+	stateRepo      models.IState
+	store          *store.Store
+	cache          *cache.Cache
 
-	store *store.Store
-	cache *cache.Cache
+	state           *state
+	idGenerator     *generator.IdGenerator
+	receiver        *receiver.Receiver
+	statusChecker   *statusChecker
+	rollbackManager models.Rollback
 
-	state         *state
-	idGenerator   *parser.IdGenerator
-	receiver      *receiver.Receiver
-	statusChecker *statusChecker
-	wg            *sync.WaitGroup
+	txWriteMutex *sync.Mutex
+	wg           *sync.WaitGroup
 }
 
 // New - creates new indexer entity
 func New(
 	cfg config.Config,
-	address models.IAddress,
-	blocks models.IBlock,
-	declares models.IDeclare,
-	deploys models.IDeploy,
-	deployAccounts models.IDeployAccount,
-	invokeV0 models.IInvokeV0,
-	invokeV1 models.IInvokeV1,
-	l1Handlers models.IL1Handler,
-	classes models.IClass,
-	storageDiffs models.IStorageDiff,
-	transactable storage.Transactable,
+	storage postgres.Storage,
 ) *Indexer {
 	indexer := &Indexer{
-		cfg:            cfg,
-		outputs:        make(map[string]*modules.Output),
-		queue:          make(map[uint64]receiver.Result),
-		address:        address,
-		blocks:         blocks,
-		declares:       declares,
-		deploys:        deploys,
-		deployAccounts: deployAccounts,
-		invokeV0:       invokeV0,
-		invokeV1:       invokeV1,
-		l1Handlers:     l1Handlers,
-		classes:        classes,
-		storageDiffs:   storageDiffs,
-		state:          newState(nil),
-		cache:          cache.New(address, classes),
-		receiver:       receiver.NewReceiver(cfg),
-		wg:             new(sync.WaitGroup),
+		cfg:             cfg,
+		outputs:         make(map[string]*modules.Output),
+		queue:           make(map[uint64]receiver.Result),
+		stateRepo:       storage.State,
+		address:         storage.Address,
+		blocks:          storage.Blocks,
+		declares:        storage.Declare,
+		deploys:         storage.Deploy,
+		deployAccounts:  storage.DeployAccount,
+		invoke:          storage.InvokeV0,
+		l1Handlers:      storage.L1Handler,
+		classes:         storage.Class,
+		storageDiffs:    storage.StorageDiff,
+		proxy:           storage.Proxy,
+		state:           newState(nil),
+		cache:           cache.New(storage.Address, storage.Class, storage.Proxy),
+		receiver:        receiver.NewReceiver(cfg),
+		rollbackManager: storage.RollbackManager,
+		txWriteMutex:    new(sync.Mutex),
+		wg:              new(sync.WaitGroup),
 	}
 
-	indexer.idGenerator = parser.NewIdGenerator(address, classes, indexer.cache)
-	indexer.store = store.New(indexer.cache, classes, address, transactable)
+	indexer.idGenerator = generator.NewIdGenerator(storage.Address, storage.Class, indexer.cache, indexer.state.Current())
+	indexer.store = store.New(indexer.cache, storage.Class, storage.Address, storage.Transactable, storage.PartitionManager)
 	indexer.statusChecker = newStatusChecker(
 		indexer.receiver,
-		blocks,
-		declares,
-		deploys,
-		deployAccounts,
-		invokeV0,
-		invokeV1,
-		l1Handlers,
-		transactable,
+		storage.Blocks,
+		storage.Declare,
+		storage.Deploy,
+		storage.DeployAccount,
+		storage.InvokeV0,
+		storage.L1Handler,
+		storage.Transactable,
 	)
 
 	return indexer
@@ -149,17 +145,16 @@ func (indexer *Indexer) init(ctx context.Context) error {
 		return err
 	}
 
-	current, err := indexer.blocks.Last(ctx)
+	state, err := indexer.stateRepo.ByName(ctx, indexer.Name())
 	switch {
 	case err == nil:
-		indexer.state = newState(&current)
-		if err := indexer.idGenerator.Init(ctx); err != nil {
-			return err
-		}
-
+		indexer.state.Set(state)
+		indexer.idGenerator.Init()
 		return nil
 	case indexer.blocks.IsNoRows(err):
-		return nil
+		state := indexer.state.Current()
+		state.Name = indexer.Name()
+		return indexer.stateRepo.Save(ctx, state)
 	default:
 		return err
 	}
@@ -282,39 +277,71 @@ func (indexer *Indexer) saveBlocks(ctx context.Context) {
 						return
 					}
 					log.Err(err).Msg("handle block")
-					time.Sleep(time.Second * 10)
+					time.Sleep(time.Second * 3)
 				}
+
 			}
 		}
 	}
 }
 
 func (indexer *Indexer) handleBlock(ctx context.Context, result receiver.Result) error {
-	parser := parser.New(indexer.receiver, indexer.cache, indexer.idGenerator, indexer.storageDiffs)
-	parseResult, err := parser.Parse(ctx, result)
+	start := time.Now()
+
+	parseResult, err := parser.Parse(ctx, indexer.receiver, indexer.cache, indexer.idGenerator, indexer.blocks, result)
 	if err != nil {
 		return err
 	}
 
-	if err := indexer.store.Save(ctx, parseResult); err != nil {
-		return errors.Wrap(err, "saving block to database")
+	indexer.txWriteMutex.Lock()
+	{
+		parseResult.State = indexer.updateState(ctx, parseResult.Block, len(parseResult.Classes))
+		if err := indexer.store.Save(ctx, parseResult); err != nil {
+			return errors.Wrap(err, "saving block to database")
+		}
 	}
+	indexer.txWriteMutex.Unlock()
 
 	if parseResult.Block.Status == models.StatusAcceptedOnL2 {
 		indexer.statusChecker.addBlock(parseResult.Block)
 	}
 
-	indexer.updateState(parseResult.Block)
-
-	log.Info().Uint64("height", result.Block.BlockNumber).Msg("indexed")
 	delete(indexer.queue, result.Block.BlockNumber)
+
+	l := log.Info().
+		Uint64("height", result.Block.BlockNumber).
+		Int("tx_count", parseResult.Block.TxCount).
+		Time("block_time", parseResult.Block.Time).
+		Int64("process_time_in_ms", time.Since(start).Milliseconds())
+	if result.Block.StarknetVersion != nil {
+		l.Str("version", *result.Block.StarknetVersion)
+	}
+	l.Msg("indexed")
 
 	// indexer.notifyAllAboutBlock(storageData.Blocks)
 	return nil
 }
 
-func (indexer *Indexer) updateState(block models.Block) {
+func (indexer *Indexer) updateState(ctx context.Context, block models.Block, classesCount int) *models.State {
+	state := indexer.state.Current()
 	if indexer.state.Height() < block.Height {
-		indexer.state.Set(block)
+		state.LastHeight = block.Height
+		state.LastTime = block.Time
+		state.DeclaresCount += uint64(block.DeclareCount)
+		state.DeploysCount += uint64(block.DeployCount)
+		state.DeployAccountsCount += uint64(block.DeployAccountCount)
+		state.InvokesCount += uint64(block.InvokeCount)
+		state.L1HandlersCount += uint64(block.L1HandlerCount)
+		state.TxCount += uint64(block.TxCount)
 	}
+	return state
+}
+
+// Rollback -
+func (indexer *Indexer) Rollback(ctx context.Context, height uint64) error {
+	indexer.txWriteMutex.Lock()
+	defer indexer.txWriteMutex.Unlock()
+
+	log.Info().Uint64("new_height", height).Msg("rollback starting...")
+	return indexer.rollbackManager.Rollback(ctx, indexer.Name(), height)
 }

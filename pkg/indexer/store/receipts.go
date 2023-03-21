@@ -3,79 +3,100 @@ package store
 import (
 	"context"
 
-	"github.com/dipdup-io/starknet-go-api/pkg/encoding"
 	models "github.com/dipdup-io/starknet-indexer/internal/storage"
-	"github.com/dipdup-io/starknet-indexer/pkg/indexer/parser"
+	parserData "github.com/dipdup-io/starknet-indexer/pkg/indexer/parser/data"
 	"github.com/dipdup-net/indexer-sdk/pkg/storage"
 )
 
 func (store *Store) saveInternals(
 	ctx context.Context,
 	tx storage.Transaction,
-	result parser.Result,
+	result parserData.Result,
 	internals []models.Internal,
-) error {
+) ([]models.Internal, error) {
 	if len(internals) == 0 {
+		return nil, nil
+	}
+
+	models := make([]models.Internal, 0)
+	for i := range internals {
+		models = append(models, internals[i])
+		if err := store.saveEvents(ctx, tx, internals[i].Events); err != nil {
+			return nil, err
+		}
+
+		if err := store.saveMessages(ctx, tx, internals[i].Messages); err != nil {
+			return nil, err
+		}
+
+		if err := store.saveTransfers(ctx, tx, internals[i].Transfers); err != nil {
+			return nil, err
+		}
+
+		received, err := store.saveInternals(ctx, tx, result, internals[i].Internals)
+		if err != nil {
+			return nil, err
+		}
+		models = append(models, received...)
+	}
+
+	return models, nil
+}
+
+func (store *Store) saveEvents(ctx context.Context, tx storage.Transaction, events []models.Event) error {
+	models := make([]any, len(events))
+	for i := range events {
+		models[i] = &events[i]
+	}
+
+	return tx.BulkSave(ctx, models)
+}
+
+func (store *Store) saveMessages(ctx context.Context, tx storage.Transaction, msgs []models.Message) error {
+	models := make([]any, len(msgs))
+	for i := range msgs {
+		models[i] = &msgs[i]
+	}
+	return tx.BulkSave(ctx, models)
+}
+
+func (store *Store) saveTransfers(ctx context.Context, tx storage.Transaction, transfers []models.Transfer) error {
+	if len(transfers) == 0 {
 		return nil
 	}
-
-	for i := range internals {
-		ptr := &internals[i]
-
-		if ptr.ContractID == 0 {
-			if address, ok := result.Addresses[encoding.EncodeHex(ptr.Contract.Hash)]; ok {
-				ptr.ContractID = address.ID
-			}
-		}
-
-		if ptr.CallerID == 0 {
-			if address, ok := result.Addresses[encoding.EncodeHex(ptr.Contract.Hash)]; ok {
-				ptr.ContractID = address.ID
-			}
-		}
-
-		if ptr.ClassID == 0 {
-			if class, ok := result.Classes[encoding.EncodeHex(ptr.Class.Hash)]; ok {
-				ptr.ClassID = class.ID
-				store.cache.SetClassByHash(ptr.Class)
-			}
-		}
-
-		if err := tx.Add(ctx, ptr); err != nil {
+	result := make([]any, 0)
+	for j := range transfers {
+		result = append(result, &transfers[j])
+		if err := store.saveBalanceUpdates(ctx, tx, transfers[j].TokenBalanceUpdates()); err != nil {
 			return err
 		}
+	}
+	return tx.BulkSave(ctx, result)
+}
 
-		if len(ptr.Internals) > 0 {
-			for j := range ptr.Internals {
-				ptrInt := &ptr.Internals[j]
-				ptrInt.InternalID = &ptr.ID
-			}
-
-			if err := store.saveInternals(ctx, tx, result, ptr.Internals); err != nil {
-				return err
-			}
+func (store *Store) saveBalanceUpdates(ctx context.Context, tx storage.Transaction, updates []models.TokenBalance) error {
+	for i := range updates {
+		if _, err := tx.Exec(ctx, `
+		INSERT INTO token_balance (owner_id, contract_id, token_id, balance)
+		VALUES(?,?,?,?) 
+		ON CONFLICT (owner_id, contract_id, token_id)
+		DO 
+		UPDATE SET balance = token_balance.balance + excluded.balance
+		`, updates[i].OwnerID, updates[i].ContractID, updates[i].TokenID, updates[i].Balance); err != nil {
+			return err
 		}
 	}
-
 	return nil
 }
 
-func (store *Store) saveMessage(ctx context.Context, tx storage.Transaction, msg *models.Message) error {
-	if len(msg.From.Hash) > 0 {
-		msg.FromID = msg.From.ID
+func (store *Store) saveFee(ctx context.Context, tx storage.Transaction, fee *models.Fee) error {
+	if fee == nil {
+		return nil
 	}
 
-	if len(msg.To.Hash) > 0 {
-		msg.ToID = msg.To.ID
+	if err := store.saveBalanceUpdates(ctx, tx, fee.TokenBalanceUpdates()); err != nil {
+		return err
 	}
 
-	return tx.Add(ctx, msg)
-}
-
-func (store *Store) saveEvent(ctx context.Context, tx storage.Transaction, event *models.Event) error {
-	if len(event.From.Hash) > 0 {
-		event.FromID = event.From.ID
-	}
-
-	return tx.Add(ctx, event)
+	return tx.Add(ctx, fee)
 }

@@ -15,6 +15,17 @@
                 "${workspaceFolder}/build/dipdup.yml"
             ],
             "envFile": "${workspaceFolder}/.env"
+        }, {
+            "name": "Launch Tester",
+            "type": "go",
+            "request": "launch",
+            "mode": "debug",
+            "program": "${workspaceFolder}/cmd/tester",
+            "args": [
+                "-c",
+                "${workspaceFolder}/build/dipdup.yml"
+            ],
+            "envFile": "${workspaceFolder}/.env"
         }
     ]
 }

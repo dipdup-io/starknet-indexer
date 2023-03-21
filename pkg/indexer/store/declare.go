@@ -3,79 +3,53 @@ package store
 import (
 	"context"
 
-	"github.com/dipdup-io/starknet-go-api/pkg/encoding"
-	"github.com/dipdup-io/starknet-indexer/pkg/indexer/parser"
+	parserData "github.com/dipdup-io/starknet-indexer/pkg/indexer/parser/data"
 	"github.com/dipdup-net/indexer-sdk/pkg/storage"
 )
 
 func (store *Store) saveDeclare(
 	ctx context.Context,
 	tx storage.Transaction,
-	result parser.Result,
+	result parserData.Result,
 ) error {
 	if result.Block.DeclareCount == 0 {
 		return nil
 	}
 
+	models := make([]any, result.Block.DeclareCount)
 	for i := range result.Block.Declare {
-		ptr := &result.Block.Declare[i]
+		models[i] = &result.Block.Declare[i]
 
-		if ptr.ClassID == 0 {
-			if class, ok := result.Classes[encoding.EncodeHex(ptr.Class.Hash)]; ok {
-				ptr.ClassID = class.ID
-				store.cache.SetClassByHash(ptr.Class)
-			}
-		}
-
-		if ptr.ContractID == nil {
-			if address, ok := result.Addresses[encoding.EncodeHex(ptr.Contract.Hash)]; ok {
-				ptr.ContractID = &address.ID
-			}
-		}
-
-		if ptr.SenderID == nil {
-			if address, ok := result.Addresses[encoding.EncodeHex(ptr.Sender.Hash)]; ok {
-				ptr.SenderID = &address.ID
-			}
-		}
-
-		if err := tx.Add(ctx, ptr); err != nil {
+		allInternals, err := store.saveInternals(ctx, tx, result, result.Block.Declare[i].Internals)
+		if err != nil {
 			return err
 		}
-
-		if len(ptr.Internals) > 0 {
-			for j := range ptr.Internals {
-				ptrInt := &ptr.Internals[j]
-				ptrInt.DeclareID = &ptr.ID
-			}
-
-			if err := store.saveInternals(ctx, tx, result, ptr.Internals); err != nil {
+		internalModels := make([]any, len(allInternals))
+		for i := range allInternals {
+			internalModels[i] = &allInternals[i]
+		}
+		if len(allInternals) > 0 {
+			if err := tx.BulkSave(ctx, internalModels); err != nil {
 				return err
 			}
 		}
 
-		if len(ptr.Events) > 0 {
-			for j := range ptr.Events {
-				ptrEv := &ptr.Events[j]
-				ptrEv.DeclareID = &ptr.ID
-
-				if err := store.saveEvent(ctx, tx, ptrEv); err != nil {
-					return err
-				}
-			}
+		if err := store.saveEvents(ctx, tx, result.Block.Declare[i].Events); err != nil {
+			return err
 		}
 
-		if len(ptr.Messages) > 0 {
-			for j := range ptr.Messages {
-				ptrMsg := &ptr.Messages[j]
-				ptrMsg.DeclareID = &ptr.ID
+		if err := store.saveMessages(ctx, tx, result.Block.Declare[i].Messages); err != nil {
+			return err
+		}
 
-				if err := store.saveMessage(ctx, tx, ptrMsg); err != nil {
-					return err
-				}
-			}
+		if err := store.saveTransfers(ctx, tx, result.Block.Declare[i].Transfers); err != nil {
+			return err
+		}
+
+		if err := store.saveFee(ctx, tx, result.Block.Declare[i].Fee); err != nil {
+			return err
 		}
 	}
 
-	return nil
+	return tx.BulkSave(ctx, models)
 }

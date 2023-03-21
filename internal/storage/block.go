@@ -2,6 +2,7 @@ package storage
 
 import (
 	"context"
+	"time"
 
 	"github.com/dipdup-net/indexer-sdk/pkg/storage"
 )
@@ -20,13 +21,13 @@ type Block struct {
 	// nolint
 	tableName struct{} `pg:"block"`
 
-	ID     uint64
-	Height uint64 `pg:",use_zero"`
-	Time   int64
+	ID      uint64
+	Height  uint64 `pg:",use_zero"`
+	Time    time.Time
+	Version *string
 
 	TxCount            int `pg:",use_zero"`
-	InvokeV0Count      int `pg:",use_zero"`
-	InvokeV1Count      int `pg:",use_zero"`
+	InvokeCount        int `pg:",use_zero"`
 	DeclareCount       int `pg:",use_zero"`
 	DeployCount        int `pg:",use_zero"`
 	DeployAccountCount int `pg:",use_zero"`
@@ -39,8 +40,7 @@ type Block struct {
 	NewRoot          []byte
 	SequencerAddress []byte
 
-	InvokeV0      []InvokeV0      `pg:"rel:has-many"`
-	InvokeV1      []InvokeV1      `pg:"rel:has-many"`
+	Invoke        []Invoke        `pg:"rel:has-many"`
 	Declare       []Declare       `pg:"rel:has-many"`
 	Deploy        []Deploy        `pg:"rel:has-many"`
 	DeployAccount []DeployAccount `pg:"rel:has-many"`

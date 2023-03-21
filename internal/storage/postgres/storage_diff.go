@@ -22,11 +22,15 @@ func NewStorageDiff(db *database.PgGo) *StorageDiff {
 
 // GetOnBlock -
 func (sd *StorageDiff) GetOnBlock(ctx context.Context, height, contractId uint64, key []byte) (diff storage.StorageDiff, err error) {
-	err = sd.DB().ModelContext(ctx, &diff).
-		Where("height <= ?", height).
+	query := sd.DB().ModelContext(ctx, &diff).
 		Where("contract_id = ?", contractId).
-		Where("key = ?", key).
-		Order("id desc").
+		Where("key = ?", key)
+
+	if height > 0 {
+		query = query.Where("height >= ?", height)
+	}
+
+	err = query.Order("id desc").
 		Limit(1).
 		Select(&diff)
 	return

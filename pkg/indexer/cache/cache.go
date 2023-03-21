@@ -12,27 +12,31 @@ import (
 	"github.com/pkg/errors"
 )
 
+const ttl = time.Hour
+
 // Cache -
 type Cache struct {
 	*ccache.Cache
 
 	address storage.IAddress
 	class   storage.IClass
+	proxy   storage.IProxy
 }
 
 // New -
-func New(address storage.IAddress, class storage.IClass) *Cache {
+func New(address storage.IAddress, class storage.IClass, proxy storage.IProxy) *Cache {
 	return &Cache{
-		Cache:   ccache.New(ccache.Configure().MaxSize(1000)),
+		Cache:   ccache.New(ccache.Configure().MaxSize(50000)),
 		address: address,
 		class:   class,
+		proxy:   proxy,
 	}
 }
 
 // GetAbiByAddress -
 func (cache *Cache) GetAbiByAddress(ctx context.Context, hash []byte) (abi.Abi, error) {
-	item, err := cache.Fetch(fmt.Sprintf("abi:address:%x", hash), time.Hour, func() (interface{}, error) {
-		address, err := cache.address.GetByHash(ctx, hash)
+	item, err := cache.Fetch(fmt.Sprintf("abi:address:%x", hash), ttl, func() (interface{}, error) {
+		address, err := cache.GetAddress(ctx, hash)
 		if err != nil {
 			return nil, err
 		}
@@ -59,12 +63,12 @@ func (cache *Cache) GetAbiByAddress(ctx context.Context, hash []byte) (abi.Abi, 
 
 // SetAbiByAddress -
 func (cache *Cache) SetAbiByAddress(class storage.Class, hash []byte) {
-	cache.Set(fmt.Sprintf("abi:address:%x", hash), class.Abi, time.Hour)
+	cache.Set(fmt.Sprintf("abi:address:%x", hash), class.Abi, ttl)
 }
 
 // GetAbiByClassHash -
 func (cache *Cache) GetAbiByClassHash(ctx context.Context, hash []byte) (abi.Abi, error) {
-	item, err := cache.Fetch(fmt.Sprintf("abi:class_hash:%x", hash), time.Hour, func() (interface{}, error) {
+	item, err := cache.Fetch(fmt.Sprintf("abi:class_hash:%x", hash), ttl, func() (interface{}, error) {
 		class, err := cache.class.GetByHash(ctx, hash)
 		if err != nil {
 			return nil, err
@@ -83,12 +87,12 @@ func (cache *Cache) GetAbiByClassHash(ctx context.Context, hash []byte) (abi.Abi
 
 // SetAbiByClassHash -
 func (cache *Cache) SetAbiByClassHash(class storage.Class, a abi.Abi) {
-	cache.Set(fmt.Sprintf("abi:class_hash:%x", class.Hash), a, time.Hour)
+	cache.Set(fmt.Sprintf("abi:class_hash:%x", class.Hash), a, ttl)
 }
 
 // GetClassByHash -
 func (cache *Cache) GetClassByHash(ctx context.Context, hash []byte) (storage.Class, error) {
-	item, err := cache.Fetch(fmt.Sprintf("class:hash:%x", hash), time.Hour, func() (interface{}, error) {
+	item, err := cache.Fetch(fmt.Sprintf("class:hash:%x", hash), ttl, func() (interface{}, error) {
 		return cache.class.GetByHash(ctx, hash)
 	})
 	if err != nil {
@@ -100,12 +104,12 @@ func (cache *Cache) GetClassByHash(ctx context.Context, hash []byte) (storage.Cl
 
 // SetClassByHash -
 func (cache *Cache) SetClassByHash(class storage.Class) {
-	cache.Set(fmt.Sprintf("class:hash:%x", class.Hash), class, time.Hour)
+	cache.Set(fmt.Sprintf("class:hash:%x", class.Hash), class, ttl)
 }
 
 // GetAddress -
 func (cache *Cache) GetAddress(ctx context.Context, hash []byte) (storage.Address, error) {
-	item, err := cache.Fetch(fmt.Sprintf("address:hash:%x", hash), time.Hour, func() (interface{}, error) {
+	item, err := cache.Fetch(fmt.Sprintf("address:hash:%x", hash), ttl, func() (interface{}, error) {
 		return cache.address.GetByHash(ctx, hash)
 	})
 	if err != nil {
@@ -117,7 +121,7 @@ func (cache *Cache) GetAddress(ctx context.Context, hash []byte) (storage.Addres
 
 // GetAbiByAddressId -
 func (cache *Cache) GetAbiByAddressId(ctx context.Context, id uint64) (abi.Abi, error) {
-	item, err := cache.Fetch(fmt.Sprintf("abi:address_id:%d", id), time.Hour, func() (interface{}, error) {
+	item, err := cache.Fetch(fmt.Sprintf("abi:address_id:%d", id), ttl, func() (interface{}, error) {
 		address, err := cache.address.GetByID(ctx, id)
 		if err != nil {
 			return nil, err
@@ -145,7 +149,7 @@ func (cache *Cache) GetAbiByAddressId(ctx context.Context, id uint64) (abi.Abi, 
 
 // GetClassById -
 func (cache *Cache) GetClassById(ctx context.Context, id uint64) (*storage.Class, error) {
-	item, err := cache.Fetch(fmt.Sprintf("class:id:%d", id), time.Hour, func() (interface{}, error) {
+	item, err := cache.Fetch(fmt.Sprintf("class:id:%d", id), ttl, func() (interface{}, error) {
 		return cache.class.GetByID(ctx, id)
 	})
 	if err != nil {
@@ -153,4 +157,41 @@ func (cache *Cache) GetClassById(ctx context.Context, id uint64) (*storage.Class
 	}
 
 	return item.Value().(*storage.Class), nil
+}
+
+// GetClassForAddress -
+func (cache *Cache) GetClassForAddress(ctx context.Context, hash []byte) (storage.Class, error) {
+	item, err := cache.Fetch(fmt.Sprintf("class:address:%x", hash), ttl, func() (interface{}, error) {
+		address, err := cache.address.GetByHash(ctx, hash)
+		if err != nil {
+			return nil, err
+		}
+
+		if address.ClassID != nil {
+			return cache.GetClassById(ctx, *address.ClassID)
+		}
+
+		return nil, errors.Errorf("address is not a starknet contract: hash=%x", hash)
+	})
+	if err != nil {
+		return storage.Class{}, err
+	}
+	class := item.Value().(*storage.Class)
+	return *class, err
+}
+
+// GetProxy -
+func (cache *Cache) GetProxy(ctx context.Context, hash []byte) (storage.Proxy, error) {
+	item, err := cache.Fetch(fmt.Sprintf("proxy:hash:%x", hash), ttl, func() (interface{}, error) {
+		return cache.proxy.GetByHash(ctx, hash)
+	})
+	if err != nil {
+		return storage.Proxy{}, err
+	}
+	return item.Value().(storage.Proxy), nil
+}
+
+// SetProxy -
+func (cache *Cache) SetProxy(proxy storage.Proxy) {
+	cache.Set(fmt.Sprintf("proxy:hash:%x", proxy.Hash), proxy, ttl)
 }

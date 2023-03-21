@@ -10,4 +10,5 @@ type Config struct {
 	Gateway            string `yaml:"gateway" validate:"required,url"`
 	RequestsPerSecond  int    `yaml:"requests_per_second" validate:"omitempty,min=1"`
 	ClassInterfacesDir string `yaml:"class_interfaces_dir" validate:"required,dir"`
+	BridgedTokensFile  string `yaml:"bridged_tokens_file" validate:"required,file"`
 }

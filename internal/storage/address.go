@@ -18,8 +18,9 @@ type Address struct {
 	// nolint
 	tableName struct{} `pg:"address"`
 
-	ID      uint64
+	ID      uint64 `pg:"id,type:bigint,pk,notnull"`
 	ClassID *uint64
+	Height  uint64 `pg:",use_zero"`
 	Hash    []byte `pg:",unique:address_hash"`
 
 	Class Class `pg:"rel:has-one"`

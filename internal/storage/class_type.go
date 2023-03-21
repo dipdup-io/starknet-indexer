@@ -10,9 +10,13 @@ const (
 	ClassTypeERC721Metadata
 	ClassTypeERC721Receiver
 	ClassTypeERC1155
+	ClassTypeERC1155Metadata
+	ClassTypeERC1155Receiver
 	ClassTypeProxy
 	ClassTypeArgentX0
 	ClassTypeArgentX
+	ClassTypeBraavos
+	ClassTypeAccount
 )
 
 // Set -
@@ -59,6 +63,14 @@ func NewClassType(interfaces ...string) ClassType {
 			ct.Set(ClassTypeArgentX)
 		case "argentx_0":
 			ct.Set(ClassTypeArgentX0)
+		case "braavos":
+			ct.Set(ClassTypeBraavos)
+		case "erc1155_metadata":
+			ct.Set(ClassTypeERC1155Metadata)
+		case "erc1155_receiver":
+			ct.Set(ClassTypeERC1155Receiver)
+		case "account":
+			ct.Set(ClassTypeAccount)
 		}
 	}
 

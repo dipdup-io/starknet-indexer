@@ -1,6 +1,8 @@
 package storage
 
 import (
+	"time"
+
 	"github.com/dipdup-net/indexer-sdk/pkg/storage"
 )
 
@@ -12,19 +14,18 @@ type IInternal interface {
 // Internal -
 type Internal struct {
 	// nolint
-	tableName struct{} `pg:"internal_tx"`
+	tableName struct{} `pg:"internal_tx,partition_by:RANGE(time)"`
 
-	ID     uint64
-	Height uint64 `pg:",use_zero"`
-	Time   int64
-	Status Status `pg:",use_zero"`
+	ID     uint64    `pg:"id,type:bigint,pk,notnull"`
+	Height uint64    `pg:",use_zero"`
+	Time   time.Time `pg:",pk"`
+	Status Status    `pg:",use_zero"`
 	Hash   []byte
 
 	DeclareID       *uint64
 	DeployID        *uint64
 	DeployAccountID *uint64
-	InvokeV0ID      *uint64 `pg:"invoke_v0_id"`
-	InvokeV1ID      *uint64 `pg:"invoke_v1_id"`
+	InvokeID        *uint64
 	L1HandlerID     *uint64
 	InternalID      *uint64
 
@@ -45,6 +46,7 @@ type Internal struct {
 	Internals []Internal `pg:"rel:has-many"`
 	Messages  []Message  `pg:"rel:has-many"`
 	Events    []Event    `pg:"rel:has-many"`
+	Transfers []Transfer `pg:"rel:has-many"`
 }
 
 // TableName -

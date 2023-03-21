@@ -9,6 +9,7 @@ const (
 	EntrypointTypeUnknown EntrypointType = iota + 1
 	EntrypointTypeExternal
 	EntrypointTypeConstructor
+	EntrypointTypeL1Handler
 )
 
 // NewEntrypointType -
@@ -18,6 +19,8 @@ func NewEntrypointType(value string) EntrypointType {
 		return EntrypointTypeExternal
 	case data.EntrypointTypeConstructor:
 		return EntrypointTypeConstructor
+	case data.EntrypointTypeL1Handler:
+		return EntrypointTypeL1Handler
 	default:
 		return EntrypointTypeUnknown
 	}
@@ -30,6 +33,8 @@ func (s EntrypointType) String() string {
 		return data.EntrypointTypeExternal
 	case EntrypointTypeConstructor:
 		return data.EntrypointTypeConstructor
+	case EntrypointTypeL1Handler:
+		return data.EntrypointTypeL1Handler
 	default:
 		return Unknown
 	}

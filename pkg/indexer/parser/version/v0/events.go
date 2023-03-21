@@ -1,0 +1,401 @@
+package v0
+
+import (
+	"bytes"
+	"context"
+
+	"github.com/dipdup-io/starknet-go-api/pkg/abi"
+	starknetData "github.com/dipdup-io/starknet-go-api/pkg/data"
+	"github.com/dipdup-io/starknet-go-api/pkg/encoding"
+	"github.com/dipdup-io/starknet-indexer/internal/starknet"
+	"github.com/dipdup-io/starknet-indexer/internal/storage"
+	"github.com/dipdup-io/starknet-indexer/pkg/indexer/cache"
+	"github.com/dipdup-io/starknet-indexer/pkg/indexer/decode"
+	"github.com/dipdup-io/starknet-indexer/pkg/indexer/parser/data"
+	"github.com/dipdup-io/starknet-indexer/pkg/indexer/parser/resolver"
+	"github.com/pkg/errors"
+	"github.com/rs/zerolog/log"
+	"github.com/shopspring/decimal"
+)
+
+var (
+	errInvalidTransfer = errors.New("invalid transfer")
+)
+
+// EventParser -
+type EventParser struct {
+	cache    *cache.Cache
+	resolver resolver.Resolver
+}
+
+// NewEventParser -
+func NewEventParser(
+	cache *cache.Cache,
+	resolver resolver.Resolver,
+) EventParser {
+	return EventParser{
+		cache:    cache,
+		resolver: resolver,
+	}
+}
+
+// Parse -
+func (parser EventParser) Parse(ctx context.Context, txCtx data.TxContext, contractAbi abi.Abi, event starknetData.Event) (storage.Event, error) {
+	model := storage.Event{
+		ID:              parser.resolver.NextEventId(),
+		Height:          txCtx.Height,
+		Time:            txCtx.Time,
+		Order:           event.Order,
+		Data:            event.Data,
+		Keys:            event.Keys,
+		ContractID:      txCtx.ContractId,
+		DeclareID:       txCtx.DeclareID,
+		DeployID:        txCtx.DeployID,
+		DeployAccountID: txCtx.DeployAccountID,
+		InvokeID:        txCtx.InvokeID,
+		L1HandlerID:     txCtx.L1HandlerID,
+		InternalID:      txCtx.InternalID,
+	}
+	if txCtx.ProxyId > 0 {
+		model.ContractID = txCtx.ContractId
+	}
+
+	if address, err := parser.resolver.FindAddressByHash(ctx, starknetData.Felt(event.FromAddress)); err != nil {
+		return model, err
+	} else if address != nil {
+		model.FromID = address.ID
+		model.From = *address
+	}
+
+	if len(contractAbi.Events) > 0 {
+		parsed, name, err := decode.Event(parser.cache, contractAbi, model.Keys, model.Data)
+		if err != nil {
+			return model, err
+		}
+		model.ParsedData = parsed
+		model.Name = name
+	}
+
+	return model, nil
+}
+
+func upgraded(ctx context.Context, resolver resolver.Resolver, contract storage.Address, event storage.Event) error {
+	value, ok := event.ParsedData["implementation"]
+	if !ok {
+		return nil
+	}
+	implementation, ok := value.(string)
+	if !ok {
+		return nil
+	}
+	impl := encoding.MustDecodeHex(implementation)
+	if len(impl) != starknetData.AddressBytesLength {
+		log.Warn().Msgf("invalid implementation address: %x", impl)
+		return nil
+	}
+	return resolver.UpgradeProxy(ctx, contract, impl, event.Height)
+}
+
+func depositHandled(ctx context.Context, resolver resolver.Resolver, txCtx data.TxContext, contract storage.Address, event storage.Event) ([]storage.Transfer, error) {
+	transfer := storage.Transfer{
+		Height:          event.Height,
+		Time:            event.Time,
+		DeclareID:       txCtx.DeclareID,
+		DeployID:        txCtx.DeployID,
+		DeployAccountID: txCtx.DeployAccountID,
+		InvokeID:        txCtx.InvokeID,
+		L1HandlerID:     txCtx.L1HandlerID,
+		InternalID:      txCtx.InternalID,
+	}
+
+	bridged := starknet.BridgedTokens()
+	for i := range bridged {
+		if bytes.Equal(contract.Hash, bridged[i].L2BridgeAddress.Bytes()) {
+			address, err := resolver.FindAddressByHash(ctx, bridged[i].L2TokenAddress)
+			if err != nil {
+				return nil, err
+			}
+			transfer.ContractID = address.ID
+			break
+		}
+	}
+
+	var err error
+
+	transfer.ToID, err = parseTransferAddress(ctx, resolver, event.Height, event.ParsedData, "account")
+	if err != nil {
+		return nil, err
+	}
+
+	if transfer.ToID == 0 {
+		return nil, errInvalidTransfer
+	}
+
+	transfer.Amount, err = parseTransferDecimal(event.ParsedData, "amount")
+	if err != nil {
+		return nil, err
+	}
+
+	return []storage.Transfer{transfer}, nil
+}
+
+func withdrawInitiated(ctx context.Context, resolver resolver.Resolver, txCtx data.TxContext, contract storage.Address, event storage.Event) ([]storage.Transfer, error) {
+	transfer := storage.Transfer{
+		Height:          event.Height,
+		Time:            event.Time,
+		DeclareID:       txCtx.DeclareID,
+		DeployID:        txCtx.DeployID,
+		DeployAccountID: txCtx.DeployAccountID,
+		InvokeID:        txCtx.InvokeID,
+		L1HandlerID:     txCtx.L1HandlerID,
+		InternalID:      txCtx.InternalID,
+	}
+
+	bridged := starknet.BridgedTokens()
+	for i := range bridged {
+		if bytes.Equal(contract.Hash, bridged[i].L2BridgeAddress.Bytes()) {
+			address, err := resolver.FindAddressByHash(ctx, bridged[i].L2TokenAddress)
+			if err != nil {
+				return nil, err
+			}
+			transfer.ContractID = address.ID
+			break
+		}
+	}
+
+	var err error
+
+	transfer.FromID, err = parseTransferAddress(ctx, resolver, event.Height, event.ParsedData, "caller_address")
+	if err != nil {
+		return nil, err
+	}
+
+	if transfer.FromID == 0 {
+		return nil, errInvalidTransfer
+	}
+
+	transfer.Amount, err = parseTransferDecimal(event.ParsedData, "amount")
+	if err != nil {
+		return nil, err
+	}
+
+	return []storage.Transfer{transfer}, nil
+}
+
+func transfer(ctx context.Context, resolver resolver.Resolver, txCtx data.TxContext, contractId uint64, event storage.Event) ([]storage.Transfer, error) {
+	transfer := storage.Transfer{
+		Height:          event.Height,
+		Time:            event.Time,
+		ContractID:      contractId,
+		DeclareID:       txCtx.DeclareID,
+		DeployID:        txCtx.DeployID,
+		DeployAccountID: txCtx.DeployAccountID,
+		InvokeID:        txCtx.InvokeID,
+		L1HandlerID:     txCtx.L1HandlerID,
+		InternalID:      txCtx.InternalID,
+	}
+
+	var err error
+
+	for _, key := range []string{
+		"from_,", "sender",
+	} {
+		transfer.FromID, err = parseTransferAddress(ctx, resolver, event.Height, event.ParsedData, key)
+		if err != nil {
+			return nil, err
+		}
+		if transfer.FromID > 0 {
+			break
+		}
+	}
+	for _, key := range []string{
+		"to", "recipient",
+	} {
+		transfer.ToID, err = parseTransferAddress(ctx, resolver, event.Height, event.ParsedData, key)
+		if err != nil {
+			return nil, err
+		}
+		if transfer.ToID > 0 {
+			break
+		}
+	}
+
+	if transfer.FromID == 0 && transfer.ToID == 0 {
+		return nil, errInvalidTransfer
+	}
+
+	transfer.Amount, err = parseTransferDecimal(event.ParsedData, "value")
+	if err != nil {
+		return nil, err
+	}
+	transfer.TokenID, err = parseTransferDecimal(event.ParsedData, "tokenId")
+	if err != nil {
+		return nil, err
+	}
+
+	// if 'tokenId' is in event parameters then it's erc721 token. it's nft and amount equals 1
+	if _, ok := event.ParsedData["tokenId"]; ok && transfer.Amount.IsZero() {
+		transfer.Amount = decimal.NewFromInt(1)
+	}
+
+	return []storage.Transfer{transfer}, nil
+}
+
+func transferSingle(ctx context.Context, resolver resolver.Resolver, txCtx data.TxContext, contractId uint64, event storage.Event) ([]storage.Transfer, error) {
+	transfer := storage.Transfer{
+		Height:          event.Height,
+		Time:            event.Time,
+		ContractID:      contractId,
+		DeclareID:       txCtx.DeclareID,
+		DeployID:        txCtx.DeployID,
+		DeployAccountID: txCtx.DeployAccountID,
+		InvokeID:        txCtx.InvokeID,
+		L1HandlerID:     txCtx.L1HandlerID,
+		InternalID:      txCtx.InternalID,
+	}
+
+	var err error
+
+	transfer.FromID, err = parseTransferAddress(ctx, resolver, event.Height, event.ParsedData, "from_")
+	if err != nil {
+		return nil, err
+	}
+
+	transfer.ToID, err = parseTransferAddress(ctx, resolver, event.Height, event.ParsedData, "to")
+	if err != nil {
+		return nil, err
+	}
+
+	if transfer.FromID == 0 && transfer.ToID == 0 {
+		return nil, errInvalidTransfer
+	}
+
+	transfer.Amount, err = parseTransferDecimal(event.ParsedData, "value")
+	if err != nil {
+		return nil, err
+	}
+	transfer.TokenID, err = parseTransferDecimal(event.ParsedData, "id")
+	if err != nil {
+		return nil, err
+	}
+
+	return []storage.Transfer{transfer}, nil
+}
+
+func transferBatch(ctx context.Context, resolver resolver.Resolver, txCtx data.TxContext, contractId uint64, event storage.Event) ([]storage.Transfer, error) {
+	fromId, err := parseTransferAddress(ctx, resolver, event.Height, event.ParsedData, "from_")
+	if err != nil {
+		return nil, err
+	}
+
+	toId, err := parseTransferAddress(ctx, resolver, event.Height, event.ParsedData, "to")
+	if err != nil {
+		return nil, err
+	}
+
+	if fromId == 0 && toId == 0 {
+		return nil, errInvalidTransfer
+	}
+
+	ids, err := parseTransferArrayDecimals(event, "ids")
+	if err != nil {
+		return nil, err
+	}
+	values, err := parseTransferArrayDecimals(event, "values")
+	if err != nil {
+		return nil, err
+	}
+
+	if len(ids) != len(values) {
+		return nil, errInvalidTransfer
+	}
+
+	transfers := make([]storage.Transfer, len(ids))
+	for i := range ids {
+		transfers[i] = storage.Transfer{
+			Height:          event.Height,
+			Time:            event.Time,
+			ContractID:      contractId,
+			DeclareID:       txCtx.DeclareID,
+			DeployID:        txCtx.DeployID,
+			DeployAccountID: txCtx.DeployAccountID,
+			InvokeID:        txCtx.InvokeID,
+			L1HandlerID:     txCtx.L1HandlerID,
+			InternalID:      txCtx.InternalID,
+			FromID:          fromId,
+			ToID:            toId,
+			Amount:          values[i],
+			TokenID:         ids[i],
+		}
+	}
+	return transfers, nil
+}
+
+func parseTransferAddress(ctx context.Context, resolver resolver.Resolver, height uint64, data map[string]any, key string) (uint64, error) {
+	if value, ok := data[key]; ok {
+		if sValue, ok := value.(string); ok {
+			address := storage.Address{
+				Hash:   starknetData.Felt(sValue).Bytes(),
+				Height: height,
+			}
+			if err := resolver.FindAddress(ctx, &address); err != nil {
+				return 0, err
+			}
+			return address.ID, nil
+		}
+	}
+	return 0, nil
+}
+
+func parseDecimalValue(value any) (decimal.Decimal, error) {
+	switch typ := value.(type) {
+	case string:
+		return encoding.DecimalFromHex(typ), nil
+	case map[string]any:
+		lowValue, ok := typ["low"]
+		if !ok {
+			return decimal.Zero, nil
+		}
+		low, ok := lowValue.(string)
+		if !ok {
+			return decimal.Zero, nil
+		}
+		highValue, ok := typ["high"]
+		if !ok {
+			return decimal.Zero, nil
+		}
+		high, ok := highValue.(string)
+		if !ok {
+			return decimal.Zero, nil
+		}
+		uint256 := starknetData.NewUint256FromStrings(low, high)
+		return uint256.Decimal()
+	default:
+		return decimal.Zero, nil
+	}
+}
+
+func parseTransferDecimal(data map[string]any, key string) (decimal.Decimal, error) {
+	if value, ok := data[key]; ok {
+		return parseDecimalValue(value)
+	}
+	return decimal.Zero, nil
+}
+
+func parseTransferArrayDecimals(event storage.Event, key string) ([]decimal.Decimal, error) {
+	var err error
+
+	if value, ok := event.ParsedData[key]; ok {
+		if arr, ok := value.([]any); ok {
+			result := make([]decimal.Decimal, len(arr))
+			for i := range arr {
+				result[i], err = parseDecimalValue(arr[i])
+				if err != nil {
+					return nil, err
+				}
+			}
+			return result, nil
+		}
+	}
+	return nil, nil
+}

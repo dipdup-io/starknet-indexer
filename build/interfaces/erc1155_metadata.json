@@ -1,0 +1,19 @@
+[
+    {
+        "type": "function",
+        "name": "uri",
+        "stateMutability": "view",
+        "outputs": [
+            {
+                "name": "uri",
+                "type": "felt"
+            }
+        ],
+        "inputs": [
+            {
+                "name": "id",
+                "type": "Uint256"
+            }
+        ]
+    }
+]

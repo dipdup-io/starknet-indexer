@@ -3,66 +3,53 @@ package store
 import (
 	"context"
 
-	"github.com/dipdup-io/starknet-go-api/pkg/encoding"
-	"github.com/dipdup-io/starknet-indexer/pkg/indexer/parser"
+	parserData "github.com/dipdup-io/starknet-indexer/pkg/indexer/parser/data"
 	"github.com/dipdup-net/indexer-sdk/pkg/storage"
 )
 
 func (store *Store) saveL1Handler(
 	ctx context.Context,
 	tx storage.Transaction,
-	result parser.Result,
+	result parserData.Result,
 ) error {
 	if result.Block.L1HandlerCount == 0 {
 		return nil
 	}
 
+	models := make([]any, result.Block.L1HandlerCount)
 	for i := range result.Block.L1Handler {
-		ptr := &result.Block.L1Handler[i]
+		models[i] = &result.Block.L1Handler[i]
 
-		if ptr.ContractID == 0 {
-			if address, ok := result.Addresses[encoding.EncodeHex(ptr.Contract.Hash)]; ok {
-				ptr.ContractID = address.ID
-			}
-		}
-
-		if err := tx.Add(ctx, ptr); err != nil {
+		allInternals, err := store.saveInternals(ctx, tx, result, result.Block.L1Handler[i].Internals)
+		if err != nil {
 			return err
 		}
-
-		if len(ptr.Internals) > 0 {
-			for j := range ptr.Internals {
-				ptrInt := &ptr.Internals[j]
-				ptrInt.L1HandlerID = &ptr.ID
-			}
-
-			if err := store.saveInternals(ctx, tx, result, ptr.Internals); err != nil {
+		internalModels := make([]any, len(allInternals))
+		for i := range allInternals {
+			internalModels[i] = &allInternals[i]
+		}
+		if len(allInternals) > 0 {
+			if err := tx.BulkSave(ctx, internalModels); err != nil {
 				return err
 			}
 		}
 
-		if len(ptr.Events) > 0 {
-			for j := range ptr.Events {
-				ptrEv := &ptr.Events[j]
-				ptrEv.L1HandlerID = &ptr.ID
-
-				if err := store.saveEvent(ctx, tx, ptrEv); err != nil {
-					return err
-				}
-			}
+		if err := store.saveEvents(ctx, tx, result.Block.L1Handler[i].Events); err != nil {
+			return err
 		}
 
-		if len(ptr.Messages) > 0 {
-			for j := range ptr.Messages {
-				ptrMsg := &ptr.Messages[j]
-				ptrMsg.L1HandlerID = &ptr.ID
+		if err := store.saveMessages(ctx, tx, result.Block.L1Handler[i].Messages); err != nil {
+			return err
+		}
 
-				if err := store.saveMessage(ctx, tx, ptrMsg); err != nil {
-					return err
-				}
-			}
+		if err := store.saveTransfers(ctx, tx, result.Block.L1Handler[i].Transfers); err != nil {
+			return err
+		}
+
+		if err := store.saveFee(ctx, tx, result.Block.L1Handler[i].Fee); err != nil {
+			return err
 		}
 	}
 
-	return nil
+	return tx.BulkSave(ctx, models)
 }

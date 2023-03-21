@@ -1,0 +1,13 @@
+package starknet
+
+import "github.com/dipdup-io/starknet-go-api/pkg/encoding"
+
+// ProxyStorageVars -
+var ProxyStorageVars = map[string][]byte{
+	"0x3ad34fad732b51fe0d1a1350f149f21a0cf14a9382c9c6e7b262c4e0c8dbf18": encoding.MustDecodeHex("0x3ad34fad732b51fe0d1a1350f149f21a0cf14a9382c9c6e7b262c4e0c8dbf18"),
+	"0xf920571b9f85bdd92a867cfdc73319d0f8836f0e69e06e4c5566b6203f75cc":  encoding.MustDecodeHex("0xf920571b9f85bdd92a867cfdc73319d0f8836f0e69e06e4c5566b6203f75cc"),
+	"0x5d2e9527cbeb1a51aa084b0de7501f343b7b1bf24a0c427d6204a7b7988970":  encoding.MustDecodeHex("0x5d2e9527cbeb1a51aa084b0de7501f343b7b1bf24a0c427d6204a7b7988970"),
+	"0x21001002be3fcf98f1bc5d249803318acc1a9f29c56cfeba1af82abc7157353": encoding.MustDecodeHex("0x21001002be3fcf98f1bc5d249803318acc1a9f29c56cfeba1af82abc7157353"),
+	"0x1c76cd4f3f79786d9e5d1298f47170de4bf0222337c680c5377ec772d3ce96b": encoding.MustDecodeHex("0x1c76cd4f3f79786d9e5d1298f47170de4bf0222337c680c5377ec772d3ce96b"),
+	"0x3f1abe37754ee6ca6d8dfa1036089f78a07ebe8f3b1e336cdbf3274d25becd0": encoding.MustDecodeHex("0x3f1abe37754ee6ca6d8dfa1036089f78a07ebe8f3b1e336cdbf3274d25becd0"),
+}

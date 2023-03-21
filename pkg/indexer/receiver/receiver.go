@@ -43,7 +43,7 @@ func NewReceiver(cfg config.Config) *Receiver {
 
 	receiver := &Receiver{
 		api:     starknet.NewAPI(cfg.Gateway, cfg.FeederGateway, opts...),
-		result:  make(chan Result, cfg.ThreadsCount),
+		result:  make(chan Result, cfg.ThreadsCount*2),
 		cache:   ccache.New(ccache.Configure().MaxSize(1000)),
 		timeout: cfg.Timeout,
 		wg:      new(sync.WaitGroup),

@@ -6,6 +6,7 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/dipdup-io/starknet-indexer/internal/starknet"
 	"github.com/dipdup-io/starknet-indexer/internal/storage/postgres"
 	"github.com/dipdup-io/starknet-indexer/pkg/indexer"
 	"github.com/dipdup-net/go-lib/config"
@@ -54,6 +55,11 @@ func main() {
 	}
 	zerolog.SetGlobalLevel(logLevel)
 
+	if err := starknet.LoadBridgedTokens(cfg.Indexer.BridgedTokensFile); err != nil {
+		log.Panic().Err(err).Msg("loading bridged tokens")
+		return
+	}
+
 	ctx, cancel := context.WithCancel(context.Background())
 
 	postgres, err := postgres.Create(ctx, cfg.Database)
@@ -62,20 +68,13 @@ func main() {
 		return
 	}
 
-	indexer := indexer.New(
-		cfg.Indexer,
-		postgres.Address,
-		postgres.Blocks,
-		postgres.Declare,
-		postgres.Deploy,
-		postgres.DeployAccount,
-		postgres.InvokeV0,
-		postgres.InvokeV1,
-		postgres.L1Handler,
-		postgres.Class,
-		postgres.StorageDiff,
-		postgres.Transactable,
-	)
+	indexer := indexer.New(cfg.Indexer, postgres)
+
+	// if err := indexer.Rollback(ctx, 2835); err != nil {
+	// 	log.Panic().Err(err).Msg("postgres connection")
+	// 	return
+	// }
+	// log.Info().Msg("rollback finished")
 
 	indexer.Start(ctx)
 

@@ -2,217 +2,141 @@ package parser
 
 import (
 	"context"
-	"math/big"
+	"time"
 
-	"github.com/dipdup-io/starknet-go-api/pkg/data"
+	starknetData "github.com/dipdup-io/starknet-go-api/pkg/data"
 	"github.com/dipdup-io/starknet-go-api/pkg/encoding"
-	"github.com/dipdup-io/starknet-indexer/internal/starknet"
 	"github.com/dipdup-io/starknet-indexer/internal/storage"
 	"github.com/dipdup-io/starknet-indexer/pkg/indexer/cache"
+	parserData "github.com/dipdup-io/starknet-indexer/pkg/indexer/parser/data"
+	"github.com/dipdup-io/starknet-indexer/pkg/indexer/parser/generator"
+	"github.com/dipdup-io/starknet-indexer/pkg/indexer/parser/interfaces"
+	"github.com/dipdup-io/starknet-indexer/pkg/indexer/parser/resolver"
+	v0 "github.com/dipdup-io/starknet-indexer/pkg/indexer/parser/version/v0"
 	"github.com/dipdup-io/starknet-indexer/pkg/indexer/receiver"
 	"github.com/pkg/errors"
-	"github.com/shopspring/decimal"
 )
 
-// Result -
-type Result struct {
-	Addresses map[string]*storage.Address
-	Block     storage.Block
-	Classes   map[string]*storage.Class
-}
-
-// Parser -
-type Parser struct {
-	receiver     *receiver.Receiver
-	cache        *cache.Cache
-	idGenerator  *IdGenerator
-	storageDiffs storage.IStorageDiff
-
-	addresses map[string]*storage.Address
-	classes   map[string]*storage.Class
-}
-
-// New -
-func New(
-	receiver *receiver.Receiver,
+func createParser(
+	version *string,
+	resolver resolver.Resolver,
 	cache *cache.Cache,
-	idGenerator *IdGenerator,
-	storageDiffs storage.IStorageDiff,
-) *Parser {
-	return &Parser{
-		receiver:     receiver,
-		cache:        cache,
-		idGenerator:  idGenerator,
-		storageDiffs: storageDiffs,
+	blocks storage.IBlock,
+) (interfaces.Parser, error) {
+	if version == nil {
+		return v0.New(resolver, cache, blocks), nil
+	}
 
-		addresses: make(map[string]*storage.Address),
-		classes:   make(map[string]*storage.Class),
-	}
-}
-
-func (parser *Parser) addAddress(address *storage.Address) {
-	if len(address.Hash) == 0 {
-		return
-	}
-	key := encoding.EncodeHex(address.Hash)
-	if _, ok := parser.addresses[key]; !ok {
-		parser.addresses[key] = address
-	}
-}
-
-func (parser *Parser) addClass(class *storage.Class) {
-	if len(class.Hash) == 0 {
-		return
-	}
-	key := encoding.EncodeHex(class.Hash)
-	if _, ok := parser.classes[key]; !ok {
-		parser.classes[key] = class
+	switch *version {
+	case "0.9.1", "0.10.0", "0.10.1", "0.10.2", "0.10.3":
+		return v0.New(resolver, cache, blocks), nil
+	default:
+		return nil, errors.Errorf("unknown starknet version: %s", *version)
 	}
 }
 
 // Parse -
-func (parser *Parser) Parse(ctx context.Context, result receiver.Result) (Result, error) {
+func Parse(
+	ctx context.Context,
+	receiver *receiver.Receiver,
+	cache *cache.Cache,
+	idGenerator *generator.IdGenerator,
+	blocks storage.IBlock,
+	result receiver.Result,
+) (parserData.Result, error) {
 	block := storage.Block{
 		ID:               result.Block.BlockNumber + 1,
 		Height:           result.Block.BlockNumber,
-		Time:             result.Block.Timestamp,
+		Time:             time.Unix(result.Block.Timestamp, 0).UTC(),
 		Hash:             encoding.MustDecodeHex(result.Block.BlockHash),
 		ParentHash:       encoding.MustDecodeHex(result.Block.ParentHash),
 		NewRoot:          encoding.MustDecodeHex(result.Block.NewRoot),
 		SequencerAddress: encoding.MustDecodeHex(result.Block.SequencerAddress),
+		Version:          result.Block.StarknetVersion,
 		Status:           storage.NewStatus(result.Block.Status),
 		TxCount:          len(result.Block.Transactions),
 
-		InvokeV0:      make([]storage.InvokeV0, 0),
-		InvokeV1:      make([]storage.InvokeV1, 0),
+		Invoke:        make([]storage.Invoke, 0),
 		Declare:       make([]storage.Declare, 0),
 		Deploy:        make([]storage.Deploy, 0),
 		DeployAccount: make([]storage.DeployAccount, 0),
 		L1Handler:     make([]storage.L1Handler, 0),
 	}
 
-	if err := parser.entitiesFromStateUpdate(ctx, &block, result.StateUpdate); err != nil {
-		return Result{}, errors.Wrap(err, "state update parsing")
+	resolver := resolver.NewResolver(receiver, cache, idGenerator, blocks)
+
+	if err := resolver.ResolveStateUpdates(ctx, &block, result.StateUpdate); err != nil {
+		return parserData.Result{}, errors.Wrap(err, "state update parsing")
+	}
+
+	p, err := createParser(block.Version, resolver, cache, blocks)
+	if err != nil {
+		return parserData.Result{}, errors.Wrap(err, "createParser")
 	}
 
 	for i := range result.Block.Transactions {
 		switch typed := result.Block.Transactions[i].Body.(type) {
-		case *data.InvokeV0:
-			invoke, err := parser.getInvokeV0(ctx, typed, block, result.Trace.Traces[i])
-			if err != nil {
-				return Result{}, errors.Wrap(err, "invoke v0")
+		case *starknetData.Invoke:
+			var (
+				invoke storage.Invoke
+				err    error
+			)
+			switch result.Block.Transactions[i].Version {
+			case starknetData.Version0:
+				invoke, err = p.ParseInvokeV0(ctx, typed, block, result.Trace.Traces[i], result.Block.Receipts[i])
+			case starknetData.Version1:
+				invoke, err = p.ParseInvokeV1(ctx, typed, block, result.Trace.Traces[i], result.Block.Receipts[i])
+			default:
+				return parserData.Result{}, errors.Errorf("unknown invoke version: %s", result.Block.Transactions[i].Version)
 			}
-			block.InvokeV0 = append(block.InvokeV0, invoke)
-		case *data.InvokeV1:
-			invoke, err := parser.getInvokeV1(ctx, typed, block, result.Trace.Traces[i])
 			if err != nil {
-				return Result{}, errors.Wrap(err, "invoke v1")
+				return parserData.Result{}, errors.Wrapf(err, "%s invoke version=%s", result.Block.Transactions[i].TransactionHash, result.Block.Transactions[i].Version)
 			}
-			block.InvokeV1 = append(block.InvokeV1, invoke)
-		case *data.Declare:
-			tx, err := parser.getDeclare(ctx, typed, block, result.Trace.Traces[i])
+			invoke.Position = i
+			block.Invoke = append(block.Invoke, invoke)
+		case *starknetData.Declare:
+			tx, err := p.ParseDeclare(ctx, result.Block.Transactions[i].Version, typed, block, result.Trace.Traces[i], result.Block.Receipts[i])
 			if err != nil {
-				return Result{}, errors.Wrap(err, "declare")
+				return parserData.Result{}, errors.Wrapf(err, "%s declare", result.Block.Transactions[i].TransactionHash)
 			}
+			tx.Position = i
 			block.Declare = append(block.Declare, tx)
-		case *data.Deploy:
-			tx, err := parser.getDeploy(ctx, typed, block, result.Trace.Traces[i])
+		case *starknetData.Deploy:
+			tx, err := p.ParseDeploy(ctx, typed, block, result.Trace.Traces[i], result.Block.Receipts[i])
 			if err != nil {
-				return Result{}, errors.Wrap(err, "deploy")
+				return parserData.Result{}, errors.Wrapf(err, "%s deploy", result.Block.Transactions[i].TransactionHash)
 			}
+			tx.Position = i
 			block.Deploy = append(block.Deploy, tx)
-		case *data.DeployAccount:
-			tx, err := parser.getDeployAccount(ctx, typed, block, result.Trace.Traces[i])
+		case *starknetData.DeployAccount:
+			tx, err := p.ParseDeployAccount(ctx, typed, block, result.Trace.Traces[i], result.Block.Receipts[i])
 			if err != nil {
-				return Result{}, errors.Wrap(err, "deploy account")
+				return parserData.Result{}, errors.Wrapf(err, "%s deploy account", result.Block.Transactions[i].TransactionHash)
 			}
+			tx.Position = i
 			block.DeployAccount = append(block.DeployAccount, tx)
-		case *data.L1Handler:
-			tx, err := parser.getL1Handler(ctx, typed, block, result.Trace.Traces[i])
+		case *starknetData.L1Handler:
+			tx, err := p.ParseL1Handler(ctx, typed, block, result.Trace.Traces[i], result.Block.Receipts[i])
 			if err != nil {
-				return Result{}, errors.Wrap(err, "l1 handler")
+				return parserData.Result{}, errors.Wrapf(err, "%s l1 handler", result.Block.Transactions[i].TransactionHash)
 			}
+			tx.Position = i
 			block.L1Handler = append(block.L1Handler, tx)
 		default:
-			return Result{}, errors.Errorf("unknown transaction type: %s", result.Block.Transactions[i].Type)
+			return parserData.Result{}, errors.Errorf("unknown transaction type: %s", result.Block.Transactions[i].Type)
 		}
 	}
 
-	block.InvokeV0Count = len(block.InvokeV0)
-	block.InvokeV1Count = len(block.InvokeV1)
+	block.InvokeCount = len(block.Invoke)
 	block.DeclareCount = len(block.Declare)
 	block.DeployCount = len(block.Deploy)
 	block.DeployAccountCount = len(block.DeployAccount)
 	block.L1HandlerCount = len(block.L1Handler)
 
-	return Result{
+	return parserData.Result{
 		Block:     block,
-		Addresses: parser.addresses,
-		Classes:   parser.classes,
+		Addresses: resolver.Addresses(),
+		Classes:   resolver.Classes(),
+		Proxies:   resolver.Proxies(),
 	}, nil
-}
-
-func decimalFromHex(s string) decimal.Decimal {
-	if s == "" {
-		return decimal.Zero
-	}
-	i, _ := new(big.Int).SetString(s, 0)
-	return decimal.NewFromBigInt(i, 0)
-}
-
-func (parser *Parser) receiveClass(ctx context.Context, class *storage.Class) error {
-	rawClass, err := parser.receiver.GetClass(ctx, encoding.EncodeHex(class.Hash))
-	if err != nil {
-		return err
-	}
-
-	class.Abi = storage.Bytes(rawClass.RawAbi)
-
-	a, err := rawClass.GetAbi()
-	if err != nil {
-		return err
-	}
-	interfaces, err := starknet.FindInterfaces(a)
-	if err != nil {
-		return err
-	}
-	class.Type = storage.NewClassType(interfaces...)
-
-	parser.cache.SetAbiByClassHash(*class, a)
-	parser.addClass(class)
-
-	return nil
-}
-
-func (parser *Parser) findAddress(ctx context.Context, address *storage.Address) error {
-	if value, ok := parser.addresses[encoding.EncodeHex(address.Hash)]; ok {
-		address.ID = value.ID
-		address.ClassID = value.ClassID
-		return nil
-	}
-	generated, err := parser.idGenerator.SetAddressId(ctx, address)
-	if err != nil {
-		return err
-	}
-	if generated {
-		parser.addAddress(address)
-	}
-	return nil
-}
-
-func (parser *Parser) findClass(ctx context.Context, class *storage.Class) error {
-	if value, ok := parser.classes[encoding.EncodeHex(class.Hash)]; ok {
-		class.ID = value.ID
-		class.Abi = value.Abi
-		class.Type = value.Type
-		return nil
-	}
-	generated, err := parser.idGenerator.SetClassId(ctx, class)
-	if err != nil {
-		return err
-	}
-	if generated {
-		parser.addClass(class)
-	}
-	return nil
 }

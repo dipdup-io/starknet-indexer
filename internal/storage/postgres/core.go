@@ -18,8 +18,7 @@ type Storage struct {
 
 	Blocks models.IBlock
 
-	InvokeV0      models.IInvokeV0
-	InvokeV1      models.IInvokeV1
+	InvokeV0      models.IInvoke
 	Declare       models.IDeclare
 	Deploy        models.IDeploy
 	DeployAccount models.IDeployAccount
@@ -30,6 +29,17 @@ type Storage struct {
 	Address       models.IAddress
 	Class         models.IClass
 	StorageDiff   models.IStorageDiff
+	Proxy         models.IProxy
+	Transfer      models.ITransfer
+	Fee           models.IFee
+	ERC20         models.IERC20
+	ERC721        models.IERC721
+	ERC1155       models.IERC1155
+	TokenBalance  models.ITokenBalance
+	State         models.IState
+
+	PartitionManager PartitionManager
+	RollbackManager  RollbackManager
 }
 
 // Create -
@@ -42,8 +52,7 @@ func Create(ctx context.Context, cfg config.Database) (Storage, error) {
 	s := Storage{
 		Storage:       strg,
 		Blocks:        NewBlocks(strg.Connection()),
-		InvokeV0:      NewInvokeV0(strg.Connection()),
-		InvokeV1:      NewInvokeV1(strg.Connection()),
+		InvokeV0:      NewInvoke(strg.Connection()),
 		Declare:       NewDeclare(strg.Connection()),
 		Deploy:        NewDeploy(strg.Connection()),
 		DeployAccount: NewDeployAccount(strg.Connection()),
@@ -54,19 +63,31 @@ func Create(ctx context.Context, cfg config.Database) (Storage, error) {
 		Address:       NewAddress(strg.Connection()),
 		Class:         NewClass(strg.Connection()),
 		StorageDiff:   NewStorageDiff(strg.Connection()),
+		Proxy:         NewProxy(strg.Connection()),
+		Transfer:      NewTransfer(strg.Connection()),
+		Fee:           NewFee(strg.Connection()),
+		ERC20:         NewERC20(strg.Connection()),
+		ERC721:        NewERC721(strg.Connection()),
+		ERC1155:       NewERC1155(strg.Connection()),
+		TokenBalance:  NewTokenBalance(strg.Connection()),
+		State:         NewState(strg.Connection()),
+
+		PartitionManager: NewPartitionManager(strg.Connection()),
 	}
+
+	s.RollbackManager = NewRollbackManager(s.Transactable, s.State, s.Blocks)
 
 	return s, nil
 }
 
 func initDatabase(ctx context.Context, conn *database.PgGo) error {
 	for _, data := range []storage.Model{
+		&models.State{},
 		&models.Address{},
 		&models.Class{},
 		&models.StorageDiff{},
 		&models.Block{},
-		&models.InvokeV0{},
-		&models.InvokeV1{},
+		&models.Invoke{},
 		&models.Declare{},
 		&models.Deploy{},
 		&models.DeployAccount{},
@@ -74,6 +95,13 @@ func initDatabase(ctx context.Context, conn *database.PgGo) error {
 		&models.Internal{},
 		&models.Event{},
 		&models.Message{},
+		&models.Transfer{},
+		&models.Fee{},
+		&models.ERC20{},
+		&models.ERC721{},
+		&models.ERC1155{},
+		&models.TokenBalance{},
+		&models.Proxy{},
 	} {
 		if err := conn.DB().WithContext(ctx).Model(data).CreateTable(&orm.CreateTableOptions{
 			IfNotExists: true,
@@ -89,6 +117,18 @@ func initDatabase(ctx context.Context, conn *database.PgGo) error {
 
 func createIndices(ctx context.Context, conn *database.PgGo) error {
 	return conn.DB().RunInTransaction(ctx, func(tx *pg.Tx) error {
+		// Address
+		if _, err := tx.ExecContext(ctx, `CREATE INDEX IF NOT EXISTS address_hash_idx ON address (hash)`); err != nil {
+			return err
+		}
+
+		// Storage diff
+		if _, err := tx.ExecContext(ctx, `CREATE INDEX IF NOT EXISTS storage_diff_key_idx ON storage_diff (key)`); err != nil {
+			return err
+		}
+		if _, err := tx.ExecContext(ctx, `CREATE INDEX IF NOT EXISTS storage_diff_contract_id_idx ON storage_diff (contract_id)`); err != nil {
+			return err
+		}
 		return nil
 	})
 }

@@ -28,13 +28,8 @@ func newAcceptedOnL2FromIndexingBlock(block storage.Block) acceptedOnL2 {
 		Height: block.Height,
 	}
 
-	if block.InvokeV0Count > 0 {
-		a.TransactionHash = block.InvokeV0[0].Hash
-		return a
-	}
-
-	if block.InvokeV1Count > 0 {
-		a.TransactionHash = block.InvokeV1[0].Hash
+	if block.InvokeCount > 0 {
+		a.TransactionHash = block.Invoke[0].Hash
 		return a
 	}
 
@@ -67,8 +62,7 @@ type statusChecker struct {
 	declares       storage.IDeclare
 	deploys        storage.IDeploy
 	deployAccounts storage.IDeployAccount
-	invokeV0       storage.IInvokeV0
-	invokeV1       storage.IInvokeV1
+	invoke         storage.IInvoke
 	l1Handlers     storage.IL1Handler
 	transactable   sdk.Transactable
 	receiver       *receiver.Receiver
@@ -81,8 +75,7 @@ func newStatusChecker(
 	declares storage.IDeclare,
 	deploys storage.IDeploy,
 	deployAccounts storage.IDeployAccount,
-	invokeV0 storage.IInvokeV0,
-	invokeV1 storage.IInvokeV1,
+	invoke storage.IInvoke,
 	l1Handlers storage.IL1Handler,
 	transactable sdk.Transactable,
 ) *statusChecker {
@@ -93,8 +86,7 @@ func newStatusChecker(
 		declares:       declares,
 		deploys:        deploys,
 		deployAccounts: deployAccounts,
-		invokeV0:       invokeV0,
-		invokeV1:       invokeV1,
+		invoke:         invoke,
 		l1Handlers:     l1Handlers,
 		transactable:   transactable,
 		wg:             new(sync.WaitGroup),
@@ -181,19 +173,8 @@ func byHeight[T sdk.Model](ctx context.Context, src storage.Heightable[T], heigh
 }
 
 func (checker *statusChecker) addIndexedBlockToQueue(ctx context.Context, block storage.Block) error {
-	if block.InvokeV0Count > 0 {
-		tx, err := byHeight[storage.InvokeV0](ctx, checker.invokeV0, block.Height)
-		if err != nil {
-			return err
-		}
-		checker.acceptedOnL2.Push(acceptedOnL2{
-			TransactionHash: tx.Hash,
-			Height:          tx.Height,
-		})
-		return nil
-	}
-	if block.InvokeV1Count > 0 {
-		tx, err := byHeight[storage.InvokeV1](ctx, checker.invokeV1, block.Height)
+	if block.InvokeCount > 0 {
+		tx, err := byHeight[storage.Invoke](ctx, checker.invoke, block.Height)
 		if err != nil {
 			return err
 		}
@@ -314,12 +295,11 @@ func (checker *statusChecker) update(ctx context.Context, height uint64, status 
 		&storage.Declare{},
 		&storage.DeployAccount{},
 		&storage.Deploy{},
-		&storage.InvokeV0{},
-		&storage.InvokeV1{},
+		&storage.Invoke{},
 		&storage.L1Handler{},
 		&storage.Internal{},
 	} {
-		if err := tx.Exec(ctx, `update ? set status = ? where height = ?`, pg.Ident(model.TableName()), status, height); err != nil {
+		if _, err := tx.Exec(ctx, `update ? set status = ? where height = ?`, pg.Ident(model.TableName()), status, height); err != nil {
 			return tx.HandleError(ctx, err)
 		}
 	}

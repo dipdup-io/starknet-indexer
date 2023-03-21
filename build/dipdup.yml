@@ -11,6 +11,7 @@ indexer:
   timeout: ${INDEXER_REQUEST_TIMEOUT:-10}
   requests_per_second: ${STARKNET_RPS:-2}
   class_interfaces_dir: ${INDEXER_CLASS_INTERFACES_DIR:-./interfaces/}
+  bridged_tokens_file: ${INDEXER_BRIDGED_TOKENS_FILE:-mainnet.json}
 
 grpc:
   server:
