@@ -153,17 +153,6 @@ func isInternalNotEqualParent(txCtx parserData.TxContext, tx storage.Internal) b
 	}
 }
 
-func parentHasTransfers(txCtx parserData.TxContext) bool {
-	switch {
-	case txCtx.Invoke != nil:
-		return len(txCtx.Invoke.Transfers) > 0
-	case txCtx.Internal != nil:
-		return len(txCtx.Internal.Transfers) > 0
-	default:
-		return false
-	}
-}
-
 func stringArrayIsEqual(a, b []string) bool {
 	if len(a) != len(b) {
 		return false

@@ -16,7 +16,7 @@ func TestInterfaces(t *testing.T) {
 		{
 			name:    "load interfaces",
 			dir:     "../../build/interfaces",
-			wantLen: 5,
+			wantLen: 12,
 		},
 	}
 	for _, tt := range tests {
