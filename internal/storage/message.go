@@ -26,6 +26,7 @@ type Message struct {
 	DeployAccountID *uint64
 	InvokeID        *uint64
 	L1HandlerID     *uint64
+	FeeID           *uint64
 	InternalID      *uint64
 
 	ContractID uint64

@@ -3,12 +3,11 @@ package decode
 import (
 	"github.com/dipdup-io/starknet-go-api/pkg/abi"
 	"github.com/dipdup-io/starknet-go-api/pkg/encoding"
-	"github.com/dipdup-io/starknet-indexer/pkg/indexer/cache"
 	"github.com/pkg/errors"
 )
 
 // CalldataBySelector -
-func CalldataBySelector(cache *cache.Cache, contractAbi abi.Abi, selector []byte, calldata []string) (map[string]any, string, error) {
+func CalldataBySelector(contractAbi abi.Abi, selector []byte, calldata []string) (map[string]any, string, error) {
 	function, ok := contractAbi.GetFunctionBySelector(encoding.EncodeHex(selector))
 	if !ok {
 		return nil, "", errors.Errorf("unknown selector: %x", selector)
@@ -23,7 +22,7 @@ func CalldataBySelector(cache *cache.Cache, contractAbi abi.Abi, selector []byte
 }
 
 // CalldataForConstructor -
-func CalldataForConstructor(cache *cache.Cache, classAbi abi.Abi, calldata []string) (map[string]any, error) {
+func CalldataForConstructor(classAbi abi.Abi, calldata []string) (map[string]any, error) {
 	function, ok := classAbi.Constructor[encoding.ConstructorEntrypoint]
 	if !ok {
 		return nil, errors.Errorf("unknown constructor")
@@ -33,7 +32,7 @@ func CalldataForConstructor(cache *cache.Cache, classAbi abi.Abi, calldata []str
 }
 
 // CalldataForL1Handler -
-func CalldataForL1Handler(cache *cache.Cache, contractAbi abi.Abi, selector []byte, calldata []string) (map[string]any, string, error) {
+func CalldataForL1Handler(contractAbi abi.Abi, selector []byte, calldata []string) (map[string]any, string, error) {
 	function, ok := contractAbi.GetL1HandlerBySelector(encoding.EncodeHex(selector))
 	if !ok {
 		return nil, "", errors.Errorf("unknown selector: %x", selector)
@@ -48,7 +47,7 @@ func CalldataForL1Handler(cache *cache.Cache, contractAbi abi.Abi, selector []by
 }
 
 // Event -
-func Event(cache *cache.Cache, contractAbi abi.Abi, keys []string, data []string) (map[string]any, string, error) {
+func Event(contractAbi abi.Abi, keys []string, data []string) (map[string]any, string, error) {
 	if len(keys) != 1 {
 		return nil, "", nil
 	}

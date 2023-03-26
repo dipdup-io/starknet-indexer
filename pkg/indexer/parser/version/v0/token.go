@@ -68,7 +68,6 @@ func (parser TokenParser) getErc20(ctx context.Context, txCtx data.TxContext, co
 
 	token.Name = getStringFromParsedData(constructorData, "name")
 	token.Symbol = getStringFromParsedData(constructorData, "symbol")
-
 	token.Decimals, err = getUint64FromParsedData(constructorData, "decimals")
 	return &token, err
 }

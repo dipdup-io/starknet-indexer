@@ -45,6 +45,7 @@ type Block struct {
 	Deploy        []Deploy        `pg:"rel:has-many"`
 	DeployAccount []DeployAccount `pg:"rel:has-many"`
 	L1Handler     []L1Handler     `pg:"rel:has-many"`
+	Fee           []Fee           `pg:"rel:has-many"`
 	StorageDiffs  []StorageDiff   `pg:"rel:has-many"`
 }
 

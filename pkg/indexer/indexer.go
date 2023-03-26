@@ -288,17 +288,20 @@ func (indexer *Indexer) saveBlocks(ctx context.Context) {
 func (indexer *Indexer) handleBlock(ctx context.Context, result receiver.Result) error {
 	start := time.Now()
 
-	parseResult, err := parser.Parse(ctx, indexer.receiver, indexer.cache, indexer.idGenerator, indexer.blocks, result)
+	parseResult, err := parser.Parse(ctx, indexer.receiver, indexer.cache, indexer.idGenerator, indexer.blocks, indexer.proxy, result)
 	if err != nil {
 		return err
 	}
 
+	var saveTime int64
 	indexer.txWriteMutex.Lock()
 	{
+		startSave := time.Now()
 		parseResult.State = indexer.updateState(ctx, parseResult.Block, len(parseResult.Classes))
 		if err := indexer.store.Save(ctx, parseResult); err != nil {
 			return errors.Wrap(err, "saving block to database")
 		}
+		saveTime = time.Since(startSave).Milliseconds()
 	}
 	indexer.txWriteMutex.Unlock()
 
@@ -312,7 +315,8 @@ func (indexer *Indexer) handleBlock(ctx context.Context, result receiver.Result)
 		Uint64("height", result.Block.BlockNumber).
 		Int("tx_count", parseResult.Block.TxCount).
 		Time("block_time", parseResult.Block.Time).
-		Int64("process_time_in_ms", time.Since(start).Milliseconds())
+		Int64("process_time_in_ms", time.Since(start).Milliseconds()).
+		Int64("save_time_in_ms", saveTime)
 	if result.Block.StarknetVersion != nil {
 		l.Str("version", *result.Block.StarknetVersion)
 	}

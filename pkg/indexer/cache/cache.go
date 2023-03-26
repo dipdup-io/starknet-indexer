@@ -116,7 +116,16 @@ func (cache *Cache) GetAddress(ctx context.Context, hash []byte) (storage.Addres
 		return storage.Address{}, err
 	}
 
-	return item.Value().(storage.Address), nil
+	address := item.Value().(storage.Address)
+	if address.ClassID == nil {
+		address, err = cache.address.GetByHash(ctx, hash)
+		if err != nil {
+			return address, err
+		}
+		cache.Set(fmt.Sprintf("address:hash:%x", hash), address, ttl)
+	}
+
+	return address, nil
 }
 
 // GetAbiByAddressId -
@@ -178,20 +187,4 @@ func (cache *Cache) GetClassForAddress(ctx context.Context, hash []byte) (storag
 	}
 	class := item.Value().(*storage.Class)
 	return *class, err
-}
-
-// GetProxy -
-func (cache *Cache) GetProxy(ctx context.Context, hash []byte) (storage.Proxy, error) {
-	item, err := cache.Fetch(fmt.Sprintf("proxy:hash:%x", hash), ttl, func() (interface{}, error) {
-		return cache.proxy.GetByHash(ctx, hash)
-	})
-	if err != nil {
-		return storage.Proxy{}, err
-	}
-	return item.Value().(storage.Proxy), nil
-}
-
-// SetProxy -
-func (cache *Cache) SetProxy(proxy storage.Proxy) {
-	cache.Set(fmt.Sprintf("proxy:hash:%x", proxy.Hash), proxy, ttl)
 }

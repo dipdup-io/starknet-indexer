@@ -52,6 +52,8 @@ func (state *state) Set(s storage.State) {
 	state.state.L1HandlersCount = s.L1HandlersCount
 	state.state.LastAddressID = s.LastAddressID
 	state.state.LastClassID = s.LastClassID
+	state.state.LastEventID = s.LastEventID
+	state.state.LastTxID = s.LastTxID
 	state.state.LastHeight = s.LastHeight
 	state.state.LastTime = s.LastTime
 	state.state.Name = s.Name

@@ -16,7 +16,7 @@ import (
 )
 
 // ParseInvokeV0 -
-func (parser Parser) ParseInvokeV0(ctx context.Context, raw *data.Invoke, block storage.Block, trace sequencer.Trace, receipts sequencer.Receipt) (storage.Invoke, error) {
+func (parser Parser) ParseInvokeV0(ctx context.Context, raw *data.Invoke, block storage.Block, trace sequencer.Trace, receipts sequencer.Receipt) (storage.Invoke, *storage.Fee, error) {
 	tx := storage.Invoke{
 		ID:                 parser.Resolver.NextTxId(),
 		Height:             block.Height,
@@ -36,7 +36,7 @@ func (parser Parser) ParseInvokeV0(ctx context.Context, raw *data.Invoke, block 
 	}
 
 	if address, err := parser.Resolver.FindAddressByHash(ctx, raw.ContractAddress); err != nil {
-		return tx, err
+		return tx, nil, err
 	} else if address != nil {
 		tx.ContractID = address.ID
 		tx.Contract = *address
@@ -52,7 +52,7 @@ func (parser Parser) ParseInvokeV0(ctx context.Context, raw *data.Invoke, block 
 	if helpers.NeedDecode(tx.CallData, trace.FunctionInvocation) {
 		contractAbi, err = parser.Cache.GetAbiByAddress(ctx, tx.Contract.Hash)
 		if err != nil {
-			return tx, err
+			return tx, nil, err
 		}
 
 		if _, ok := contractAbi.GetFunctionBySelector(encoding.EncodeHex(tx.EntrypointSelector)); !ok {
@@ -60,19 +60,19 @@ func (parser Parser) ParseInvokeV0(ctx context.Context, raw *data.Invoke, block 
 			if tx.Contract.ClassID == nil {
 				class, err = parser.Cache.GetClassForAddress(ctx, tx.Contract.Hash)
 				if err != nil {
-					return tx, err
+					return tx, nil, err
 				}
 			} else {
 				c, err := parser.Cache.GetClassById(ctx, *tx.Contract.ClassID)
 				if err != nil {
-					return tx, err
+					return tx, nil, err
 				}
 				class = *c
 			}
 
-			contractAbi, err = parser.Resolver.Proxy(ctx, class, tx.Contract)
+			contractAbi, err = parser.Resolver.Proxy(ctx, parserData.NewEmptyTxContext(), class, tx.Contract)
 			if err != nil {
-				return tx, err
+				return tx, nil, err
 			}
 
 			if class.Type.Is(storage.ClassTypeProxy) {
@@ -84,16 +84,23 @@ func (parser Parser) ParseInvokeV0(ctx context.Context, raw *data.Invoke, block 
 	isExecute := bytes.Equal(tx.EntrypointSelector, encoding.ExecuteEntrypointSelector)
 	_, hasExecute := contractAbi.Functions[encoding.ExecuteEntrypoint]
 
+	isChangeModules := bytes.Equal(tx.EntrypointSelector, encoding.ChangeModuleEntrypointSelector)
+	_, hasChangeModules := contractAbi.Functions[encoding.ChangeModulesEntrypoint]
+
 	if len(tx.CallData) > 0 {
-		if isExecute && !hasExecute {
+		switch {
+		case isExecute && !hasExecute:
+			tx.Entrypoint = encoding.ChangeModulesEntrypoint
+			tx.ParsedCalldata, err = abi.DecodeChangeModulesCallData(tx.CallData)
+		case isChangeModules && !hasChangeModules:
 			tx.Entrypoint = encoding.ExecuteEntrypoint
 			tx.ParsedCalldata, err = abi.DecodeExecuteCallData(tx.CallData)
-		} else {
-			tx.ParsedCalldata, tx.Entrypoint, err = decode.CalldataBySelector(parser.Cache, contractAbi, tx.EntrypointSelector, tx.CallData)
+		default:
+			tx.ParsedCalldata, tx.Entrypoint, err = decode.CalldataBySelector(contractAbi, tx.EntrypointSelector, tx.CallData)
 		}
 		if err != nil {
 			if !errors.Is(err, abi.ErrNoLenField) {
-				return tx, err
+				return tx, nil, err
 			}
 		}
 	}
@@ -102,47 +109,50 @@ func (parser Parser) ParseInvokeV0(ctx context.Context, raw *data.Invoke, block 
 
 	tx.Transfers, err = parser.TransferParser.ParseCalldata(ctx, txCtx, tx.Entrypoint, tx.ParsedCalldata)
 	if err != nil {
-		return tx, err
+		return tx, nil, err
 	}
-	txCtx.TransfersCount = len(tx.Transfers)
 
 	if trace.FunctionInvocation != nil {
 		tx.Events, err = parseEvents(ctx, parser.EventParser, txCtx, contractAbi, trace.FunctionInvocation.Events)
 		if err != nil {
-			return tx, err
+			return tx, nil, err
 		}
 		tx.Transfers, err = parser.TransferParser.ParseEvents(ctx, txCtx, tx.Contract, tx.Events)
 		if err != nil {
-			return tx, err
+			return tx, nil, err
 		}
-		if err := parser.ProxyUpgrader.Parse(ctx, tx.Contract, tx.Events); err != nil {
-			return tx, err
+		if err := parser.ProxyUpgrader.Parse(ctx, txCtx, tx.Contract, tx.Events, tx.Entrypoint, tx.ParsedCalldata); err != nil {
+			return tx, nil, err
 		}
 
 		tx.Messages, err = parseMessages(ctx, parser.MessageParser, txCtx, trace.FunctionInvocation.Messages)
 		if err != nil {
-			return tx, err
+			return tx, nil, err
 		}
 
 		tx.Internals, err = parseInternals(ctx, parser.InternalTxParser, txCtx, trace.FunctionInvocation.InternalCalls)
 		if err != nil {
-			return tx, err
+			return tx, nil, err
 		}
 	}
 
-	var fee *storage.Fee
 	if trace.FeeTransferInvocation != nil {
-		fee, err = parser.FeeParser.ParseInvocation(ctx, txCtx, *trace.FeeTransferInvocation)
+		fee, err := parser.FeeParser.ParseInvocation(ctx, txCtx, *trace.FeeTransferInvocation)
+		if err != nil {
+			return tx, nil, nil
+		}
+		if fee != nil {
+			return tx, fee, nil
+		}
 	} else {
-		fee, err = parser.FeeParser.ParseActualFee(ctx, txCtx, receipts.ActualFee)
-	}
-	if err != nil {
-		return tx, err
-	}
-	if fee != nil {
-		fee.InvokeID = &tx.ID
-		tx.Fee = fee
+		transfer, err := parser.FeeParser.ParseActualFee(ctx, txCtx, receipts.ActualFee)
+		if err != nil {
+			return tx, nil, nil
+		}
+		if transfer != nil {
+			tx.Transfers = append(tx.Transfers, *transfer)
+		}
 	}
 
-	return tx, nil
+	return tx, nil, nil
 }

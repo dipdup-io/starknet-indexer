@@ -74,7 +74,11 @@ func (parser TransferParser) ParseEvents(
 		switch events[i].Name {
 
 		case "Transfer":
-			t, err = transfer(ctx, parser.resolver, txCtx, contractId, events[i])
+			if _, ok := events[i].ParsedData["tokenId"]; ok {
+				t, err = transferERC721(ctx, parser.resolver, txCtx, contractId, events[i])
+			} else {
+				t, err = transfer(ctx, parser.resolver, txCtx, contractId, events[i])
+			}
 		case "TransferSingle":
 			t, err = transferSingle(ctx, parser.resolver, txCtx, contractId, events[i])
 		case "TransferBatch":
@@ -117,12 +121,15 @@ func (parser TransferParser) parseTransferCalldata(ctx context.Context, txCtx da
 		InvokeID:        txCtx.InvokeID,
 		L1HandlerID:     txCtx.L1HandlerID,
 		InternalID:      txCtx.InternalID,
+		FeeID:           txCtx.FeeID,
 		ContractID:      txCtx.ContractId,
 	}
 
 	switch {
 	case txCtx.Internal != nil:
 		transfer.FromID = txCtx.Internal.CallerID
+	case txCtx.Fee != nil:
+		transfer.FromID = txCtx.Fee.CallerID
 	default:
 		transfer.FromID = txCtx.ContractId
 	}
@@ -152,6 +159,7 @@ func (parser TransferParser) parseTransferFromCalldata(ctx context.Context, txCt
 		InvokeID:        txCtx.InvokeID,
 		L1HandlerID:     txCtx.L1HandlerID,
 		InternalID:      txCtx.InternalID,
+		FeeID:           txCtx.FeeID,
 		ContractID:      txCtx.ContractId,
 	}
 
@@ -185,6 +193,7 @@ func (parser TransferParser) parseTransferFromERC721Calldata(ctx context.Context
 		InvokeID:        txCtx.InvokeID,
 		L1HandlerID:     txCtx.L1HandlerID,
 		InternalID:      txCtx.InternalID,
+		FeeID:           txCtx.FeeID,
 		Amount:          decimal.NewFromInt(1),
 		ContractID:      txCtx.ContractId,
 	}
@@ -219,6 +228,7 @@ func (parser TransferParser) parseMintErc20(ctx context.Context, txCtx data.TxCo
 		InvokeID:        txCtx.InvokeID,
 		L1HandlerID:     txCtx.L1HandlerID,
 		InternalID:      txCtx.InternalID,
+		FeeID:           txCtx.FeeID,
 		ContractID:      txCtx.ContractId,
 	}
 

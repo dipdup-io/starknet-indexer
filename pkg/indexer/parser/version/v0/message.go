@@ -39,6 +39,7 @@ func (parser MessageParser) Parse(ctx context.Context, txCtx parserData.TxContex
 		DeployAccountID: txCtx.DeployAccountID,
 		InvokeID:        txCtx.InvokeID,
 		L1HandlerID:     txCtx.L1HandlerID,
+		FeeID:           txCtx.FeeID,
 		InternalID:      txCtx.InternalID,
 	}
 	if txCtx.ProxyId > 0 {

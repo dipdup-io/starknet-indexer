@@ -54,13 +54,35 @@ func (tb *TokenBalance) TotalSupply(ctx context.Context, contractId, tokenId uin
 }
 
 // Owner -
-func (tb *TokenBalance) Owner(ctx context.Context, cotractId uint64, tokenId decimal.Decimal) (tokenBalance storage.TokenBalance, err error) {
+func (tb *TokenBalance) Owner(ctx context.Context, contractId uint64, tokenId decimal.Decimal) (tokenBalance storage.TokenBalance, err error) {
 	err = tb.DB().ModelContext(ctx, &tokenBalance).
-		Where("contract_id = ?", cotractId).
+		Where("contract_id = ?", contractId).
 		Where("token_id = ?", tokenId).
+		Where("balance > 0").
 		Limit(1).
 		Relation("Owner").
 		Relation("Contract").
 		Select(&tokenBalance)
+	return
+}
+
+// Balances -
+func (tb *TokenBalance) Balances(ctx context.Context, contractId uint64, tokenId int64, limit, offset int) (balances []storage.TokenBalance, err error) {
+	query := tb.DB().ModelContext(ctx, &balances).
+		Where("contract_id = ?", contractId)
+
+	if tokenId >= 0 {
+		query.Where("token_id = ?", tokenId)
+	}
+	if limit > 0 {
+		query.Limit(limit)
+	}
+	if offset > 0 {
+		query.Offset(offset)
+	}
+	err = query.
+		Relation("Owner").
+		Relation("Contract").
+		Select(&balances)
 	return
 }

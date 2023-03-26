@@ -16,19 +16,21 @@ func (resolver *Resolver) ReceiveClass(ctx context.Context, class *storage.Class
 		return err
 	}
 
-	class.Abi = storage.Bytes(rawClass.RawAbi)
+	if rawClass.RawAbi != nil {
+		class.Abi = storage.Bytes(rawClass.RawAbi)
 
-	a, err := rawClass.GetAbi()
-	if err != nil {
-		return err
+		a, err := rawClass.GetAbi()
+		if err != nil {
+			return err
+		}
+		interfaces, err := starknet.FindInterfaces(a)
+		if err != nil {
+			return err
+		}
+		class.Type = storage.NewClassType(interfaces...)
+		resolver.cache.SetAbiByClassHash(*class, a)
 	}
-	interfaces, err := starknet.FindInterfaces(a)
-	if err != nil {
-		return err
-	}
-	class.Type = storage.NewClassType(interfaces...)
 
-	resolver.cache.SetAbiByClassHash(*class, a)
 	resolver.addClass(class)
 
 	return nil

@@ -16,7 +16,7 @@ import (
 )
 
 // ParseDeploy -
-func (parser Parser) ParseDeploy(ctx context.Context, raw *data.Deploy, block storage.Block, trace sequencer.Trace, receipts sequencer.Receipt) (storage.Deploy, error) {
+func (parser Parser) ParseDeploy(ctx context.Context, raw *data.Deploy, block storage.Block, trace sequencer.Trace, receipts sequencer.Receipt) (storage.Deploy, *storage.Fee, error) {
 	tx := storage.Deploy{
 		ID:                  parser.Resolver.NextTxId(),
 		Height:              block.Height,
@@ -28,14 +28,14 @@ func (parser Parser) ParseDeploy(ctx context.Context, raw *data.Deploy, block st
 	}
 
 	if class, err := parser.Resolver.FindClassByHash(ctx, raw.ClassHash); err != nil {
-		return tx, err
+		return tx, nil, err
 	} else if class != nil {
 		tx.Class = *class
 		tx.ClassID = class.ID
 	}
 
 	if address, err := parser.Resolver.FindAddressByHash(ctx, raw.ContractAddress); err != nil {
-		return tx, err
+		return tx, nil, err
 	} else if address != nil {
 		tx.ContractID = address.ID
 		tx.Contract = *address
@@ -48,14 +48,14 @@ func (parser Parser) ParseDeploy(ctx context.Context, raw *data.Deploy, block st
 
 	classAbi, err := parser.Cache.GetAbiByClassHash(ctx, tx.Class.Hash)
 	if err != nil {
-		return tx, err
+		return tx, nil, err
 	}
 
 	if len(tx.ConstructorCalldata) > 0 {
-		tx.ParsedCalldata, err = decode.CalldataForConstructor(parser.Cache, classAbi, tx.ConstructorCalldata)
+		tx.ParsedCalldata, err = decode.CalldataForConstructor(classAbi, tx.ConstructorCalldata)
 		if err != nil {
 			if !errors.Is(err, abi.ErrNoLenField) {
-				return tx, err
+				return tx, nil, err
 			}
 		}
 	}
@@ -72,36 +72,40 @@ func (parser Parser) ParseDeploy(ctx context.Context, raw *data.Deploy, block st
 	if trace.FunctionInvocation != nil {
 		tx.Events, err = parseEvents(ctx, parser.EventParser, txCtx, classAbi, trace.FunctionInvocation.Events)
 		if err != nil {
-			return tx, err
+			return tx, nil, err
 		}
 		tx.Transfers, err = parser.TransferParser.ParseEvents(ctx, txCtx, tx.Contract, tx.Events)
 		if err != nil {
-			return tx, err
+			return tx, nil, err
 		}
 
 		tx.Messages, err = parseMessages(ctx, parser.MessageParser, txCtx, trace.FunctionInvocation.Messages)
 		if err != nil {
-			return tx, err
+			return tx, nil, err
 		}
 
 		tx.Internals, err = parseInternals(ctx, parser.InternalTxParser, txCtx, trace.FunctionInvocation.InternalCalls)
 		if err != nil {
-			return tx, err
+			return tx, nil, err
 		}
 	}
 
-	var fee *storage.Fee
 	if trace.FeeTransferInvocation != nil {
-		fee, err = parser.FeeParser.ParseInvocation(ctx, txCtx, *trace.FeeTransferInvocation)
+		fee, err := parser.FeeParser.ParseInvocation(ctx, txCtx, *trace.FeeTransferInvocation)
+		if err != nil {
+			return tx, nil, nil
+		}
+		if fee != nil {
+			return tx, fee, nil
+		}
 	} else {
-		fee, err = parser.FeeParser.ParseActualFee(ctx, txCtx, receipts.ActualFee)
-	}
-	if err != nil {
-		return tx, err
-	}
-	if fee != nil {
-		fee.DeployID = &tx.ID
-		tx.Fee = fee
+		transfer, err := parser.FeeParser.ParseActualFee(ctx, txCtx, receipts.ActualFee)
+		if err != nil {
+			return tx, nil, nil
+		}
+		if transfer != nil {
+			tx.Transfers = append(tx.Transfers, *transfer)
+		}
 	}
 
 	if token := createBridgedToken(ctx, block, tx.Contract); token != nil {
@@ -109,14 +113,14 @@ func (parser Parser) ParseDeploy(ctx context.Context, raw *data.Deploy, block st
 	} else if tx.Class.Type.OneOf(storage.ClassTypeERC20, storage.ClassTypeERC721, storage.ClassTypeERC1155) {
 		token, err := parser.TokenParser.Parse(ctx, txCtx, tx.Contract, tx.Class.Type, tx.ParsedCalldata)
 		if err != nil {
-			return tx, err
+			return tx, nil, err
 		}
 		tx.ERC20 = token.ERC20
 		tx.ERC721 = token.ERC721
 		tx.ERC1155 = token.ERC1155
 	}
 
-	return tx, nil
+	return tx, nil, nil
 }
 
 func createBridgedToken(ctx context.Context, block storage.Block, contract storage.Address) *storage.ERC20 {

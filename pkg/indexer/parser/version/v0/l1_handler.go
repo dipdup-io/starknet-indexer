@@ -15,7 +15,7 @@ import (
 )
 
 // ParseL1Handler -
-func (parser Parser) ParseL1Handler(ctx context.Context, raw *data.L1Handler, block storage.Block, trace sequencer.Trace, receipts sequencer.Receipt) (storage.L1Handler, error) {
+func (parser Parser) ParseL1Handler(ctx context.Context, raw *data.L1Handler, block storage.Block, trace sequencer.Trace, receipts sequencer.Receipt) (storage.L1Handler, *storage.Fee, error) {
 	tx := storage.L1Handler{
 		ID:                 parser.Resolver.NextTxId(),
 		Height:             block.Height,
@@ -28,7 +28,7 @@ func (parser Parser) ParseL1Handler(ctx context.Context, raw *data.L1Handler, bl
 	}
 
 	if address, err := parser.Resolver.FindAddressByHash(ctx, raw.ContractAddress); err != nil {
-		return tx, err
+		return tx, nil, err
 	} else if address != nil {
 		tx.ContractID = address.ID
 		tx.Contract = *address
@@ -44,7 +44,7 @@ func (parser Parser) ParseL1Handler(ctx context.Context, raw *data.L1Handler, bl
 	if helpers.NeedDecode(tx.CallData, trace.FunctionInvocation) {
 		contractAbi, err = parser.Cache.GetAbiByAddress(ctx, tx.Contract.Hash)
 		if err != nil {
-			return tx, err
+			return tx, nil, err
 		}
 	}
 
@@ -52,21 +52,21 @@ func (parser Parser) ParseL1Handler(ctx context.Context, raw *data.L1Handler, bl
 		if _, ok := contractAbi.GetL1HandlerBySelector(encoding.EncodeHex(tx.EntrypointSelector)); !ok {
 			class, err := parser.Cache.GetClassById(ctx, *tx.Contract.ClassID)
 			if err != nil {
-				return tx, err
+				return tx, nil, err
 			}
-			contractAbi, err = parser.Resolver.Proxy(ctx, *class, tx.Contract)
+			contractAbi, err = parser.Resolver.Proxy(ctx, parserData.NewEmptyTxContext(), *class, tx.Contract)
 			if err != nil {
-				return tx, err
+				return tx, nil, err
 			}
 			if class.Type.Is(storage.ClassTypeProxy) {
 				proxyId = tx.ContractID
 			}
 		}
 
-		tx.ParsedCalldata, tx.Entrypoint, err = decode.CalldataForL1Handler(parser.Cache, contractAbi, tx.EntrypointSelector, tx.CallData)
+		tx.ParsedCalldata, tx.Entrypoint, err = decode.CalldataForL1Handler(contractAbi, tx.EntrypointSelector, tx.CallData)
 		if err != nil {
 			if !errors.Is(err, abi.ErrNoLenField) {
-				return tx, err
+				return tx, nil, err
 			}
 		}
 	}
@@ -76,37 +76,41 @@ func (parser Parser) ParseL1Handler(ctx context.Context, raw *data.L1Handler, bl
 	if trace.FunctionInvocation != nil {
 		tx.Events, err = parseEvents(ctx, parser.EventParser, txCtx, contractAbi, trace.FunctionInvocation.Events)
 		if err != nil {
-			return tx, err
+			return tx, nil, err
 		}
 		tx.Transfers, err = parser.TransferParser.ParseEvents(ctx, txCtx, tx.Contract, tx.Events)
 		if err != nil {
-			return tx, err
+			return tx, nil, err
 		}
 
 		tx.Messages, err = parseMessages(ctx, parser.MessageParser, txCtx, trace.FunctionInvocation.Messages)
 		if err != nil {
-			return tx, err
+			return tx, nil, err
 		}
 
 		tx.Internals, err = parseInternals(ctx, parser.InternalTxParser, txCtx, trace.FunctionInvocation.InternalCalls)
 		if err != nil {
-			return tx, err
+			return tx, nil, err
 		}
 	}
 
-	var fee *storage.Fee
 	if trace.FeeTransferInvocation != nil {
-		fee, err = parser.FeeParser.ParseInvocation(ctx, txCtx, *trace.FeeTransferInvocation)
+		fee, err := parser.FeeParser.ParseInvocation(ctx, txCtx, *trace.FeeTransferInvocation)
+		if err != nil {
+			return tx, nil, nil
+		}
+		if fee != nil {
+			return tx, fee, nil
+		}
 	} else {
-		fee, err = parser.FeeParser.ParseActualFee(ctx, txCtx, receipts.ActualFee)
-	}
-	if err != nil {
-		return tx, err
-	}
-	if fee != nil {
-		fee.L1HandlerID = &tx.ID
-		tx.Fee = fee
+		transfer, err := parser.FeeParser.ParseActualFee(ctx, txCtx, receipts.ActualFee)
+		if err != nil {
+			return tx, nil, nil
+		}
+		if transfer != nil {
+			tx.Transfers = append(tx.Transfers, *transfer)
+		}
 	}
 
-	return tx, nil
+	return tx, nil, nil
 }

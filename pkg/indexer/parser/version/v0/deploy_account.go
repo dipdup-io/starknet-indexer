@@ -14,7 +14,7 @@ import (
 )
 
 // ParseDeployAccount -
-func (parser Parser) ParseDeployAccount(ctx context.Context, raw *data.DeployAccount, block storage.Block, trace sequencer.Trace, receipts sequencer.Receipt) (storage.DeployAccount, error) {
+func (parser Parser) ParseDeployAccount(ctx context.Context, raw *data.DeployAccount, block storage.Block, trace sequencer.Trace, receipts sequencer.Receipt) (storage.DeployAccount, *storage.Fee, error) {
 	tx := storage.DeployAccount{
 		ID:                  parser.Resolver.NextTxId(),
 		Height:              block.Height,
@@ -29,14 +29,14 @@ func (parser Parser) ParseDeployAccount(ctx context.Context, raw *data.DeployAcc
 	}
 
 	if class, err := parser.Resolver.FindClassByHash(ctx, raw.ClassHash); err != nil {
-		return tx, err
+		return tx, nil, err
 	} else if class != nil {
 		tx.Class = *class
 		tx.ClassID = class.ID
 	}
 
 	if address, err := parser.Resolver.FindAddressByHash(ctx, raw.ContractAddress); err != nil {
-		return tx, err
+		return tx, nil, err
 	} else if address != nil {
 		tx.ContractID = address.ID
 		tx.Contract = *address
@@ -53,14 +53,14 @@ func (parser Parser) ParseDeployAccount(ctx context.Context, raw *data.DeployAcc
 	)
 
 	if err = json.Unmarshal(tx.Class.Abi, &classAbi); err != nil {
-		return tx, err
+		return tx, nil, err
 	}
 
 	if len(tx.ConstructorCalldata) > 0 {
-		tx.ParsedCalldata, err = decode.CalldataForConstructor(parser.Cache, classAbi, tx.ConstructorCalldata)
+		tx.ParsedCalldata, err = decode.CalldataForConstructor(classAbi, tx.ConstructorCalldata)
 		if err != nil {
 			if !errors.Is(err, abi.ErrNoLenField) {
-				return tx, err
+				return tx, nil, err
 			}
 		}
 	}
@@ -75,37 +75,41 @@ func (parser Parser) ParseDeployAccount(ctx context.Context, raw *data.DeployAcc
 	if trace.FunctionInvocation != nil {
 		tx.Events, err = parseEvents(ctx, parser.EventParser, txCtx, classAbi, trace.FunctionInvocation.Events)
 		if err != nil {
-			return tx, err
+			return tx, nil, err
 		}
 		tx.Transfers, err = parser.TransferParser.ParseEvents(ctx, txCtx, tx.Contract, tx.Events)
 		if err != nil {
-			return tx, err
+			return tx, nil, err
 		}
 
 		tx.Messages, err = parseMessages(ctx, parser.MessageParser, txCtx, trace.FunctionInvocation.Messages)
 		if err != nil {
-			return tx, err
+			return tx, nil, err
 		}
 
 		tx.Internals, err = parseInternals(ctx, parser.InternalTxParser, txCtx, trace.FunctionInvocation.InternalCalls)
 		if err != nil {
-			return tx, err
+			return tx, nil, err
 		}
 	}
 
-	var fee *storage.Fee
 	if trace.FeeTransferInvocation != nil {
-		fee, err = parser.FeeParser.ParseInvocation(ctx, txCtx, *trace.FeeTransferInvocation)
+		fee, err := parser.FeeParser.ParseInvocation(ctx, txCtx, *trace.FeeTransferInvocation)
+		if err != nil {
+			return tx, nil, nil
+		}
+		if fee != nil {
+			return tx, fee, nil
+		}
 	} else {
-		fee, err = parser.FeeParser.ParseActualFee(ctx, txCtx, receipts.ActualFee)
-	}
-	if err != nil {
-		return tx, err
-	}
-	if fee != nil {
-		fee.DeployAccountID = &tx.ID
-		tx.Fee = fee
+		transfer, err := parser.FeeParser.ParseActualFee(ctx, txCtx, receipts.ActualFee)
+		if err != nil {
+			return tx, nil, nil
+		}
+		if transfer != nil {
+			tx.Transfers = append(tx.Transfers, *transfer)
+		}
 	}
 
-	return tx, nil
+	return tx, nil, nil
 }

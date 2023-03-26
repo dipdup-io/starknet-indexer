@@ -3,7 +3,6 @@ package receiver
 import (
 	"context"
 	"errors"
-	"fmt"
 	"sync"
 	"time"
 
@@ -13,7 +12,6 @@ import (
 	"github.com/dipdup-io/starknet-indexer/internal/storage"
 	"github.com/dipdup-io/starknet-indexer/pkg/indexer/config"
 	"github.com/dipdup-net/workerpool"
-	"github.com/karlseguin/ccache/v2"
 	"github.com/rs/zerolog/log"
 )
 
@@ -29,7 +27,6 @@ type Receiver struct {
 	api     starknet.API
 	result  chan Result
 	pool    *workerpool.Pool[uint64]
-	cache   *ccache.Cache
 	timeout uint64
 	wg      *sync.WaitGroup
 }
@@ -40,11 +37,15 @@ func NewReceiver(cfg config.Config) *Receiver {
 	if cfg.RequestsPerSecond > 0 {
 		opts = append(opts, starknet.WithRateLimit(cfg.RequestsPerSecond))
 	}
+	if cfg.CacheDir != "" {
+		opts = append(opts, starknet.WithCacheInFS(cfg.CacheDir))
+	}
+
+	api := starknet.NewAPI(cfg.Gateway, cfg.FeederGateway, opts...)
 
 	receiver := &Receiver{
-		api:     starknet.NewAPI(cfg.Gateway, cfg.FeederGateway, opts...),
+		api:     api,
 		result:  make(chan Result, cfg.ThreadsCount*2),
-		cache:   ccache.New(ccache.Configure().MaxSize(1000)),
 		timeout: cfg.Timeout,
 		wg:      new(sync.WaitGroup),
 	}
@@ -168,23 +169,16 @@ func (r *Receiver) Head(ctx context.Context) (uint64, error) {
 
 // GetClass -
 func (r *Receiver) GetClass(ctx context.Context, hash string) (starknetData.Class, error) {
-	item, err := r.cache.Fetch(fmt.Sprintf("class:%s", hash), time.Hour, func() (interface{}, error) {
-		requestCtx, cancel := context.WithTimeout(ctx, time.Duration(r.timeout)*time.Second)
-		defer cancel()
+	requestCtx, cancel := context.WithTimeout(ctx, time.Duration(r.timeout)*time.Second)
+	defer cancel()
 
-		response, err := r.api.GetClassByHash(requestCtx, starknetData.BlockID{
-			String: starknetData.Latest,
-		}, hash)
-		if err != nil {
-			return starknetData.Class{}, err
-		}
-		return response, nil
-	})
+	response, err := r.api.GetClassByHash(requestCtx, starknetData.BlockID{
+		String: starknetData.Latest,
+	}, hash)
 	if err != nil {
 		return starknetData.Class{}, err
 	}
-
-	return item.Value().(starknetData.Class), nil
+	return response, nil
 }
 
 // TransactionStatus -

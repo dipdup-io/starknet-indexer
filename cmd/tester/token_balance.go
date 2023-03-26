@@ -131,13 +131,14 @@ func (tbt TokenBalanceTester) testTotalSupplyForERC20(ctx context.Context) error
 				Number: &last.Height,
 			}))
 			if err != nil {
-				return err
+				log.Err(err).Msg("total supply request")
+				continue
 			}
 
 			if !dbTotalSupply.Equal(apiTotalSupply) {
 				multiplier := decimal.NewFromInt(10).Pow(decimal.NewFromInt(int64(tokens[i].Decimals)))
 				diff := dbTotalSupply.Sub(apiTotalSupply).Div(multiplier)
-				log.Info().
+				log.Warn().
 					Str("name", tokens[i].Name).
 					Str("symbol", tokens[i].Symbol).
 					Str("db_total_supply", dbTotalSupply.Div(multiplier).String()).
@@ -155,7 +156,7 @@ func (tbt TokenBalanceTester) testTotalSupplyForERC20(ctx context.Context) error
 }
 
 func (tbt TokenBalanceTester) testOwnerForERC271(ctx context.Context) error {
-	log.Info().Msg("test total supply for ERC20...")
+	log.Info().Msg("test owner for ERC721...")
 
 	var (
 		offset = uint64(0)
@@ -177,7 +178,7 @@ func (tbt TokenBalanceTester) testOwnerForERC271(ctx context.Context) error {
 		for i := range tokens {
 			log.Info().Str("name", tokens[i].Name).Str("symbol", tokens[i].Symbol).Msg("test owner of ERC721")
 
-			nfts, err := tbt.postgres.TokenBalance.List(ctx, 5, 0, storage.SortOrderDesc)
+			nfts, err := tbt.postgres.TokenBalance.Balances(ctx, tokens[i].ContractID, -1, 5, 0)
 			if err != nil {
 				return err
 			}
@@ -209,13 +210,16 @@ func (tbt TokenBalanceTester) testOwnerForERC271(ctx context.Context) error {
 
 				dbOwner := encoding.EncodeHex(tokenBalance.Owner.Hash)
 
-				if dbOwner != apiOwner.String() {
-					log.Info().
+				apiOwnerString := encoding.TrimHex(apiOwner.String())
+				dbOwner = encoding.TrimHex(dbOwner)
+
+				if dbOwner != apiOwnerString {
+					log.Warn().
 						Str("name", tokens[i].Name).
 						Str("symbol", tokens[i].Symbol).
 						Str("db_owner", dbOwner).
 						Str("api_owner", apiOwner.String()).
-						Msg("total supplies are differ")
+						Msg("nft owners are differ")
 				}
 			}
 		}

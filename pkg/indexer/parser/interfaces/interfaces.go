@@ -12,12 +12,12 @@ import (
 
 // Parser -
 type Parser interface {
-	ParseDeclare(ctx context.Context, version starknetData.Felt, raw *starknetData.Declare, block storage.Block, trace sequencer.Trace, receipts sequencer.Receipt) (storage.Declare, error)
-	ParseDeployAccount(ctx context.Context, raw *starknetData.DeployAccount, block storage.Block, trace sequencer.Trace, receipts sequencer.Receipt) (storage.DeployAccount, error)
-	ParseDeploy(ctx context.Context, raw *starknetData.Deploy, block storage.Block, trace sequencer.Trace, receipts sequencer.Receipt) (storage.Deploy, error)
-	ParseInvokeV0(ctx context.Context, raw *starknetData.Invoke, block storage.Block, trace sequencer.Trace, receipts sequencer.Receipt) (storage.Invoke, error)
-	ParseInvokeV1(ctx context.Context, raw *starknetData.Invoke, block storage.Block, trace sequencer.Trace, receipts sequencer.Receipt) (storage.Invoke, error)
-	ParseL1Handler(ctx context.Context, raw *starknetData.L1Handler, block storage.Block, trace sequencer.Trace, receipts sequencer.Receipt) (storage.L1Handler, error)
+	ParseDeclare(ctx context.Context, version starknetData.Felt, raw *starknetData.Declare, block storage.Block, trace sequencer.Trace, receipts sequencer.Receipt) (storage.Declare, *storage.Fee, error)
+	ParseDeployAccount(ctx context.Context, raw *starknetData.DeployAccount, block storage.Block, trace sequencer.Trace, receipts sequencer.Receipt) (storage.DeployAccount, *storage.Fee, error)
+	ParseDeploy(ctx context.Context, raw *starknetData.Deploy, block storage.Block, trace sequencer.Trace, receipts sequencer.Receipt) (storage.Deploy, *storage.Fee, error)
+	ParseInvokeV0(ctx context.Context, raw *starknetData.Invoke, block storage.Block, trace sequencer.Trace, receipts sequencer.Receipt) (storage.Invoke, *storage.Fee, error)
+	ParseInvokeV1(ctx context.Context, raw *starknetData.Invoke, block storage.Block, trace sequencer.Trace, receipts sequencer.Receipt) (storage.Invoke, *storage.Fee, error)
+	ParseL1Handler(ctx context.Context, raw *starknetData.L1Handler, block storage.Block, trace sequencer.Trace, receipts sequencer.Receipt) (storage.L1Handler, *storage.Fee, error)
 }
 
 // InternalTxParser -
@@ -38,7 +38,7 @@ type MessageParser interface {
 // FeeParser -
 type FeeParser interface {
 	ParseInvocation(ctx context.Context, txCtx data.TxContext, feeInvocation sequencer.Invocation) (*storage.Fee, error)
-	ParseActualFee(ctx context.Context, txCtx data.TxContext, actualFee starknetData.Felt) (*storage.Fee, error)
+	ParseActualFee(ctx context.Context, txCtx data.TxContext, actualFee starknetData.Felt) (*storage.Transfer, error)
 }
 
 // TokenParser -
@@ -54,5 +54,5 @@ type TransferParser interface {
 
 // ProxyUpgrader -
 type ProxyUpgrader interface {
-	Parse(ctx context.Context, contract storage.Address, events []storage.Event) error
+	Parse(ctx context.Context, txCtx data.TxContext, contract storage.Address, events []storage.Event, entrypoint string, data map[string]any) error
 }

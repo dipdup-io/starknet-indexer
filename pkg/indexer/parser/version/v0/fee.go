@@ -1,16 +1,21 @@
 package v0
 
 import (
+	"bytes"
 	"context"
+	"errors"
 
+	"github.com/dipdup-io/starknet-go-api/pkg/abi"
 	starknetData "github.com/dipdup-io/starknet-go-api/pkg/data"
+	"github.com/dipdup-io/starknet-go-api/pkg/encoding"
 	"github.com/dipdup-io/starknet-go-api/pkg/sequencer"
 	"github.com/dipdup-io/starknet-indexer/internal/storage"
 	"github.com/dipdup-io/starknet-indexer/pkg/indexer/cache"
 	"github.com/dipdup-io/starknet-indexer/pkg/indexer/decode"
 	"github.com/dipdup-io/starknet-indexer/pkg/indexer/parser/data"
+	"github.com/dipdup-io/starknet-indexer/pkg/indexer/parser/interfaces"
 	"github.com/dipdup-io/starknet-indexer/pkg/indexer/parser/resolver"
-	"github.com/pkg/errors"
+	"github.com/shopspring/decimal"
 )
 
 const (
@@ -22,21 +27,40 @@ const (
 type FeeParser struct {
 	cache    *cache.Cache
 	resolver resolver.Resolver
+	blocks   storage.IBlock
+
+	EventParser      interfaces.EventParser
+	MessageParser    interfaces.MessageParser
+	TransferParser   interfaces.TransferParser
+	InternalTxParser interfaces.InternalTxParser
 
 	actualFeeContractId uint64
 	actualFeeToId       uint64
 }
 
 // NewFeeParser -
-func NewFeeParser(cache *cache.Cache, resolver resolver.Resolver) FeeParser {
+func NewFeeParser(
+	cache *cache.Cache,
+	resolver resolver.Resolver,
+	blocks storage.IBlock,
+	eventParser interfaces.EventParser,
+	messageParser interfaces.MessageParser,
+	transferParser interfaces.TransferParser,
+	internalTxParser interfaces.InternalTxParser,
+) FeeParser {
 	return FeeParser{
-		cache:    cache,
-		resolver: resolver,
+		cache:            cache,
+		resolver:         resolver,
+		blocks:           blocks,
+		EventParser:      eventParser,
+		MessageParser:    messageParser,
+		TransferParser:   transferParser,
+		InternalTxParser: internalTxParser,
 	}
 }
 
 // ParseInvocation -
-func (parser FeeParser) ParseActualFee(ctx context.Context, txCtx data.TxContext, actualFee starknetData.Felt) (*storage.Fee, error) {
+func (parser FeeParser) ParseActualFee(ctx context.Context, txCtx data.TxContext, actualFee starknetData.Felt) (*storage.Transfer, error) {
 	fee := actualFee.Decimal()
 	if fee.IsZero() {
 		return nil, nil
@@ -62,88 +86,171 @@ func (parser FeeParser) ParseActualFee(ctx context.Context, txCtx data.TxContext
 		parser.actualFeeToId = address.ID
 	}
 
-	return &storage.Fee{
-		ID:         parser.resolver.NextTxId(),
+	return &storage.Transfer{
 		Height:     txCtx.Height,
 		Time:       txCtx.Time,
-		Status:     txCtx.Status,
 		Amount:     fee,
 		FromID:     txCtx.ContractId,
 		ToID:       parser.actualFeeToId,
 		ContractID: parser.actualFeeContractId,
+		TokenID:    decimal.Zero,
+
+		DeclareID:       txCtx.DeclareID,
+		DeployID:        txCtx.DeployID,
+		DeployAccountID: txCtx.DeployAccountID,
+		InvokeID:        txCtx.InvokeID,
+		L1HandlerID:     txCtx.L1HandlerID,
 	}, nil
 }
 
 // ParseInvocation -
 func (parser FeeParser) ParseInvocation(ctx context.Context, txCtx data.TxContext, feeInvocation sequencer.Invocation) (*storage.Fee, error) {
-	if len(feeInvocation.Events) == 0 && len(feeInvocation.InternalCalls) == 0 {
-		return nil, nil
+	tx := storage.Fee{
+		ID:             parser.resolver.NextTxId(),
+		Height:         txCtx.Height,
+		Time:           txCtx.Time,
+		Status:         txCtx.Status,
+		CallType:       storage.NewCallType(feeInvocation.CallType),
+		EntrypointType: storage.NewEntrypointType(feeInvocation.EntrypointType),
+		Selector:       feeInvocation.Selector.Bytes(),
+		Result:         feeInvocation.Result,
+		Calldata:       feeInvocation.Calldata,
+
+		DeclareID:       txCtx.DeclareID,
+		DeployID:        txCtx.DeployID,
+		DeployAccountID: txCtx.DeployAccountID,
+		InvokeID:        txCtx.InvokeID,
+		L1HandlerID:     txCtx.L1HandlerID,
+
+		Events:    make([]storage.Event, 0),
+		Messages:  make([]storage.Message, 0),
+		Internals: make([]storage.Internal, 0),
 	}
 
-	fee, err := parser.parseEvents(ctx, txCtx, feeInvocation.ContractAddress.Bytes(), feeInvocation.ClassHash.Bytes(), feeInvocation.Events)
+	if class, err := parser.resolver.FindClassByHash(ctx, feeInvocation.ClassHash); err != nil {
+		return nil, err
+	} else if class != nil {
+		tx.Class = *class
+		tx.ClassID = class.ID
+	}
+
+	if address, err := parser.resolver.FindAddressByHash(ctx, feeInvocation.ContractAddress); err != nil {
+		return nil, err
+	} else if address != nil {
+		tx.ContractID = address.ID
+		tx.Contract = *address
+		tx.Contract.Height = tx.Height
+		if tx.ClassID != 0 {
+			tx.Contract.ClassID = &tx.Class.ID
+			tx.Contract.Class = tx.Class
+		} else if tx.Contract.ClassID != nil {
+			tx.ClassID = *tx.Contract.ClassID
+		}
+	}
+
+	if address, err := parser.resolver.FindAddressByHash(ctx, feeInvocation.CallerAddress); err != nil {
+		return nil, err
+	} else if address != nil {
+		tx.CallerID = address.ID
+		tx.Caller = *address
+		tx.Caller.Height = tx.Height
+	}
+
+	var (
+		contractAbi abi.Abi
+		err         error
+		proxyId     uint64
+	)
+
+	switch {
+	case len(tx.Class.Hash) > 0:
+		contractAbi, err = parser.cache.GetAbiByClassHash(ctx, tx.Class.Hash)
+	case len(tx.Contract.Hash) > 0:
+		contractAbi, err = parser.cache.GetAbiByAddress(ctx, tx.Contract.Hash)
+	}
+	if err != nil {
+		if !parser.blocks.IsNoRows(err) {
+			return nil, err
+		}
+
+		if err := parser.resolver.ReceiveClass(ctx, &tx.Class); err != nil {
+			return nil, err
+		}
+		tx.Class.Height = tx.Height
+	}
+
+	isExecute := bytes.Equal(tx.Selector, encoding.ExecuteEntrypointSelector)
+	_, hasExecute := contractAbi.Functions[encoding.ExecuteEntrypoint]
+
+	if len(tx.Selector) > 0 && !isExecute {
+		if _, has := contractAbi.GetByTypeAndSelector(feeInvocation.EntrypointType, encoding.EncodeHex(tx.Selector)); !has {
+			if tx.Class.ID == 0 {
+				class, err := parser.cache.GetClassById(ctx, *tx.Contract.ClassID)
+				if err != nil {
+					return nil, err
+				}
+				tx.Class = *class
+			}
+			contractAbi, err = parser.resolver.Proxy(ctx, txCtx, tx.Class, tx.Contract)
+			if err != nil {
+				return nil, err
+			}
+			if tx.Class.Type.Is(storage.ClassTypeProxy) {
+				proxyId = tx.ContractID
+			}
+		}
+	}
+
+	if len(feeInvocation.Calldata) > 0 && len(tx.Selector) > 0 {
+		if isExecute && !hasExecute {
+			tx.Entrypoint = encoding.ExecuteEntrypoint
+			tx.ParsedCalldata, err = abi.DecodeExecuteCallData(feeInvocation.Calldata)
+		} else {
+			tx.ParsedCalldata, tx.Entrypoint, err = decode.CalldataBySelector(contractAbi, tx.Selector, tx.Calldata)
+		}
+		if err != nil {
+			if !errors.Is(err, abi.ErrNoLenField) {
+				return nil, err
+			}
+		}
+	}
+
+	feeTxCtx := data.NewTxContextFromFee(tx, proxyId)
+
+	tx.Events, err = parseEvents(ctx, parser.EventParser, feeTxCtx, contractAbi, feeInvocation.Events)
 	if err != nil {
 		return nil, err
 	}
-	if fee != nil {
-		return fee, nil
-	}
 
-	for i := range feeInvocation.InternalCalls {
-		fee, err = parser.ParseInvocation(ctx, txCtx, feeInvocation.InternalCalls[i])
-		if err != nil {
-			return nil, err
-		}
-		if fee != nil {
-			return fee, nil
-		}
-	}
-
-	return nil, errors.New("can't parse fee transfer")
-}
-
-func (parser FeeParser) parseEvents(ctx context.Context, txCtx data.TxContext, contractHash, classHash []byte, events []starknetData.Event) (*storage.Fee, error) {
-	abi, err := parser.cache.GetAbiByClassHash(ctx, classHash)
+	tx.Messages, err = parseMessages(ctx, parser.MessageParser, feeTxCtx, feeInvocation.Messages)
 	if err != nil {
 		return nil, err
 	}
 
-	contract, err := parser.cache.GetAddress(ctx, contractHash)
+	tx.Internals, err = parseInternals(ctx, parser.InternalTxParser, feeTxCtx, feeInvocation.InternalCalls)
 	if err != nil {
 		return nil, err
 	}
 
-	for i := range events {
-		parsed, name, err := decode.Event(parser.cache, abi, events[i].Keys, events[i].Data)
-		if err != nil {
-			return nil, err
-		}
+	isNew := len(tx.Internals) > 0 && isInternalNotEqualParent(feeTxCtx, tx.Internals[0])
 
-		if name != "Transfer" {
-			continue
-		}
-
-		transfers, err := transfer(ctx, parser.resolver, txCtx, contract.ID, storage.Event{
-			Height:     txCtx.Height,
-			ParsedData: parsed,
-		})
-		if err != nil {
-			return nil, err
-		}
-		if len(transfers) == 0 {
-			return nil, err
-		}
-
-		return &storage.Fee{
-			ID:         parser.resolver.NextTxId(),
-			Height:     txCtx.Height,
-			Time:       txCtx.Time,
-			Status:     txCtx.Status,
-			Amount:     transfers[0].Amount,
-			FromID:     transfers[0].FromID,
-			ToID:       transfers[0].ToID,
-			ContractID: contract.ID,
-		}, nil
+	var countInternalTransfers int
+	for i := range tx.Internals {
+		countInternalTransfers += len(tx.Internals[i].Transfers)
 	}
 
-	return nil, nil
+	if isNew || countInternalTransfers == 0 {
+		tx.Transfers, err = parser.TransferParser.ParseEvents(ctx, txCtx, tx.Contract, tx.Events)
+		if err != nil {
+			return nil, err
+		}
+		if len(tx.Transfers) == 0 {
+			tx.Transfers, err = parser.TransferParser.ParseCalldata(ctx, feeTxCtx, tx.Entrypoint, tx.ParsedCalldata)
+			if err != nil {
+				return nil, err
+			}
+		}
+	}
+
+	return &tx, nil
 }

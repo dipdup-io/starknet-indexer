@@ -1,30 +1,36 @@
 package resolver
 
 import (
+	"bytes"
 	"context"
 
 	jsoniter "github.com/json-iterator/go"
+	"github.com/rs/zerolog/log"
 
 	"github.com/dipdup-io/starknet-go-api/pkg/abi"
 	"github.com/dipdup-io/starknet-go-api/pkg/encoding"
 	"github.com/dipdup-io/starknet-indexer/internal/storage"
+	"github.com/dipdup-io/starknet-indexer/pkg/indexer/parser/data"
 	"github.com/pkg/errors"
 )
 
 var json = jsoniter.ConfigCompatibleWithStandardLibrary
 
 // Proxy -
-func (resolver *Resolver) Proxy(ctx context.Context, class storage.Class, contract storage.Address) (a abi.Abi, err error) {
+func (resolver *Resolver) Proxy(ctx context.Context, txCtx data.TxContext, class storage.Class, contract storage.Address) (a abi.Abi, err error) {
 	var (
 		current = class
 		hash    = contract.Hash
 	)
 	for current.Type.Is(storage.ClassTypeProxy) {
-		c, address, err := resolver.resolveHash(ctx, hash)
+		c, address, err := resolver.resolveHash(ctx, txCtx, hash)
 		if err != nil {
 			return a, err
 		}
 		current = *c
+		if bytes.Equal(address, hash) {
+			break
+		}
 		hash = address
 	}
 
@@ -39,6 +45,10 @@ func (resolver *Resolver) Proxy(ctx context.Context, class storage.Class, contra
 func (resolver *Resolver) UpgradeProxy(ctx context.Context, contract storage.Address, impl []byte, height uint64) error {
 	id, typ, err := resolver.findProxyEntity(ctx, impl, height)
 	if err != nil {
+		if errors.Is(err, ErrUnknownProxy) {
+			log.Warn().Msgf("unknown proxy: %x", impl)
+			return nil
+		}
 		return err
 	}
 
@@ -50,12 +60,11 @@ func (resolver *Resolver) UpgradeProxy(ctx context.Context, contract storage.Add
 		EntityType: typ,
 	}
 	resolver.contextProxies[encoding.EncodeHex(contract.Hash)] = &proxy
-	resolver.cache.SetProxy(proxy)
 	return nil
 }
 
-func (resolver *Resolver) resolveHash(ctx context.Context, hash []byte) (*storage.Class, []byte, error) {
-	proxy, err := resolver.findProxy(ctx, hash)
+func (resolver *Resolver) resolveHash(ctx context.Context, txCtx data.TxContext, hash []byte) (*storage.Class, []byte, error) {
+	proxy, err := resolver.findProxy(ctx, txCtx, hash)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -86,13 +95,15 @@ func (resolver *Resolver) resolveHash(ctx context.Context, hash []byte) (*storag
 	}
 }
 
-func (resolver *Resolver) findProxy(ctx context.Context, hash []byte) (storage.Proxy, error) {
+func (resolver *Resolver) findProxy(ctx context.Context, txCtx data.TxContext, hash []byte) (storage.Proxy, error) {
 	sHash := encoding.EncodeHex(hash)
-	if proxy, ok := resolver.contextProxies[sHash]; ok {
-		return *proxy, nil
+	if _, ok := txCtx.ProxyUpgrades[sHash]; !ok {
+		if proxy, ok := resolver.contextProxies[sHash]; ok {
+			return *proxy, nil
+		}
 	}
 
-	proxy, err := resolver.cache.GetProxy(ctx, hash)
+	proxy, err := resolver.proxies.GetByHash(ctx, hash)
 	switch {
 	case err == nil:
 		return proxy, err

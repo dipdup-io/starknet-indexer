@@ -83,7 +83,8 @@ func (resolver *Resolver) parseStorageDiffs(ctx context.Context, block *storage.
 			}
 			block.StorageDiffs = append(block.StorageDiffs, diff)
 
-			if _, ok := starknet.ProxyStorageVars[updates[i].Key.String()]; ok {
+			sKey := updates[i].Key.String()
+			if _, ok := starknet.ProxyStorageVars[sKey]; ok {
 				proxy := storage.Proxy{
 					Hash:       address.Hash,
 					ContractID: address.ID,

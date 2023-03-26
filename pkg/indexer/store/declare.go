@@ -11,6 +11,7 @@ func (store *Store) saveDeclare(
 	ctx context.Context,
 	tx storage.Transaction,
 	result parserData.Result,
+	sm *subModels,
 ) error {
 	if result.Block.DeclareCount == 0 {
 		return nil
@@ -20,33 +21,12 @@ func (store *Store) saveDeclare(
 	for i := range result.Block.Declare {
 		models[i] = &result.Block.Declare[i]
 
-		allInternals, err := store.saveInternals(ctx, tx, result, result.Block.Declare[i].Internals)
-		if err != nil {
-			return err
-		}
-		internalModels := make([]any, len(allInternals))
-		for i := range allInternals {
-			internalModels[i] = &allInternals[i]
-		}
-		if len(allInternals) > 0 {
-			if err := tx.BulkSave(ctx, internalModels); err != nil {
-				return err
-			}
-		}
+		sm.addInternals(result.Block.Declare[i].Internals)
+		sm.addEvents(result.Block.Declare[i].Events)
+		sm.addMessages(result.Block.Declare[i].Messages)
+		sm.addTransfers(result.Block.Declare[i].Transfers)
 
-		if err := store.saveEvents(ctx, tx, result.Block.Declare[i].Events); err != nil {
-			return err
-		}
-
-		if err := store.saveMessages(ctx, tx, result.Block.Declare[i].Messages); err != nil {
-			return err
-		}
-
-		if err := store.saveTransfers(ctx, tx, result.Block.Declare[i].Transfers); err != nil {
-			return err
-		}
-
-		if err := store.saveFee(ctx, tx, result.Block.Declare[i].Fee); err != nil {
+		if err := store.saveInternals(ctx, tx, result.Block.Declare[i].Internals, sm); err != nil {
 			return err
 		}
 	}

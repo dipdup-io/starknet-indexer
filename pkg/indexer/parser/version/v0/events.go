@@ -14,7 +14,6 @@ import (
 	"github.com/dipdup-io/starknet-indexer/pkg/indexer/parser/data"
 	"github.com/dipdup-io/starknet-indexer/pkg/indexer/parser/resolver"
 	"github.com/pkg/errors"
-	"github.com/rs/zerolog/log"
 	"github.com/shopspring/decimal"
 )
 
@@ -54,6 +53,7 @@ func (parser EventParser) Parse(ctx context.Context, txCtx data.TxContext, contr
 		DeployAccountID: txCtx.DeployAccountID,
 		InvokeID:        txCtx.InvokeID,
 		L1HandlerID:     txCtx.L1HandlerID,
+		FeeID:           txCtx.FeeID,
 		InternalID:      txCtx.InternalID,
 	}
 	if txCtx.ProxyId > 0 {
@@ -68,7 +68,7 @@ func (parser EventParser) Parse(ctx context.Context, txCtx data.TxContext, contr
 	}
 
 	if len(contractAbi.Events) > 0 {
-		parsed, name, err := decode.Event(parser.cache, contractAbi, model.Keys, model.Data)
+		parsed, name, err := decode.Event(contractAbi, model.Keys, model.Data)
 		if err != nil {
 			return model, err
 		}
@@ -79,21 +79,28 @@ func (parser EventParser) Parse(ctx context.Context, txCtx data.TxContext, contr
 	return model, nil
 }
 
-func upgraded(ctx context.Context, resolver resolver.Resolver, contract storage.Address, event storage.Event) error {
-	value, ok := event.ParsedData["implementation"]
+func upgraded(data map[string]any) ([]byte, error) {
+	value, ok := data["implementation"]
 	if !ok {
-		return nil
+		return nil, nil
 	}
 	implementation, ok := value.(string)
 	if !ok {
-		return nil
+		return nil, nil
 	}
-	impl := encoding.MustDecodeHex(implementation)
-	if len(impl) != starknetData.AddressBytesLength {
-		log.Warn().Msgf("invalid implementation address: %x", impl)
-		return nil
+	return starknetData.Felt(implementation).Bytes(), nil
+}
+
+func accountUpgraded(data map[string]any) ([]byte, error) {
+	value, ok := data["new_implementation"]
+	if !ok {
+		return nil, nil
 	}
-	return resolver.UpgradeProxy(ctx, contract, impl, event.Height)
+	implementation, ok := value.(string)
+	if !ok {
+		return nil, nil
+	}
+	return starknetData.Felt(implementation).Bytes(), nil
 }
 
 func depositHandled(ctx context.Context, resolver resolver.Resolver, txCtx data.TxContext, contract storage.Address, event storage.Event) ([]storage.Transfer, error) {
@@ -105,6 +112,7 @@ func depositHandled(ctx context.Context, resolver resolver.Resolver, txCtx data.
 		DeployAccountID: txCtx.DeployAccountID,
 		InvokeID:        txCtx.InvokeID,
 		L1HandlerID:     txCtx.L1HandlerID,
+		FeeID:           txCtx.FeeID,
 		InternalID:      txCtx.InternalID,
 	}
 
@@ -148,6 +156,7 @@ func withdrawInitiated(ctx context.Context, resolver resolver.Resolver, txCtx da
 		DeployAccountID: txCtx.DeployAccountID,
 		InvokeID:        txCtx.InvokeID,
 		L1HandlerID:     txCtx.L1HandlerID,
+		FeeID:           txCtx.FeeID,
 		InternalID:      txCtx.InternalID,
 	}
 
@@ -192,13 +201,66 @@ func transfer(ctx context.Context, resolver resolver.Resolver, txCtx data.TxCont
 		DeployAccountID: txCtx.DeployAccountID,
 		InvokeID:        txCtx.InvokeID,
 		L1HandlerID:     txCtx.L1HandlerID,
+		FeeID:           txCtx.FeeID,
 		InternalID:      txCtx.InternalID,
 	}
 
 	var err error
 
 	for _, key := range []string{
-		"from_,", "sender",
+		"from_", "sender", "from_address",
+	} {
+		transfer.FromID, err = parseTransferAddress(ctx, resolver, event.Height, event.ParsedData, key)
+		if err != nil {
+			return nil, err
+		}
+		if transfer.FromID > 0 {
+			break
+		}
+	}
+	for _, key := range []string{
+		"to", "recipient", "to_address",
+	} {
+		transfer.ToID, err = parseTransferAddress(ctx, resolver, event.Height, event.ParsedData, key)
+		if err != nil {
+			return nil, err
+		}
+		if transfer.ToID > 0 {
+			break
+		}
+	}
+
+	if transfer.FromID == 0 && transfer.ToID == 0 {
+		return nil, errInvalidTransfer
+	}
+
+	transfer.Amount, err = parseTransferDecimal(event.ParsedData, "value")
+	if err != nil {
+		return nil, err
+	}
+
+	return []storage.Transfer{transfer}, nil
+}
+
+func transferERC721(ctx context.Context, resolver resolver.Resolver, txCtx data.TxContext, contractId uint64, event storage.Event) ([]storage.Transfer, error) {
+	transfer := storage.Transfer{
+		Height:          event.Height,
+		Time:            event.Time,
+		ContractID:      contractId,
+		DeclareID:       txCtx.DeclareID,
+		DeployID:        txCtx.DeployID,
+		DeployAccountID: txCtx.DeployAccountID,
+		InvokeID:        txCtx.InvokeID,
+		L1HandlerID:     txCtx.L1HandlerID,
+		FeeID:           txCtx.FeeID,
+		InternalID:      txCtx.InternalID,
+		Amount:          decimal.NewFromInt(1),
+	}
+
+	var err error
+
+	for _, key := range []string{
+		"from_", "sender",
 	} {
 		transfer.FromID, err = parseTransferAddress(ctx, resolver, event.Height, event.ParsedData, key)
 		if err != nil {
@@ -224,18 +286,9 @@ func transfer(ctx context.Context, resolver resolver.Resolver, txCtx data.TxCont
 		return nil, errInvalidTransfer
 	}
 
-	transfer.Amount, err = parseTransferDecimal(event.ParsedData, "value")
-	if err != nil {
-		return nil, err
-	}
 	transfer.TokenID, err = parseTransferDecimal(event.ParsedData, "tokenId")
 	if err != nil {
 		return nil, err
-	}
-
-	// if 'tokenId' is in event parameters then it's erc721 token. it's nft and amount equals 1
-	if _, ok := event.ParsedData["tokenId"]; ok && transfer.Amount.IsZero() {
-		transfer.Amount = decimal.NewFromInt(1)
 	}
 
 	return []storage.Transfer{transfer}, nil
@@ -251,32 +304,53 @@ func transferSingle(ctx context.Context, resolver resolver.Resolver, txCtx data.
 		DeployAccountID: txCtx.DeployAccountID,
 		InvokeID:        txCtx.InvokeID,
 		L1HandlerID:     txCtx.L1HandlerID,
+		FeeID:           txCtx.FeeID,
 		InternalID:      txCtx.InternalID,
 	}
 
 	var err error
 
-	transfer.FromID, err = parseTransferAddress(ctx, resolver, event.Height, event.ParsedData, "from_")
-	if err != nil {
-		return nil, err
+	for _, key := range []string{"from_", "_from"} {
+		transfer.FromID, err = parseTransferAddress(ctx, resolver, event.Height, event.ParsedData, key)
+		if err != nil {
+			return nil, err
+		}
+		if transfer.FromID > 0 {
+			break
+		}
 	}
-
-	transfer.ToID, err = parseTransferAddress(ctx, resolver, event.Height, event.ParsedData, "to")
-	if err != nil {
-		return nil, err
+	for _, key := range []string{"to", "_to"} {
+		transfer.ToID, err = parseTransferAddress(ctx, resolver, event.Height, event.ParsedData, key)
+		if err != nil {
+			return nil, err
+		}
+		if transfer.ToID > 0 {
+			break
+		}
 	}
 
 	if transfer.FromID == 0 && transfer.ToID == 0 {
 		return nil, errInvalidTransfer
 	}
 
-	transfer.Amount, err = parseTransferDecimal(event.ParsedData, "value")
-	if err != nil {
-		return nil, err
+	for _, key := range []string{"value", "_value"} {
+		transfer.Amount, err = parseTransferDecimal(event.ParsedData, key)
+		if err != nil {
+			return nil, err
+		}
+		if transfer.Amount.IsPositive() {
+			break
+		}
 	}
-	transfer.TokenID, err = parseTransferDecimal(event.ParsedData, "id")
-	if err != nil {
-		return nil, err
+
+	for _, key := range []string{"id", "_id"} {
+		transfer.TokenID, err = parseTransferDecimal(event.ParsedData, key)
+		if err != nil {
+			return nil, err
+		}
+		if transfer.TokenID.IsPositive() {
+			break
+		}
 	}
 
 	return []storage.Transfer{transfer}, nil
@@ -321,6 +395,7 @@ func transferBatch(ctx context.Context, resolver resolver.Resolver, txCtx data.T
 			DeployAccountID: txCtx.DeployAccountID,
 			InvokeID:        txCtx.InvokeID,
 			L1HandlerID:     txCtx.L1HandlerID,
+			FeeID:           txCtx.FeeID,
 			InternalID:      txCtx.InternalID,
 			FromID:          fromId,
 			ToID:            toId,

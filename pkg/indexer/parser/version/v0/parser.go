@@ -66,11 +66,11 @@ func New(
 ) Parser {
 	event := NewEventParser(cache, resolver)
 	message := NewMessageParser(cache, resolver)
-	fee := NewFeeParser(cache, resolver)
 	transferParser := NewTransferParser(resolver)
 	proxyUpgrader := NewProxyUpgrader(resolver)
-	internal := NewInternalTxParser(resolver, cache, blocks, event, message, transferParser, proxyUpgrader)
 	tokenParser := NewTokenParser(cache, resolver)
+	internal := NewInternalTxParser(resolver, cache, blocks, event, message, transferParser, tokenParser, proxyUpgrader)
+	fee := NewFeeParser(cache, resolver, blocks, event, message, transferParser, internal)
 
 	return Parser{
 		Cache:            cache,
@@ -134,6 +134,20 @@ func isInternalNotEqualParent(txCtx parserData.TxContext, tx storage.Internal) b
 			return true
 		}
 		if !stringArrayIsEqual(tx.Calldata, txCtx.Internal.Calldata) {
+			return true
+		}
+		return false
+	case txCtx.Fee != nil:
+		if tx.ContractID != txCtx.Fee.ContractID {
+			return true
+		}
+		if tx.CallerID != txCtx.Fee.CallerID {
+			return true
+		}
+		if !bytes.Equal(tx.Selector, txCtx.Fee.Selector) {
+			return true
+		}
+		if !stringArrayIsEqual(tx.Calldata, txCtx.Fee.Calldata) {
 			return true
 		}
 		return false

@@ -42,6 +42,7 @@ func Parse(
 	cache *cache.Cache,
 	idGenerator *generator.IdGenerator,
 	blocks storage.IBlock,
+	proxies storage.IProxy,
 	result receiver.Result,
 ) (parserData.Result, error) {
 	block := storage.Block{
@@ -63,7 +64,7 @@ func Parse(
 		L1Handler:     make([]storage.L1Handler, 0),
 	}
 
-	resolver := resolver.NewResolver(receiver, cache, idGenerator, blocks)
+	resolver := resolver.NewResolver(receiver, cache, idGenerator, blocks, proxies)
 
 	if err := resolver.ResolveStateUpdates(ctx, &block, result.StateUpdate); err != nil {
 		return parserData.Result{}, errors.Wrap(err, "state update parsing")
@@ -79,13 +80,14 @@ func Parse(
 		case *starknetData.Invoke:
 			var (
 				invoke storage.Invoke
+				fee    *storage.Fee
 				err    error
 			)
 			switch result.Block.Transactions[i].Version {
 			case starknetData.Version0:
-				invoke, err = p.ParseInvokeV0(ctx, typed, block, result.Trace.Traces[i], result.Block.Receipts[i])
+				invoke, fee, err = p.ParseInvokeV0(ctx, typed, block, result.Trace.Traces[i], result.Block.Receipts[i])
 			case starknetData.Version1:
-				invoke, err = p.ParseInvokeV1(ctx, typed, block, result.Trace.Traces[i], result.Block.Receipts[i])
+				invoke, fee, err = p.ParseInvokeV1(ctx, typed, block, result.Trace.Traces[i], result.Block.Receipts[i])
 			default:
 				return parserData.Result{}, errors.Errorf("unknown invoke version: %s", result.Block.Transactions[i].Version)
 			}
@@ -94,34 +96,49 @@ func Parse(
 			}
 			invoke.Position = i
 			block.Invoke = append(block.Invoke, invoke)
+			if fee != nil {
+				block.Fee = append(block.Fee, *fee)
+			}
 		case *starknetData.Declare:
-			tx, err := p.ParseDeclare(ctx, result.Block.Transactions[i].Version, typed, block, result.Trace.Traces[i], result.Block.Receipts[i])
+			tx, fee, err := p.ParseDeclare(ctx, result.Block.Transactions[i].Version, typed, block, result.Trace.Traces[i], result.Block.Receipts[i])
 			if err != nil {
 				return parserData.Result{}, errors.Wrapf(err, "%s declare", result.Block.Transactions[i].TransactionHash)
 			}
 			tx.Position = i
 			block.Declare = append(block.Declare, tx)
+			if fee != nil {
+				block.Fee = append(block.Fee, *fee)
+			}
 		case *starknetData.Deploy:
-			tx, err := p.ParseDeploy(ctx, typed, block, result.Trace.Traces[i], result.Block.Receipts[i])
+			tx, fee, err := p.ParseDeploy(ctx, typed, block, result.Trace.Traces[i], result.Block.Receipts[i])
 			if err != nil {
 				return parserData.Result{}, errors.Wrapf(err, "%s deploy", result.Block.Transactions[i].TransactionHash)
 			}
 			tx.Position = i
 			block.Deploy = append(block.Deploy, tx)
+			if fee != nil {
+				block.Fee = append(block.Fee, *fee)
+			}
 		case *starknetData.DeployAccount:
-			tx, err := p.ParseDeployAccount(ctx, typed, block, result.Trace.Traces[i], result.Block.Receipts[i])
+			tx, fee, err := p.ParseDeployAccount(ctx, typed, block, result.Trace.Traces[i], result.Block.Receipts[i])
 			if err != nil {
 				return parserData.Result{}, errors.Wrapf(err, "%s deploy account", result.Block.Transactions[i].TransactionHash)
 			}
 			tx.Position = i
 			block.DeployAccount = append(block.DeployAccount, tx)
+			if fee != nil {
+				block.Fee = append(block.Fee, *fee)
+			}
 		case *starknetData.L1Handler:
-			tx, err := p.ParseL1Handler(ctx, typed, block, result.Trace.Traces[i], result.Block.Receipts[i])
+			tx, fee, err := p.ParseL1Handler(ctx, typed, block, result.Trace.Traces[i], result.Block.Receipts[i])
 			if err != nil {
 				return parserData.Result{}, errors.Wrapf(err, "%s l1 handler", result.Block.Transactions[i].TransactionHash)
 			}
 			tx.Position = i
 			block.L1Handler = append(block.L1Handler, tx)
+			if fee != nil {
+				block.Fee = append(block.Fee, *fee)
+			}
 		default:
 			return parserData.Result{}, errors.Errorf("unknown transaction type: %s", result.Block.Transactions[i].Type)
 		}

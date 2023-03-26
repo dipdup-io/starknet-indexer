@@ -4,7 +4,6 @@ import (
 	"time"
 
 	"github.com/dipdup-net/indexer-sdk/pkg/storage"
-	"github.com/shopspring/decimal"
 )
 
 // IFee -
@@ -22,47 +21,34 @@ type Fee struct {
 	Time   time.Time `pg:",pk"`
 	Status Status    `pg:",use_zero"`
 
-	ContractID uint64
-	FromID     uint64
-	ToID       uint64
-	Amount     decimal.Decimal `pg:",type:numeric,use_zero"`
+	ContractID     uint64
+	CallerID       uint64
+	ClassID        uint64
+	Selector       []byte
+	EntrypointType EntrypointType
+	CallType       CallType
+	Calldata       []string
+	Result         []string
 
+	Entrypoint     string
+	ParsedCalldata map[string]any
+
+	InvokeID        *uint64
 	DeclareID       *uint64
 	DeployID        *uint64
 	DeployAccountID *uint64
-	InvokeID        *uint64
 	L1HandlerID     *uint64
 
-	From     Address `pg:"rel:has-one"`
-	To       Address `pg:"rel:has-one"`
-	Contract Address `pg:"rel:has-one"`
+	Class     Class      `pg:"rel:has-one"`
+	Caller    Address    `pg:"rel:has-one"`
+	Contract  Address    `pg:"rel:has-one"`
+	Internals []Internal `pg:"rel:has-many"`
+	Messages  []Message  `pg:"rel:has-many"`
+	Events    []Event    `pg:"rel:has-many"`
+	Transfers []Transfer `pg:"rel:has-many"`
 }
 
 // TableName -
 func (Fee) TableName() string {
 	return "fee"
-}
-
-// TokenBalanceUpdates -
-func (fee Fee) TokenBalanceUpdates() []TokenBalance {
-	updates := make([]TokenBalance, 0)
-	if fee.FromID > 0 {
-		updates = append(updates, TokenBalance{
-			OwnerID:    fee.FromID,
-			ContractID: fee.ContractID,
-			TokenID:    decimal.Zero,
-			Balance:    fee.Amount.Copy().Neg(),
-		})
-	}
-
-	if fee.ToID > 0 {
-		updates = append(updates, TokenBalance{
-			OwnerID:    fee.ToID,
-			ContractID: fee.ContractID,
-			TokenID:    decimal.Zero,
-			Balance:    fee.Amount.Copy(),
-		})
-	}
-
-	return updates
 }

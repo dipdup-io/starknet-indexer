@@ -31,6 +31,7 @@ type Transfer struct {
 	DeployID        *uint64
 	DeployAccountID *uint64
 	L1HandlerID     *uint64
+	FeeID           *uint64
 	InternalID      *uint64
 
 	From     Address `pg:"rel:has-one"`

@@ -25,6 +25,7 @@ type InternalTxParser struct {
 	EventParser    interfaces.EventParser
 	MessageParser  interfaces.MessageParser
 	TransferParser interfaces.TransferParser
+	TokenParser    interfaces.TokenParser
 	ProxyUpgrader  interfaces.ProxyUpgrader
 }
 
@@ -36,6 +37,7 @@ func NewInternalTxParser(
 	eventParser interfaces.EventParser,
 	messageParser interfaces.MessageParser,
 	transferParser interfaces.TransferParser,
+	tokenParser interfaces.TokenParser,
 	proxyUpgrader interfaces.ProxyUpgrader,
 ) InternalTxParser {
 	return InternalTxParser{
@@ -45,6 +47,7 @@ func NewInternalTxParser(
 		EventParser:    eventParser,
 		MessageParser:  messageParser,
 		TransferParser: transferParser,
+		TokenParser:    tokenParser,
 		ProxyUpgrader:  proxyUpgrader,
 	}
 }
@@ -130,7 +133,10 @@ func (parser InternalTxParser) Parse(ctx context.Context, txCtx parserData.TxCon
 	isExecute := bytes.Equal(tx.Selector, encoding.ExecuteEntrypointSelector)
 	_, hasExecute := contractAbi.Functions[encoding.ExecuteEntrypoint]
 
-	if len(tx.Selector) > 0 && !isExecute {
+	isChangeModules := bytes.Equal(tx.Selector, encoding.ChangeModuleEntrypointSelector)
+	_, hasChangeModules := contractAbi.Functions[encoding.ChangeModulesEntrypoint]
+
+	if len(tx.Selector) > 0 && !isExecute && !isChangeModules {
 		if _, has := contractAbi.GetByTypeAndSelector(internal.EntrypointType, encoding.EncodeHex(tx.Selector)); !has {
 			if tx.Class.ID == 0 {
 				class, err := parser.Cache.GetClassById(ctx, *tx.Contract.ClassID)
@@ -139,7 +145,7 @@ func (parser InternalTxParser) Parse(ctx context.Context, txCtx parserData.TxCon
 				}
 				tx.Class = *class
 			}
-			contractAbi, err = parser.Resolver.Proxy(ctx, tx.Class, tx.Contract)
+			contractAbi, err = parser.Resolver.Proxy(ctx, txCtx, tx.Class, tx.Contract)
 			if err != nil {
 				return tx, err
 			}
@@ -150,19 +156,24 @@ func (parser InternalTxParser) Parse(ctx context.Context, txCtx parserData.TxCon
 	}
 
 	if len(internal.Calldata) > 0 && len(tx.Selector) > 0 {
-		if isExecute && !hasExecute {
+		switch {
+		case isExecute && !hasExecute:
 			tx.Entrypoint = encoding.ExecuteEntrypoint
 			tx.ParsedCalldata, err = abi.DecodeExecuteCallData(internal.Calldata)
-		} else {
+		case isChangeModules && !hasChangeModules:
+			tx.Entrypoint = encoding.ChangeModulesEntrypoint
+			tx.ParsedCalldata, err = abi.DecodeChangeModulesCallData(internal.Calldata)
+		default:
 			switch tx.EntrypointType {
 			case storage.EntrypointTypeExternal:
-				tx.ParsedCalldata, tx.Entrypoint, err = decode.CalldataBySelector(parser.Cache, contractAbi, tx.Selector, tx.Calldata)
+				tx.ParsedCalldata, tx.Entrypoint, err = decode.CalldataBySelector(contractAbi, tx.Selector, tx.Calldata)
 			case storage.EntrypointTypeConstructor:
-				tx.ParsedCalldata, err = decode.CalldataForConstructor(parser.Cache, contractAbi, tx.Calldata)
+				tx.ParsedCalldata, err = decode.CalldataForConstructor(contractAbi, tx.Calldata)
 			case storage.EntrypointTypeL1Handler:
-				tx.ParsedCalldata, tx.Entrypoint, err = decode.CalldataForL1Handler(parser.Cache, contractAbi, tx.Selector, tx.Calldata)
+				tx.ParsedCalldata, tx.Entrypoint, err = decode.CalldataForL1Handler(contractAbi, tx.Selector, tx.Calldata)
 			}
 		}
+
 		if err != nil {
 			if !errors.Is(err, abi.ErrNoLenField) {
 				return tx, err
@@ -170,14 +181,14 @@ func (parser InternalTxParser) Parse(ctx context.Context, txCtx parserData.TxCon
 		}
 	}
 
-	internalTxCtx := parserData.NewTxContextFromInternal(tx, proxyId)
+	internalTxCtx := parserData.NewTxContextFromInternal(tx, txCtx.ProxyUpgrades, proxyId)
 
 	tx.Events, err = parseEvents(ctx, parser.EventParser, internalTxCtx, contractAbi, internal.Events)
 	if err != nil {
 		return tx, err
 	}
 
-	if err := parser.ProxyUpgrader.Parse(ctx, tx.Contract, tx.Events); err != nil {
+	if err := parser.ProxyUpgrader.Parse(ctx, internalTxCtx, tx.Contract, tx.Events, tx.Entrypoint, tx.ParsedCalldata); err != nil {
 		return tx, err
 	}
 
@@ -209,6 +220,16 @@ func (parser InternalTxParser) Parse(ctx context.Context, txCtx parserData.TxCon
 				return tx, err
 			}
 		}
+	}
+
+	if tx.EntrypointType == storage.EntrypointTypeConstructor && tx.Class.Type.OneOf(storage.ClassTypeERC20, storage.ClassTypeERC721, storage.ClassTypeERC1155) {
+		token, err := parser.TokenParser.Parse(ctx, txCtx, tx.Contract, tx.Class.Type, tx.ParsedCalldata)
+		if err != nil {
+			return tx, err
+		}
+		tx.ERC20 = token.ERC20
+		tx.ERC721 = token.ERC721
+		tx.ERC1155 = token.ERC1155
 	}
 
 	return tx, nil
