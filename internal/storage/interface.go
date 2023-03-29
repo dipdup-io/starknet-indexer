@@ -2,6 +2,7 @@ package storage
 
 import (
 	"context"
+	"io"
 
 	"github.com/dipdup-net/indexer-sdk/pkg/storage"
 )
@@ -14,4 +15,9 @@ type Heightable[T storage.Model] interface {
 // Rollback -
 type Rollback interface {
 	Rollback(ctx context.Context, indexerName string, height uint64) error
+}
+
+// Copiable -
+type Copiable[M storage.Model] interface {
+	InsertByCopy(models []M) (io.Reader, string, error)
 }

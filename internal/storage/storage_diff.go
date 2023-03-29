@@ -9,6 +9,7 @@ import (
 // IStorageDiff -
 type IStorageDiff interface {
 	storage.Table[*StorageDiff]
+	Copiable[StorageDiff]
 
 	GetOnBlock(ctx context.Context, height, contractId uint64, key []byte) (StorageDiff, error)
 }

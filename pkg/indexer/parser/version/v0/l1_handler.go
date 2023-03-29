@@ -17,14 +17,14 @@ import (
 // ParseL1Handler -
 func (parser Parser) ParseL1Handler(ctx context.Context, raw *data.L1Handler, block storage.Block, trace sequencer.Trace, receipts sequencer.Receipt) (storage.L1Handler, *storage.Fee, error) {
 	tx := storage.L1Handler{
-		ID:                 parser.Resolver.NextTxId(),
-		Height:             block.Height,
-		Time:               block.Time,
-		Status:             block.Status,
-		Hash:               trace.TransactionHash.Bytes(),
-		EntrypointSelector: raw.EntrypointSelector.Bytes(),
-		CallData:           raw.Calldata,
-		Nonce:              raw.Nonce.Decimal(),
+		ID:       parser.Resolver.NextTxId(),
+		Height:   block.Height,
+		Time:     block.Time,
+		Status:   block.Status,
+		Hash:     trace.TransactionHash.Bytes(),
+		Selector: raw.EntrypointSelector.Bytes(),
+		CallData: raw.Calldata,
+		Nonce:    raw.Nonce.Decimal(),
 	}
 
 	if address, err := parser.Resolver.FindAddressByHash(ctx, raw.ContractAddress); err != nil {
@@ -49,12 +49,12 @@ func (parser Parser) ParseL1Handler(ctx context.Context, raw *data.L1Handler, bl
 	}
 
 	if len(tx.CallData) > 0 {
-		if _, ok := contractAbi.GetL1HandlerBySelector(encoding.EncodeHex(tx.EntrypointSelector)); !ok {
+		if _, ok := contractAbi.GetL1HandlerBySelector(encoding.EncodeHex(tx.Selector)); !ok {
 			class, err := parser.Cache.GetClassById(ctx, *tx.Contract.ClassID)
 			if err != nil {
 				return tx, nil, err
 			}
-			contractAbi, err = parser.Resolver.Proxy(ctx, parserData.NewEmptyTxContext(), *class, tx.Contract)
+			contractAbi, err = parser.Resolver.Proxy(ctx, parserData.NewEmptyTxContext(), *class, tx.Contract, tx.Selector)
 			if err != nil {
 				return tx, nil, err
 			}
@@ -63,7 +63,7 @@ func (parser Parser) ParseL1Handler(ctx context.Context, raw *data.L1Handler, bl
 			}
 		}
 
-		tx.ParsedCalldata, tx.Entrypoint, err = decode.CalldataForL1Handler(contractAbi, tx.EntrypointSelector, tx.CallData)
+		tx.ParsedCalldata, tx.Entrypoint, err = decode.CalldataForL1Handler(contractAbi, tx.Selector, tx.CallData)
 		if err != nil {
 			if !errors.Is(err, abi.ErrNoLenField) {
 				return tx, nil, err

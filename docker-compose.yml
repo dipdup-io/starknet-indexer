@@ -30,7 +30,7 @@ services:
       - POSTGRES_DB=${POSTGRES_DB:-straknet}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-changeme}
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      test: ["CMD-SHELL", "pg_isready -U dipdup -d starknet"]
       interval: 10s
       timeout: 5s
       retries: 5

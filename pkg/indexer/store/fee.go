@@ -3,6 +3,7 @@ package store
 import (
 	"context"
 
+	models "github.com/dipdup-io/starknet-indexer/internal/storage"
 	parserData "github.com/dipdup-io/starknet-indexer/pkg/indexer/parser/data"
 	"github.com/dipdup-net/indexer-sdk/pkg/storage"
 )
@@ -17,10 +18,7 @@ func (store *Store) saveFees(
 		return nil
 	}
 
-	models := make([]any, len(result.Block.Fee))
 	for i := range result.Block.Fee {
-		models[i] = &result.Block.Fee[i]
-
 		sm.addInternals(result.Block.Fee[i].Internals)
 		sm.addEvents(result.Block.Fee[i].Events)
 		sm.addMessages(result.Block.Fee[i].Messages)
@@ -31,5 +29,5 @@ func (store *Store) saveFees(
 		}
 	}
 
-	return tx.BulkSave(ctx, models)
+	return bulkSaveWithCopy[models.Fee](ctx, tx, store.fees, result.Block.Fee)
 }

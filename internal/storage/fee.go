@@ -9,6 +9,7 @@ import (
 // IFee -
 type IFee interface {
 	storage.Table[*Fee]
+	Copiable[Fee]
 }
 
 // Fee -
@@ -27,8 +28,8 @@ type Fee struct {
 	Selector       []byte
 	EntrypointType EntrypointType
 	CallType       CallType
-	Calldata       []string
-	Result         []string
+	Calldata       []string `pg:",array"`
+	Result         []string `pg:",array"`
 
 	Entrypoint     string
 	ParsedCalldata map[string]any

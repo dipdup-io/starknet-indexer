@@ -11,6 +11,7 @@ import (
 // IInvoke -
 type IInvoke interface {
 	storage.Table[*Invoke]
+	Copiable[Invoke]
 
 	ByHeight(ctx context.Context, height, limit, offset uint64) ([]Invoke, error)
 }

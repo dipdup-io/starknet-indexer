@@ -10,6 +10,8 @@ import (
 // ITransfer -
 type ITransfer interface {
 	storage.Table[*Transfer]
+
+	Copiable[Transfer]
 }
 
 // Transfer -

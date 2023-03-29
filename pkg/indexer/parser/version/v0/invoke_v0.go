@@ -70,7 +70,7 @@ func (parser Parser) ParseInvokeV0(ctx context.Context, raw *data.Invoke, block 
 				class = *c
 			}
 
-			contractAbi, err = parser.Resolver.Proxy(ctx, parserData.NewEmptyTxContext(), class, tx.Contract)
+			contractAbi, err = parser.Resolver.Proxy(ctx, parserData.NewEmptyTxContext(), class, tx.Contract, tx.EntrypointSelector)
 			if err != nil {
 				return tx, nil, err
 			}

@@ -10,7 +10,8 @@ import (
 
 // FindAddress -
 func (resolver *Resolver) FindAddress(ctx context.Context, address *storage.Address) error {
-	if value, ok := resolver.addresses[encoding.EncodeHex(address.Hash)]; ok {
+	addresses := resolver.blockContext.Addresses()
+	if value, ok := addresses[encoding.EncodeHex(address.Hash)]; ok {
 		address.ID = value.ID
 		address.ClassID = value.ClassID
 		return nil
@@ -43,7 +44,8 @@ func (resolver *Resolver) addAddress(address *storage.Address) {
 		return
 	}
 	key := encoding.EncodeHex(address.Hash)
-	if _, ok := resolver.addresses[key]; !ok {
-		resolver.addresses[key] = address
+	addresses := resolver.blockContext.Addresses()
+	if _, ok := addresses[key]; !ok {
+		addresses[key] = address
 	}
 }

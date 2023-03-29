@@ -10,6 +10,7 @@ import (
 // IDeploy -
 type IDeploy interface {
 	storage.Table[*Deploy]
+	Copiable[Deploy]
 
 	ByHeight(ctx context.Context, height, limit, offset uint64) ([]Deploy, error)
 }

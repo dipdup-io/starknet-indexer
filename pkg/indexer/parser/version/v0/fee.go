@@ -191,7 +191,7 @@ func (parser FeeParser) ParseInvocation(ctx context.Context, txCtx data.TxContex
 				}
 				tx.Class = *class
 			}
-			contractAbi, err = parser.resolver.Proxy(ctx, txCtx, tx.Class, tx.Contract)
+			contractAbi, err = parser.resolver.Proxy(ctx, txCtx, tx.Class, tx.Contract, tx.Selector)
 			if err != nil {
 				return nil, err
 			}

@@ -38,7 +38,8 @@ func (resolver *Resolver) ReceiveClass(ctx context.Context, class *storage.Class
 
 // FindClass -
 func (resolver *Resolver) FindClass(ctx context.Context, class *storage.Class) error {
-	if value, ok := resolver.classes[encoding.EncodeHex(class.Hash)]; ok {
+	classes := resolver.blockContext.Classes()
+	if value, ok := classes[encoding.EncodeHex(class.Hash)]; ok {
 		class.ID = value.ID
 		class.Abi = value.Abi
 		class.Type = value.Type
@@ -71,8 +72,9 @@ func (resolver *Resolver) addClass(class *storage.Class) {
 		return
 	}
 	key := encoding.EncodeHex(class.Hash)
-	if _, ok := resolver.classes[key]; !ok {
-		resolver.classes[key] = class
+	classes := resolver.blockContext.Classes()
+	if _, ok := classes[key]; !ok {
+		classes[key] = class
 	}
 }
 
@@ -90,6 +92,8 @@ func (resolver *Resolver) parseClass(ctx context.Context, classHash []byte, heig
 	}
 	if class.Abi == nil {
 		if err := resolver.ReceiveClass(ctx, &class); err != nil {
+			classes := resolver.blockContext.Classes()
+			delete(classes, encoding.EncodeHex(class.Hash))
 			return class, err
 		}
 	}
@@ -98,7 +102,8 @@ func (resolver *Resolver) parseClass(ctx context.Context, classHash []byte, heig
 
 // FindClassByID -
 func (resolver *Resolver) FindClassByID(ctx context.Context, id uint64) (*storage.Class, error) {
-	for _, class := range resolver.classes {
+	classes := resolver.blockContext.Classes()
+	for _, class := range classes {
 		if class.ID == id {
 			return class, nil
 		}

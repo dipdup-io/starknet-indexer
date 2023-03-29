@@ -9,6 +9,8 @@ import (
 // IEvent -
 type IEvent interface {
 	storage.Table[*Event]
+
+	Copiable[Event]
 }
 
 // Event -

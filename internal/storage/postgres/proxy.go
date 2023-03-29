@@ -6,6 +6,7 @@ import (
 	"github.com/dipdup-io/starknet-indexer/internal/storage"
 	"github.com/dipdup-net/go-lib/database"
 	"github.com/dipdup-net/indexer-sdk/pkg/storage/postgres"
+	"github.com/go-pg/pg/v10/orm"
 )
 
 // Proxy -
@@ -21,9 +22,13 @@ func NewProxy(db *database.PgGo) *Proxy {
 }
 
 // GetByHash -
-func (p *Proxy) GetByHash(ctx context.Context, hash []byte) (proxy storage.Proxy, err error) {
+func (p *Proxy) GetByHash(ctx context.Context, address, selector []byte) (proxy storage.Proxy, err error) {
 	err = p.DB().ModelContext(ctx, &proxy).
-		Where("hash = ?", hash).
+		Where("hash = ?", address).
+		WhereGroup(func(q *orm.Query) (*orm.Query, error) {
+			q = q.Where("selector = ?", selector).WhereOr("selector IS NULL")
+			return q, nil
+		}).
 		Limit(1).
 		Select(&proxy)
 	return

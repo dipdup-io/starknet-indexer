@@ -18,7 +18,7 @@ type Storage struct {
 
 	Blocks models.IBlock
 
-	InvokeV0      models.IInvoke
+	Invoke        models.IInvoke
 	Declare       models.IDeclare
 	Deploy        models.IDeploy
 	DeployAccount models.IDeployAccount
@@ -52,7 +52,7 @@ func Create(ctx context.Context, cfg config.Database) (Storage, error) {
 	s := Storage{
 		Storage:       strg,
 		Blocks:        NewBlocks(strg.Connection()),
-		InvokeV0:      NewInvoke(strg.Connection()),
+		Invoke:        NewInvoke(strg.Connection()),
 		Declare:       NewDeclare(strg.Connection()),
 		Deploy:        NewDeploy(strg.Connection()),
 		DeployAccount: NewDeployAccount(strg.Connection()),
@@ -119,6 +119,11 @@ func createIndices(ctx context.Context, conn *database.PgGo) error {
 	return conn.DB().RunInTransaction(ctx, func(tx *pg.Tx) error {
 		// Address
 		if _, err := tx.ExecContext(ctx, `CREATE INDEX IF NOT EXISTS address_hash_idx ON address (hash)`); err != nil {
+			return err
+		}
+
+		// Proxy
+		if _, err := tx.ExecContext(ctx, `CREATE UNIQUE INDEX IF NOT EXISTS proxy_hash_selector_idx ON proxy (hash, selector) NULLS NOT DISTINCT`); err != nil {
 			return err
 		}
 

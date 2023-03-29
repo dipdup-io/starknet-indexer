@@ -12,7 +12,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-const ttl = time.Hour
+const ttl = time.Minute * 10
 
 // Cache -
 type Cache struct {
@@ -187,4 +187,33 @@ func (cache *Cache) GetClassForAddress(ctx context.Context, hash []byte) (storag
 	}
 	class := item.Value().(*storage.Class)
 	return *class, err
+}
+
+// GetAbiByClass -
+func (cache *Cache) GetAbiByClass(class storage.Class) (abi.Abi, error) {
+	item, err := cache.Fetch(fmt.Sprintf("abi:class:%d", class.ID), ttl, func() (interface{}, error) {
+		var a abi.Abi
+		err := json.Unmarshal(class.Abi, &a)
+		return a, err
+	})
+	if err != nil {
+		return abi.Abi{}, err
+	}
+	return item.Value().(abi.Abi), nil
+}
+
+// GetProxy -
+func (cache *Cache) GetProxy(ctx context.Context, address, selector []byte) (storage.Proxy, error) {
+	item, err := cache.Fetch(fmt.Sprintf("proxy:%x:%x", address, selector), ttl, func() (interface{}, error) {
+		return cache.proxy.GetByHash(ctx, address, selector)
+	})
+	if err != nil {
+		return storage.Proxy{}, err
+	}
+	return item.Value().(storage.Proxy), nil
+}
+
+// SetProxy -
+func (cache *Cache) SetProxy(address, selector []byte, proxy storage.Proxy) {
+	cache.Set(fmt.Sprintf("proxy:%x:%x", address, selector), proxy, ttl)
 }

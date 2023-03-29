@@ -12,6 +12,9 @@ import (
 	"github.com/dipdup-net/go-lib/config"
 	"github.com/spf13/cobra"
 
+	"net/http"
+	_ "net/http/pprof"
+
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 )
@@ -24,6 +27,9 @@ var (
 )
 
 func main() {
+	go func() {
+		log.Print(http.ListenAndServe("localhost:6060", nil))
+	}()
 	log.Logger = log.Output(zerolog.ConsoleWriter{
 		Out:        os.Stdout,
 		TimeFormat: "2006-01-02 15:04:05",

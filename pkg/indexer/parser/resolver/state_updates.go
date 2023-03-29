@@ -4,9 +4,9 @@ import (
 	"context"
 
 	"github.com/dipdup-io/starknet-go-api/pkg/data"
-	"github.com/dipdup-io/starknet-go-api/pkg/encoding"
 	"github.com/dipdup-io/starknet-indexer/internal/starknet"
 	"github.com/dipdup-io/starknet-indexer/internal/storage"
+	parserData "github.com/dipdup-io/starknet-indexer/pkg/indexer/parser/data"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
 )
@@ -65,6 +65,7 @@ func (resolver *Resolver) parseDeployedContracts(ctx context.Context, block *sto
 }
 
 func (resolver *Resolver) parseStorageDiffs(ctx context.Context, block *storage.Block, diffs map[data.Felt][]data.KeyValue) error {
+	endBlockProxies := resolver.blockContext.Proxies()
 	block.StorageDiffs = make([]storage.StorageDiff, 0)
 	for hash, updates := range diffs {
 		address := storage.Address{
@@ -101,7 +102,7 @@ func (resolver *Resolver) parseStorageDiffs(ctx context.Context, block *storage.
 				}
 				proxy.EntityID = id
 				proxy.EntityType = typ
-				resolver.endBlockProxies[encoding.EncodeHex(address.Hash)] = &proxy
+				endBlockProxies.AddByHash(address.Hash, nil, parserData.NewProxyWithAction(proxy, parserData.ProxyActionUpdate))
 			}
 		}
 	}

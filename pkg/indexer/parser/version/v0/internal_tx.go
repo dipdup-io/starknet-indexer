@@ -145,7 +145,7 @@ func (parser InternalTxParser) Parse(ctx context.Context, txCtx parserData.TxCon
 				}
 				tx.Class = *class
 			}
-			contractAbi, err = parser.Resolver.Proxy(ctx, txCtx, tx.Class, tx.Contract)
+			contractAbi, err = parser.Resolver.Proxy(ctx, txCtx, tx.Class, tx.Contract, tx.Selector)
 			if err != nil {
 				return tx, err
 			}

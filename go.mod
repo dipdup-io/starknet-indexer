@@ -2,15 +2,16 @@ module github.com/dipdup-io/starknet-indexer
 
 go 1.19
 
-replace github.com/dipdup-io/starknet-go-api => /usr/local/go/src/github.com/dipdup-io/starknet-go-api
+// replace github.com/dipdup-io/starknet-go-api => /usr/local/go/src/github.com/dipdup-io/starknet-go-api
+
+// replace github.com/dipdup-net/indexer-sdk => /usr/local/go/src/github.com/dipdup-net/indexer-sdk
 
 require (
-	github.com/dipdup-io/starknet-go-api v0.0.0-20230314194458-9ca0ba7d96d2
+	github.com/dipdup-io/starknet-go-api v0.0.0-20230329170036-29fef3b8a992
 	github.com/dipdup-net/go-lib v0.2.29
-	github.com/dipdup-net/indexer-sdk v0.0.0-20230315141540-d4913a902777
+	github.com/dipdup-net/indexer-sdk v0.0.0-20230328204533-290eee37f74f
 	github.com/dipdup-net/workerpool v0.0.2
 	github.com/go-pg/pg/v10 v10.11.0
-	github.com/json-iterator/go v1.1.12
 	github.com/karlseguin/ccache/v2 v2.0.8
 	github.com/pkg/errors v0.9.1
 	github.com/rs/zerolog v1.29.0
@@ -18,6 +19,8 @@ require (
 	github.com/spf13/cobra v1.6.1
 	github.com/stretchr/testify v1.8.2
 )
+
+require github.com/goccy/go-json v0.10.2
 
 require (
 	github.com/btcsuite/btcd/btcec/v2 v2.3.2 // indirect
@@ -39,8 +42,6 @@ require (
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.17 // indirect
 	github.com/mattn/go-sqlite3 v1.14.16 // indirect; indirect108.9055996755782866
-	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
-	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/tmthrgd/go-hex v0.0.0-20190904060850-447a3041c3bc // indirect

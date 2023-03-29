@@ -2,6 +2,7 @@ package indexer
 
 import (
 	"context"
+	"runtime"
 	"sync"
 	"time"
 
@@ -69,7 +70,7 @@ func New(
 		declares:        storage.Declare,
 		deploys:         storage.Deploy,
 		deployAccounts:  storage.DeployAccount,
-		invoke:          storage.InvokeV0,
+		invoke:          storage.Invoke,
 		l1Handlers:      storage.L1Handler,
 		classes:         storage.Class,
 		storageDiffs:    storage.StorageDiff,
@@ -83,14 +84,28 @@ func New(
 	}
 
 	indexer.idGenerator = generator.NewIdGenerator(storage.Address, storage.Class, indexer.cache, indexer.state.Current())
-	indexer.store = store.New(indexer.cache, storage.Class, storage.Address, storage.Transactable, storage.PartitionManager)
+	indexer.store = store.New(
+		indexer.cache,
+		storage.Class,
+		storage.Address,
+		storage.Internal,
+		storage.Transfer,
+		storage.Event,
+		storage.StorageDiff,
+		storage.Invoke,
+		storage.Deploy,
+		storage.L1Handler,
+		storage.Fee,
+		storage.Transactable,
+		storage.PartitionManager)
+
 	indexer.statusChecker = newStatusChecker(
 		indexer.receiver,
 		storage.Blocks,
 		storage.Declare,
 		storage.Deploy,
 		storage.DeployAccount,
-		storage.InvokeV0,
+		storage.Invoke,
 		storage.L1Handler,
 		storage.Transactable,
 	)
@@ -242,9 +257,6 @@ func (indexer *Indexer) sync(ctx context.Context) {
 func (indexer *Indexer) saveBlocks(ctx context.Context) {
 	defer indexer.wg.Done()
 
-	ticker := time.NewTicker(time.Microsecond * 100)
-	defer ticker.Stop()
-
 	var zeroBlock bool
 
 	for {
@@ -255,7 +267,6 @@ func (indexer *Indexer) saveBlocks(ctx context.Context) {
 		case result := <-indexer.receiver.Results():
 			indexer.queue[result.Block.BlockNumber] = result
 
-		case <-ticker.C:
 			if indexer.state.Height() == 0 && !zeroBlock {
 				if data, ok := indexer.queue[0]; ok {
 					if err := indexer.handleBlock(ctx, data); err != nil {
@@ -271,15 +282,24 @@ func (indexer *Indexer) saveBlocks(ctx context.Context) {
 			if next < indexer.cfg.StartLevel+1 {
 				next = indexer.cfg.StartLevel + 1
 			}
-			if data, ok := indexer.queue[next]; ok {
-				if err := indexer.handleBlock(ctx, data); err != nil {
-					if errors.Is(err, context.Canceled) {
-						return
-					}
-					log.Err(err).Msg("handle block")
-					time.Sleep(time.Second * 3)
-				}
 
+			for {
+				if data, ok := indexer.queue[next]; ok {
+					if err := indexer.handleBlock(ctx, data); err != nil {
+						if errors.Is(err, context.Canceled) {
+							return
+						}
+						log.Err(err).Msg("handle block")
+						time.Sleep(time.Second * 3)
+					}
+					if next%25 == 0 {
+						runtime.GC()
+					}
+
+					next = indexer.state.Height() + 1
+				} else {
+					break
+				}
 			}
 		}
 	}
@@ -297,7 +317,7 @@ func (indexer *Indexer) handleBlock(ctx context.Context, result receiver.Result)
 	indexer.txWriteMutex.Lock()
 	{
 		startSave := time.Now()
-		parseResult.State = indexer.updateState(ctx, parseResult.Block, len(parseResult.Classes))
+		parseResult.State = indexer.updateState(ctx, parseResult.Block, len(parseResult.Context.Classes()))
 		if err := indexer.store.Save(ctx, parseResult); err != nil {
 			return errors.Wrap(err, "saving block to database")
 		}

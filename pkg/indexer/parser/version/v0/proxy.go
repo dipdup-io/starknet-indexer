@@ -2,8 +2,8 @@ package v0
 
 import (
 	"context"
+	"errors"
 
-	"github.com/dipdup-io/starknet-go-api/pkg/encoding"
 	"github.com/dipdup-io/starknet-indexer/internal/storage"
 	"github.com/dipdup-io/starknet-indexer/pkg/indexer/parser/data"
 	"github.com/dipdup-io/starknet-indexer/pkg/indexer/parser/resolver"
@@ -21,7 +21,7 @@ func NewProxyUpgrader(resolver resolver.Resolver) ProxyUpgrader {
 	}
 }
 
-type upgradeHandler func(data map[string]any) ([]byte, error)
+type upgradeHandler func(data map[string]any) ([]data.ProxyUpgrade, error)
 
 // Parse -
 func (parser ProxyUpgrader) Parse(ctx context.Context, txCtx data.TxContext, contract storage.Address, events []storage.Event, entrypoint string, data map[string]any) error {
@@ -43,26 +43,36 @@ func (parser ProxyUpgrader) parseEvents(ctx context.Context, txCtx data.TxContex
 			handler = upgraded
 		case "account_upgraded":
 			handler = accountUpgraded
+		case "ModuleFunctionChange":
+			handler = moduleFunctionChange
 		default:
 			continue
 		}
 
-		newImpl, err := handler(events[i].ParsedData)
+		upgrades, err := handler(events[i].ParsedData)
 		if err != nil {
 			return false, err
 		}
-		if err := parser.resolver.UpgradeProxy(ctx, contract, newImpl, events[i].Height); err != nil {
+		if len(upgrades) == 0 {
+			return false, nil
+		}
+		if err := parser.resolver.UpgradeProxy(ctx, contract, upgrades, events[i].Height); err != nil {
+			if errors.Is(err, resolver.ErrUnknownProxy) {
+				return false, nil
+			}
 			return false, err
 		}
-		contractAddress := encoding.EncodeHex(contract.Hash)
-		txCtx.ProxyUpgrades[contractAddress] = struct{}{}
+		for i := range upgrades {
+			key := data.NewProxyKey(upgrades[i].Address, upgrades[i].Selector)
+			txCtx.ProxyUpgrades.Add(key, struct{}{})
+		}
 		return true, nil
 	}
 	return false, nil
 }
 
-func (parser ProxyUpgrader) parseParams(ctx context.Context, txCtx data.TxContext, contract storage.Address, entrypoint string, data map[string]any) error {
-	if len(data) == 0 {
+func (parser ProxyUpgrader) parseParams(ctx context.Context, txCtx data.TxContext, contract storage.Address, entrypoint string, params map[string]any) error {
+	if len(params) == 0 {
 		return nil
 	}
 
@@ -74,17 +84,22 @@ func (parser ProxyUpgrader) parseParams(ctx context.Context, txCtx data.TxContex
 		return nil
 	}
 
-	newImpl, err := handler(data)
+	upgrades, err := handler(params)
 	if err != nil {
 		return err
 	}
-	if newImpl == nil {
+	if len(upgrades) == 0 {
 		return nil
 	}
-	if err := parser.resolver.UpgradeProxy(ctx, contract, newImpl, txCtx.Height); err != nil {
+	if err := parser.resolver.UpgradeProxy(ctx, contract, upgrades, txCtx.Height); err != nil {
+		if errors.Is(err, resolver.ErrUnknownProxy) {
+			return nil
+		}
 		return err
 	}
-	contractAddress := encoding.EncodeHex(contract.Hash)
-	txCtx.ProxyUpgrades[contractAddress] = struct{}{}
+	for i := range upgrades {
+		key := data.NewProxyKey(upgrades[i].Address, upgrades[i].Selector)
+		txCtx.ProxyUpgrades.Add(key, struct{}{})
+	}
 	return err
 }

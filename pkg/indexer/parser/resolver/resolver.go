@@ -3,6 +3,7 @@ package resolver
 import (
 	"github.com/dipdup-io/starknet-indexer/internal/storage"
 	"github.com/dipdup-io/starknet-indexer/pkg/indexer/cache"
+	"github.com/dipdup-io/starknet-indexer/pkg/indexer/parser/data"
 	"github.com/dipdup-io/starknet-indexer/pkg/indexer/parser/generator"
 	"github.com/dipdup-io/starknet-indexer/pkg/indexer/receiver"
 	"github.com/pkg/errors"
@@ -15,16 +16,12 @@ var (
 
 // Resolver -
 type Resolver struct {
-	blocks      storage.IBlock
-	proxies     storage.IProxy
-	receiver    *receiver.Receiver
-	cache       *cache.Cache
-	idGenerator *generator.IdGenerator
-
-	addresses       map[string]*storage.Address
-	classes         map[string]*storage.Class
-	endBlockProxies map[string]*storage.Proxy
-	contextProxies  map[string]*storage.Proxy
+	blocks       storage.IBlock
+	proxies      storage.IProxy
+	receiver     *receiver.Receiver
+	cache        *cache.Cache
+	idGenerator  *generator.IdGenerator
+	blockContext *data.BlockContext
 }
 
 // NewResolver -
@@ -34,34 +31,16 @@ func NewResolver(
 	idGenerator *generator.IdGenerator,
 	blocks storage.IBlock,
 	proxies storage.IProxy,
+	blockContext *data.BlockContext,
 ) Resolver {
 	return Resolver{
-		receiver:    receiver,
-		cache:       cache,
-		idGenerator: idGenerator,
-		blocks:      blocks,
-		proxies:     proxies,
-
-		addresses:       make(map[string]*storage.Address),
-		classes:         make(map[string]*storage.Class),
-		endBlockProxies: make(map[string]*storage.Proxy),
-		contextProxies:  make(map[string]*storage.Proxy),
+		receiver:     receiver,
+		cache:        cache,
+		idGenerator:  idGenerator,
+		blocks:       blocks,
+		proxies:      proxies,
+		blockContext: blockContext,
 	}
-}
-
-// Addresses -
-func (resolver *Resolver) Addresses() map[string]*storage.Address {
-	return resolver.addresses
-}
-
-// Classes -
-func (resolver *Resolver) Classes() map[string]*storage.Class {
-	return resolver.classes
-}
-
-// Proxies -
-func (resolver *Resolver) Proxies() map[string]*storage.Proxy {
-	return resolver.endBlockProxies
 }
 
 // NextTxId -

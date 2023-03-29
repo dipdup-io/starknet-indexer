@@ -3,6 +3,7 @@ package v0
 import (
 	"bytes"
 	"context"
+	"strconv"
 
 	"github.com/dipdup-io/starknet-go-api/pkg/abi"
 	starknetData "github.com/dipdup-io/starknet-go-api/pkg/data"
@@ -79,8 +80,8 @@ func (parser EventParser) Parse(ctx context.Context, txCtx data.TxContext, contr
 	return model, nil
 }
 
-func upgraded(data map[string]any) ([]byte, error) {
-	value, ok := data["implementation"]
+func upgraded(params map[string]any) ([]data.ProxyUpgrade, error) {
+	value, ok := params["implementation"]
 	if !ok {
 		return nil, nil
 	}
@@ -88,11 +89,16 @@ func upgraded(data map[string]any) ([]byte, error) {
 	if !ok {
 		return nil, nil
 	}
-	return starknetData.Felt(implementation).Bytes(), nil
+	return []data.ProxyUpgrade{
+		{
+			Address: starknetData.Felt(implementation).Bytes(),
+			Action:  data.ProxyActionUpdate,
+		},
+	}, nil
 }
 
-func accountUpgraded(data map[string]any) ([]byte, error) {
-	value, ok := data["new_implementation"]
+func accountUpgraded(params map[string]any) ([]data.ProxyUpgrade, error) {
+	value, ok := params["new_implementation"]
 	if !ok {
 		return nil, nil
 	}
@@ -100,7 +106,70 @@ func accountUpgraded(data map[string]any) ([]byte, error) {
 	if !ok {
 		return nil, nil
 	}
-	return starknetData.Felt(implementation).Bytes(), nil
+	return []data.ProxyUpgrade{
+		{
+			Address: starknetData.Felt(implementation).Bytes(),
+			Action:  data.ProxyActionUpdate,
+		},
+	}, nil
+}
+
+func moduleFunctionChange(params map[string]any) ([]data.ProxyUpgrade, error) {
+	upgrade := new(data.ProxyUpgrade)
+	actionsValue, ok := params["actions"]
+	if !ok {
+		return nil, nil
+	}
+	actions, ok := actionsValue.([]any)
+	if !ok {
+		return nil, nil
+	}
+
+	upgrades := make([]data.ProxyUpgrade, 0)
+	for i := range actions {
+		action, ok := actions[i].(map[string]any)
+		if !ok {
+			continue
+		}
+
+		value, ok := action["module_address"]
+		if !ok {
+			continue
+		}
+		address, ok := value.(string)
+		if !ok {
+			continue
+		}
+		upgrade.Address = starknetData.Felt(address).Bytes()
+
+		value, ok = action["selector"]
+		if !ok {
+			continue
+		}
+		selector, ok := value.(string)
+		if !ok {
+			continue
+		}
+		upgrade.Selector = starknetData.Felt(selector).Bytes()
+
+		value, ok = action["action"]
+		if !ok {
+			return nil, nil
+		}
+		actionType, ok := value.(string)
+		if !ok {
+			continue
+		}
+		iAction, err := strconv.ParseInt(actionType, 0, 32)
+		if err != nil {
+			return nil, err
+		}
+		upgrade.Action = data.ProxyAction(iAction)
+		upgrade.IsModule = true
+		upgrades = append(upgrades, *upgrade)
+	}
+
+	return upgrades, nil
 }
 
 func depositHandled(ctx context.Context, resolver resolver.Resolver, txCtx data.TxContext, contract storage.Address, event storage.Event) ([]storage.Transfer, error) {

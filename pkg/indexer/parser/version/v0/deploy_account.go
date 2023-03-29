@@ -11,6 +11,7 @@ import (
 	"github.com/dipdup-io/starknet-indexer/internal/storage"
 	"github.com/dipdup-io/starknet-indexer/pkg/indexer/decode"
 	parserData "github.com/dipdup-io/starknet-indexer/pkg/indexer/parser/data"
+	"github.com/goccy/go-json"
 )
 
 // ParseDeployAccount -

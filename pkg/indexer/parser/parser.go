@@ -64,7 +64,9 @@ func Parse(
 		L1Handler:     make([]storage.L1Handler, 0),
 	}
 
-	resolver := resolver.NewResolver(receiver, cache, idGenerator, blocks, proxies)
+	blockCtx := parserData.NewBlockContext(block)
+
+	resolver := resolver.NewResolver(receiver, cache, idGenerator, blocks, proxies, blockCtx)
 
 	if err := resolver.ResolveStateUpdates(ctx, &block, result.StateUpdate); err != nil {
 		return parserData.Result{}, errors.Wrap(err, "state update parsing")
@@ -151,9 +153,7 @@ func Parse(
 	block.L1HandlerCount = len(block.L1Handler)
 
 	return parserData.Result{
-		Block:     block,
-		Addresses: resolver.Addresses(),
-		Classes:   resolver.Classes(),
-		Proxies:   resolver.Proxies(),
+		Block:   block,
+		Context: blockCtx,
 	}, nil
 }

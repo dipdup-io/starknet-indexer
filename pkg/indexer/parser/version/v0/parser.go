@@ -12,11 +12,8 @@ import (
 	parserData "github.com/dipdup-io/starknet-indexer/pkg/indexer/parser/data"
 	"github.com/dipdup-io/starknet-indexer/pkg/indexer/parser/interfaces"
 	"github.com/dipdup-io/starknet-indexer/pkg/indexer/parser/resolver"
-	jsoniter "github.com/json-iterator/go"
 	"github.com/pkg/errors"
 )
-
-var json = jsoniter.ConfigCompatibleWithStandardLibrary
 
 // Parser -
 type Parser struct {

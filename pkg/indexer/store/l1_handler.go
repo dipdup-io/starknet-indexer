@@ -3,6 +3,7 @@ package store
 import (
 	"context"
 
+	models "github.com/dipdup-io/starknet-indexer/internal/storage"
 	parserData "github.com/dipdup-io/starknet-indexer/pkg/indexer/parser/data"
 	"github.com/dipdup-net/indexer-sdk/pkg/storage"
 )
@@ -17,10 +18,7 @@ func (store *Store) saveL1Handler(
 		return nil
 	}
 
-	models := make([]any, result.Block.L1HandlerCount)
 	for i := range result.Block.L1Handler {
-		models[i] = &result.Block.L1Handler[i]
-
 		sm.addInternals(result.Block.L1Handler[i].Internals)
 		sm.addEvents(result.Block.L1Handler[i].Events)
 		sm.addMessages(result.Block.L1Handler[i].Messages)
@@ -31,5 +29,5 @@ func (store *Store) saveL1Handler(
 		}
 	}
 
-	return tx.BulkSave(ctx, models)
+	return bulkSaveWithCopy[models.L1Handler](ctx, tx, store.l1Handlers, result.Block.L1Handler)
 }

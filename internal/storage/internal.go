@@ -9,6 +9,8 @@ import (
 // IInternal -
 type IInternal interface {
 	storage.Table[*Internal]
+
+	Copiable[Internal]
 }
 
 // Internal -

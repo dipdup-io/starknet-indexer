@@ -5,6 +5,7 @@ import (
 	"sync"
 
 	"github.com/dipdup-io/starknet-go-api/pkg/data"
+	"github.com/goccy/go-json"
 )
 
 // BridgedToken -

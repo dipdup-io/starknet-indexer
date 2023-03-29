@@ -9,6 +9,7 @@ import (
 	models "github.com/dipdup-io/starknet-indexer/internal/storage"
 	"github.com/dipdup-io/starknet-indexer/internal/storage/postgres"
 	"github.com/dipdup-io/starknet-indexer/pkg/indexer/cache"
+	"github.com/dipdup-io/starknet-indexer/pkg/indexer/parser/data"
 	parserData "github.com/dipdup-io/starknet-indexer/pkg/indexer/parser/data"
 	"github.com/dipdup-net/indexer-sdk/pkg/storage"
 	"github.com/go-pg/pg/v10"
@@ -18,6 +19,14 @@ import (
 type Store struct {
 	classes          models.IClass
 	address          models.IAddress
+	internals        models.IInternal
+	transfers        models.ITransfer
+	events           models.IEvent
+	diffs            models.IStorageDiff
+	invokes          models.IInvoke
+	deploys          models.IDeploy
+	l1Handlers       models.IL1Handler
+	fees             models.IFee
 	cache            *cache.Cache
 	transactable     storage.Transactable
 	partitionManager postgres.PartitionManager
@@ -28,6 +37,14 @@ func New(
 	cache *cache.Cache,
 	classes models.IClass,
 	address models.IAddress,
+	internals models.IInternal,
+	transfers models.ITransfer,
+	eventsStorage models.IEvent,
+	diffs models.IStorageDiff,
+	invokes models.IInvoke,
+	deploys models.IDeploy,
+	l1Handlers models.IL1Handler,
+	fees models.IFee,
 	transactable storage.Transactable,
 	partitionManager postgres.PartitionManager,
 ) *Store {
@@ -35,6 +52,14 @@ func New(
 		cache:            cache,
 		classes:          classes,
 		address:          address,
+		internals:        internals,
+		transfers:        transfers,
+		events:           eventsStorage,
+		diffs:            diffs,
+		invokes:          invokes,
+		deploys:          deploys,
+		l1Handlers:       l1Handlers,
+		fees:             fees,
 		transactable:     transactable,
 		partitionManager: partitionManager,
 	}
@@ -55,8 +80,12 @@ func (store *Store) Save(
 	}
 	defer tx.Close(ctx)
 
-	for _, class := range result.Classes {
-		if err := tx.Add(ctx, class); err != nil {
+	for _, class := range result.Context.Classes() {
+		if _, err := tx.Exec(ctx, `INSERT INTO class (id, type, hash, abi, height)
+			VALUES (?,?,?,?,?)
+			ON CONFLICT (id)
+			DO 
+			UPDATE SET abi = excluded.abi`, class.ID, class.Type, class.Hash, class.Abi, class.Height); err != nil {
 			return tx.HandleError(ctx, err)
 		}
 	}
@@ -65,28 +94,20 @@ func (store *Store) Save(
 		return tx.HandleError(ctx, err)
 	}
 
-	for _, proxy := range result.Proxies {
-		if _, err := tx.Exec(ctx, `
-			INSERT INTO proxy (contract_id, hash, entity_type, entity_id, entity_hash)
-			VALUES(?,?,?,?,?) 
-			ON CONFLICT (hash)
-			DO 
-			UPDATE SET entity_type = excluded.entity_type, entity_id = excluded.entity_id, entity_hash = excluded.entity_hash`,
-			proxy.ContractID, proxy.Hash, proxy.EntityType, proxy.EntityID, proxy.EntityHash); err != nil {
-			return tx.HandleError(ctx, err)
-		}
+	if err := store.saveProxies(ctx, tx, result.Context.Proxies()); err != nil {
+		return tx.HandleError(ctx, err)
 	}
 
 	if err := tx.Add(ctx, &result.Block); err != nil {
 		return tx.HandleError(ctx, err)
 	}
 
-	if err := saveStorageDiff(ctx, tx, result); err != nil {
+	if err := saveStorageDiff(ctx, tx, store.diffs, result); err != nil {
 		return tx.HandleError(ctx, err)
 	}
 
 	if result.Block.TxCount > 0 {
-		sm := newSubModels()
+		sm := newSubModels(store.internals, store.transfers, store.events)
 
 		if err := store.saveDeclare(ctx, tx, result, sm); err != nil {
 			return tx.HandleError(ctx, err)
@@ -128,14 +149,15 @@ func (store *Store) Save(
 }
 
 func saveAddresses(ctx context.Context, tx storage.Transaction, result parserData.Result) error {
-	if len(result.Addresses) == 0 {
+	addresses := result.Context.Addresses()
+	if len(addresses) == 0 {
 		return nil
 	}
 
 	values := make([]string, 0)
-	for _, address := range result.Addresses {
+	for _, address := range addresses {
 		if address.ClassID == nil || *address.ClassID == 0 {
-			if class, ok := result.Classes[encoding.EncodeHex(address.Class.Hash)]; ok {
+			if class, ok := result.Context.Classes()[encoding.EncodeHex(address.Class.Hash)]; ok {
 				address.ClassID = &class.ID
 			}
 		}
@@ -154,15 +176,11 @@ func saveAddresses(ctx context.Context, tx storage.Transaction, result parserDat
 	return err
 }
 
-func saveStorageDiff(ctx context.Context, tx storage.Transaction, result parserData.Result) error {
+func saveStorageDiff(ctx context.Context, tx storage.Transaction, copiable models.Copiable[models.StorageDiff], result parserData.Result) error {
 	if result.Block.StorageDiffCount == 0 {
 		return nil
 	}
-	models := make([]any, len(result.Block.StorageDiffs))
-	for i := range result.Block.StorageDiffs {
-		models[i] = &result.Block.StorageDiffs[i]
-	}
-	return tx.BulkSave(ctx, models)
+	return bulkSaveWithCopy(ctx, tx, copiable, result.Block.StorageDiffs)
 }
 
 func (store *Store) saveInternals(
@@ -199,4 +217,32 @@ func (store *Store) saveInternals(
 		}
 	}
 	return nil
+}
+
+func (store *Store) saveProxies(ctx context.Context, tx storage.Transaction, proxies data.ProxyMap[*data.ProxyWithAction]) error {
+	return proxies.Range(func(_ parserData.ProxyKey, value *parserData.ProxyWithAction) (bool, error) {
+		store.cache.SetProxy(value.Hash, value.Selector, value.Proxy)
+		return saveProxy(ctx, tx, value)
+	})
+}
+
+func saveProxy(ctx context.Context, tx storage.Transaction, proxy *data.ProxyWithAction) (bool, error) {
+	switch proxy.Action {
+	case parserData.ProxyActionAdd, parserData.ProxyActionUpdate:
+		if _, err := tx.Exec(ctx, `
+			INSERT INTO proxy (contract_id, hash, selector, entity_type, entity_id, entity_hash)
+			VALUES(?,?,?,?,?,?) 
+			ON CONFLICT (hash, selector)
+			DO 
+			UPDATE SET entity_type = excluded.entity_type, entity_id = excluded.entity_id, entity_hash = excluded.entity_hash, selector = excluded.selector`,
+			proxy.ContractID, proxy.Hash, proxy.Selector, proxy.EntityType, proxy.EntityID, proxy.EntityHash); err != nil {
+			return true, err
+		}
+	case parserData.ProxyActionDelete:
+		if _, err := tx.Exec(ctx, `DELETE FROM proxy WHERE hash = ? AND selector = ?`,
+			proxy.Hash, proxy.Selector); err != nil {
+			return true, err
+		}
+	}
+	return false, nil
 }

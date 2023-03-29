@@ -31,13 +31,13 @@ type TxContext struct {
 	ProxyId    uint64
 	ContractId uint64
 
-	ProxyUpgrades map[string]struct{}
+	ProxyUpgrades ProxyMap[struct{}]
 }
 
 // NewEmptyTxContext -
 func NewEmptyTxContext() TxContext {
 	return TxContext{
-		ProxyUpgrades: make(map[string]struct{}),
+		ProxyUpgrades: NewProxyMap[struct{}](),
 	}
 }
 
@@ -52,7 +52,7 @@ func NewTxContextFromInvoke(tx storage.Invoke, proxyId uint64) TxContext {
 		Hash:          tx.Hash,
 		ProxyId:       proxyId,
 		ContractId:    tx.ContractID,
-		ProxyUpgrades: make(map[string]struct{}),
+		ProxyUpgrades: NewProxyMap[struct{}](),
 	}
 }
 
@@ -71,7 +71,7 @@ func NewTxContextFromDeclare(tx storage.Declare, proxyId uint64) TxContext {
 		Hash:          tx.Hash,
 		ProxyId:       proxyId,
 		ContractId:    contractId,
-		ProxyUpgrades: make(map[string]struct{}),
+		ProxyUpgrades: NewProxyMap[struct{}](),
 	}
 }
 
@@ -86,7 +86,7 @@ func NewTxContextFromDeploy(tx storage.Deploy, proxyId uint64) TxContext {
 		Hash:          tx.Hash,
 		ProxyId:       proxyId,
 		ContractId:    tx.ContractID,
-		ProxyUpgrades: make(map[string]struct{}),
+		ProxyUpgrades: NewProxyMap[struct{}](),
 	}
 }
 
@@ -101,7 +101,7 @@ func NewTxContextFromDeployAccount(tx storage.DeployAccount, proxyId uint64) TxC
 		Hash:            tx.Hash,
 		ProxyId:         proxyId,
 		ContractId:      tx.ContractID,
-		ProxyUpgrades:   make(map[string]struct{}),
+		ProxyUpgrades:   NewProxyMap[struct{}](),
 	}
 }
 
@@ -116,12 +116,12 @@ func NewTxContextFromL1Hadler(tx storage.L1Handler, proxyId uint64) TxContext {
 		Hash:          tx.Hash,
 		ProxyId:       proxyId,
 		ContractId:    tx.ContractID,
-		ProxyUpgrades: make(map[string]struct{}),
+		ProxyUpgrades: NewProxyMap[struct{}](),
 	}
 }
 
 // NewTxContextFromInternal -
-func NewTxContextFromInternal(tx storage.Internal, proxyUpgrades map[string]struct{}, proxyId uint64) TxContext {
+func NewTxContextFromInternal(tx storage.Internal, proxyUpgrades ProxyMap[struct{}], proxyId uint64) TxContext {
 	return TxContext{
 		InternalID:    &tx.ID,
 		Internal:      &tx,
@@ -145,6 +145,6 @@ func NewTxContextFromFee(tx storage.Fee, proxyId uint64) TxContext {
 		Status:        tx.Status,
 		ProxyId:       proxyId,
 		ContractId:    tx.ContractID,
-		ProxyUpgrades: make(map[string]struct{}),
+		ProxyUpgrades: NewProxyMap[struct{}](),
 	}
 }

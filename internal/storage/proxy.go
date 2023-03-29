@@ -19,7 +19,7 @@ const (
 type IProxy interface {
 	storage.Table[*Proxy]
 
-	GetByHash(ctx context.Context, hash []byte) (Proxy, error)
+	GetByHash(ctx context.Context, address, selector []byte) (Proxy, error)
 }
 
 // Proxy -
@@ -29,7 +29,8 @@ type Proxy struct {
 
 	ID         uint64
 	ContractID uint64
-	Hash       []byte     `pg:",unique:proxy_hash"`
+	Hash       []byte
+	Selector   []byte
 	EntityType EntityType `pg:",use_zero"`
 	EntityID   uint64
 	EntityHash []byte
