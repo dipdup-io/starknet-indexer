@@ -1,0 +1,27 @@
+version: 0.0.1
+
+log_level: ${LOG_LEVEL:-info}
+
+indexer:
+  name: ${INDEXER_NAME:-dipdup_starknet_indexer}
+  feeder_gateway: ${STARKNET_FEEDER_GATEWAY:-https://alpha-mainnet.starknet.io/feeder_gateway}
+  gateway: ${STARKNET_GATEWAY:-https://alpha-mainnet.starknet.io/gateway}
+  threads_count: ${INDEXER_THREADS_COUNT:-10}
+  start_level: ${INDEXER_START_LEVEL:-0}
+  timeout: ${INDEXER_REQUEST_TIMEOUT:-10}
+  requests_per_second: ${STARKNET_RPS:-2}
+  class_interfaces_dir: ${INDEXER_CLASS_INTERFACES_DIR:-./interfaces/}
+  bridged_tokens_file: ${INDEXER_BRIDGED_TOKENS_FILE:-mainnet.json}
+  cache_dir: ${INDEXER_CACHE_DIR}
+
+grpc:
+  server:
+    bind: ${GRPC_BIND:-127.0.0.1:7779}
+
+database:
+  kind: postgres
+  host: ${POSTGRES_HOST:-db}
+  port: ${POSTGRES_PORT:-5432}
+  user: ${POSTGRES_USER:-dipdup}
+  password: ${POSTGRES_PASSWORD:-changeme}
+  database: ${POSTGRES_DB:-starknet}
