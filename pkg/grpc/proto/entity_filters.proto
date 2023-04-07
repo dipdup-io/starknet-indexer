@@ -5,6 +5,7 @@ package proto;
 option go_package = "github.com/dipdup-io/starknet-indexer/pkg/grpc/pb";
 
 import "github.com/dipdup-io/starknet-indexer/pkg/grpc/proto/filters.proto";
+import "google/protobuf/any.proto";
 
 message TxRequest {
     repeated InvokeFilters invokes = 1;
@@ -24,6 +25,8 @@ message InvokeFilters {
     StringFilter contract = 5;
     EqualityFilter selector = 6;
     StringFilter entrypoint = 7;
+    map<string, google.protobuf.Any> parsed_calldata = 8;
+    repeated string calldata = 9;
 }
 
 message DeclareFilters {
@@ -39,6 +42,8 @@ message DeployFilters {
     EnumFilter status = 3;
     EnumFilter version = 4;
     StringFilter class = 5;
+    map<string, google.protobuf.Any> parsed_calldata = 6;
+    repeated string calldata = 7;
 }
 
 message DeployAccountFilters {
@@ -47,6 +52,8 @@ message DeployAccountFilters {
     EnumFilter status = 3;
     EnumFilter version = 4;
     StringFilter class = 5;
+    map<string, google.protobuf.Any> parsed_calldata = 6;
+    repeated string calldata = 7;
 }
 
 message L1HandlerFilter {
@@ -56,6 +63,8 @@ message L1HandlerFilter {
     StringFilter contract = 4;
     EqualityFilter selector = 5;
     StringFilter entrypoint = 6;
+    map<string, google.protobuf.Any> parsed_calldata = 7;
+    repeated string calldata = 8;
 }
 
 message InternalFilter {
@@ -69,6 +78,8 @@ message InternalFilter {
     StringFilter entrypoint = 8;
     EnumFilter entrypoint_type = 9;
     EnumFilter call_type = 10;
+    map<string, google.protobuf.Any> parsed_calldata = 11;
+    repeated string calldata = 12;
 }
 
 message FeeFilter {
@@ -82,6 +93,8 @@ message FeeFilter {
     StringFilter entrypoint = 8;
     EnumFilter entrypoint_type = 9;
     EnumFilter call_type = 10;
+    map<string, google.protobuf.Any> parsed_calldata = 11;
+    repeated string calldata = 12;
 }
 
 message EventFilter {
@@ -90,6 +103,8 @@ message EventFilter {
     StringFilter contract = 3;
     StringFilter from = 4;
     EqualityFilter name = 5;
+    map<string, google.protobuf.Any> parsed_data = 6;
+    repeated string data = 7;
 }
 
 
@@ -108,7 +123,7 @@ message TransferFilter {
     StringFilter contract = 3;
     StringFilter from = 4;
     StringFilter to = 5;
-    InternalFilter token_id = 6;
+    StringFilter token_id = 6;
 }
 
 message StorageDiffFilter {
@@ -120,5 +135,5 @@ message StorageDiffFilter {
 message TokenBalanceFilter {
     StringFilter owner = 1;
     StringFilter contract = 2;
-    InternalFilter token_id = 3;
+    StringFilter token_id = 3;
 }
