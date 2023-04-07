@@ -5,7 +5,8 @@ package proto;
 option go_package = "github.com/dipdup-io/starknet-indexer/pkg/grpc/pb";
 
 import "github.com/dipdup-net/indexer-sdk/pkg/modules/grpc/proto/general.proto";
-import "github.com/dipdup-io/starknet-indexer/pkg/grpc/proto/filters.proto";
+import "github.com/dipdup-io/starknet-indexer/pkg/grpc/proto/entity_filters.proto";
+import "github.com/dipdup-io/starknet-indexer/pkg/grpc/proto/response.proto";
 
 
 service IndexerService {
@@ -16,44 +17,11 @@ service IndexerService {
 message SubscribeRequest {
     uint64 start_block = 1;
     bool head = 2;
-    repeated TxRequest txs = 3;
+    TxRequest txs = 3;
 }
 
 message Subscription {
     SubscribeResponse response = 1;
     Block block = 2;
     bool end_of_block = 3;
-}
-
-message Block {
-    uint64 id = 1;
-    uint64 height = 2;
-    uint64 time = 3;
-    string version = 4;
-    uint64 tx_count = 5;
-    uint64 invokes_count = 6;
-    uint64 declares_count = 7;
-    uint64 deploys_count = 8;
-    uint64 deploy_account_count = 9;
-    uint64 l1_handlers_count = 10;
-    uint64 storage_diffs_count = 11;
-    uint64 status = 12;
-    bytes hash = 13;
-    bytes parent_hash = 14;
-    bytes new_root = 15;
-    bytes sequencer_address = 16;
-}
-
-message TxRequest {
-   repeated InvokeFilters invokes = 1;
-}
-
-message InvokeFilters {
-    IntegerFilter height = 1;
-    TimeFilter time = 2;
-    EnumFilter status = 3;
-    EnumFilter version = 4;
-    StringFilter contract = 5;
-    EqualityFilter selector = 6;
-    StringFilter entrypoint = 7;
 }

@@ -1,0 +1,124 @@
+syntax = "proto3";
+
+package proto;
+
+option go_package = "github.com/dipdup-io/starknet-indexer/pkg/grpc/pb";
+
+import "github.com/dipdup-io/starknet-indexer/pkg/grpc/proto/filters.proto";
+
+message TxRequest {
+    repeated InvokeFilters invokes = 1;
+    repeated DeclareFilters declares = 2;
+    repeated DeployFilters deploys = 3;
+    repeated DeployAccountFilters deploy_accounts = 4;
+    repeated L1HandlerFilter l1_handlers = 5;
+    repeated InternalFilter internals = 6;
+    repeated FeeFilter fees = 7;
+}
+
+message InvokeFilters {
+    IntegerFilter height = 1;
+    TimeFilter time = 2;
+    EnumFilter status = 3;
+    EnumFilter version = 4;
+    StringFilter contract = 5;
+    EqualityFilter selector = 6;
+    StringFilter entrypoint = 7;
+}
+
+message DeclareFilters {
+    IntegerFilter height = 1;
+    TimeFilter time = 2;
+    EnumFilter status = 3;
+    EnumFilter version = 4;
+}
+
+message DeployFilters {
+    IntegerFilter height = 1;
+    TimeFilter time = 2;
+    EnumFilter status = 3;
+    EnumFilter version = 4;
+    StringFilter class = 5;
+}
+
+message DeployAccountFilters {
+    IntegerFilter height = 1;
+    TimeFilter time = 2;
+    EnumFilter status = 3;
+    EnumFilter version = 4;
+    StringFilter class = 5;
+}
+
+message L1HandlerFilter {
+    IntegerFilter height = 1;
+    TimeFilter time = 2;
+    EnumFilter status = 3;
+    StringFilter contract = 4;
+    EqualityFilter selector = 5;
+    StringFilter entrypoint = 6;
+}
+
+message InternalFilter {
+    IntegerFilter height = 1;
+    TimeFilter time = 2;
+    EnumFilter status = 3;
+    StringFilter contract = 4;
+    StringFilter caller = 5;
+    StringFilter class = 6;
+    EqualityFilter selector = 7;
+    StringFilter entrypoint = 8;
+    EnumFilter entrypoint_type = 9;
+    EnumFilter call_type = 10;
+}
+
+message FeeFilter {
+    IntegerFilter height = 1;
+    TimeFilter time = 2;
+    EnumFilter status = 3;
+    StringFilter contract = 4;
+    StringFilter caller = 5;
+    StringFilter class = 6;
+    EqualityFilter selector = 7;
+    StringFilter entrypoint = 8;
+    EnumFilter entrypoint_type = 9;
+    EnumFilter call_type = 10;
+}
+
+message EventFilter {
+    IntegerFilter height = 1;
+    TimeFilter time = 2;
+    StringFilter contract = 3;
+    StringFilter from = 4;
+    EqualityFilter name = 5;
+}
+
+
+message MessageFilter {
+    IntegerFilter height = 1;
+    TimeFilter time = 2;
+    StringFilter contract = 3;
+    StringFilter from = 4;
+    StringFilter to = 5;
+    EqualityFilter selector = 6;
+}
+
+message TransferFilter {
+    IntegerFilter height = 1;
+    TimeFilter time = 2;
+    StringFilter contract = 3;
+    StringFilter from = 4;
+    StringFilter to = 5;
+    InternalFilter token_id = 6;
+}
+
+message StorageDiffFilter {
+    IntegerFilter height = 1;
+    StringFilter contract = 2;
+    EqualityFilter key = 3;
+}
+
+message TokenBalanceFilter {
+    StringFilter owner = 1;
+    StringFilter contract = 2;
+    InternalFilter token_id = 3;
+}
