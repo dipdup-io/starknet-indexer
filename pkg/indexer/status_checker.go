@@ -140,7 +140,7 @@ func (checker *statusChecker) init(ctx context.Context) error {
 	)
 
 	for !end {
-		blocks, err := checker.blocks.ByStatus(ctx, storage.StatusAcceptedOnL2, limit, 0, sdk.SortOrderAsc)
+		blocks, err := checker.blocks.ByStatus(ctx, storage.StatusAcceptedOnL2, limit, offset, sdk.SortOrderAsc)
 		if err != nil {
 			return err
 		}
@@ -263,6 +263,8 @@ func (checker *statusChecker) check(ctx context.Context) error {
 		if _, err := checker.acceptedOnL2.Pop(); err != nil {
 			return err
 		}
+
+		log.Info().Str("status", status.String()).Uint64("height", item.Height).Msg("update block status")
 	}
 }
 
@@ -298,11 +300,12 @@ func (checker *statusChecker) update(ctx context.Context, height uint64, status 
 		&storage.Invoke{},
 		&storage.L1Handler{},
 		&storage.Internal{},
+		&storage.Fee{},
 	} {
 		if _, err := tx.Exec(ctx, `update ? set status = ? where height = ?`, pg.Ident(model.TableName()), status, height); err != nil {
 			return tx.HandleError(ctx, err)
 		}
 	}
 
-	return nil
+	return tx.Flush(ctx)
 }

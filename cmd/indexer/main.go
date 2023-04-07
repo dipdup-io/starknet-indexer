@@ -8,8 +8,10 @@ import (
 
 	"github.com/dipdup-io/starknet-indexer/internal/starknet"
 	"github.com/dipdup-io/starknet-indexer/internal/storage/postgres"
+	"github.com/dipdup-io/starknet-indexer/pkg/grpc"
 	"github.com/dipdup-io/starknet-indexer/pkg/indexer"
 	"github.com/dipdup-net/go-lib/config"
+	"github.com/dipdup-net/indexer-sdk/pkg/modules"
 	"github.com/spf13/cobra"
 
 	"net/http"
@@ -74,15 +76,25 @@ func main() {
 		return
 	}
 
-	indexer := indexer.New(cfg.Indexer, postgres)
+	indexerModule := indexer.New(cfg.Indexer, postgres)
 
-	// if err := indexer.Rollback(ctx, 2835); err != nil {
-	// 	log.Panic().Err(err).Msg("postgres connection")
-	// 	return
-	// }
-	// log.Info().Msg("rollback finished")
+	grpcModule, err := grpc.NewServer(
+		cfg.GRPC,
+	)
+	if err != nil {
+		log.Panic().Err(err).Msg("creating grpc module")
+		cancel()
+		return
+	}
 
-	indexer.Start(ctx)
+	if err := modules.Connect(indexerModule, grpcModule, indexer.OutputBlocks, grpc.InputBlocks); err != nil {
+		log.Panic().Err(err).Msg("creating modules connection")
+		cancel()
+		return
+	}
+
+	grpcModule.Start(ctx)
+	indexerModule.Start(ctx)
 
 	signals := make(chan os.Signal, 1)
 	signal.Notify(signals, os.Interrupt, syscall.SIGTERM, syscall.SIGINT)
@@ -90,8 +102,11 @@ func main() {
 	<-signals
 	cancel()
 
-	if err := indexer.Close(); err != nil {
+	if err := indexerModule.Close(); err != nil {
 		log.Panic().Err(err).Msg("closing indexer")
+	}
+	if err := grpcModule.Close(); err != nil {
+		log.Panic().Err(err).Msg("closing grpc server")
 	}
 
 	close(signals)

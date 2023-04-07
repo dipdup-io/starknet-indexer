@@ -78,7 +78,7 @@ func (parser InternalTxParser) Parse(ctx context.Context, txCtx parserData.TxCon
 		Internals: make([]storage.Internal, 0),
 	}
 
-	if class, err := parser.Resolver.FindClassByHash(ctx, internal.ClassHash); err != nil {
+	if class, err := parser.Resolver.FindClassByHash(ctx, internal.ClassHash, tx.Height); err != nil {
 		return tx, err
 	} else if class != nil {
 		tx.Class = *class

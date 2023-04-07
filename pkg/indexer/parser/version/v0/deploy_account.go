@@ -29,7 +29,7 @@ func (parser Parser) ParseDeployAccount(ctx context.Context, raw *data.DeployAcc
 		Signature:           raw.Signature,
 	}
 
-	if class, err := parser.Resolver.FindClassByHash(ctx, raw.ClassHash); err != nil {
+	if class, err := parser.Resolver.FindClassByHash(ctx, raw.ClassHash, tx.Height); err != nil {
 		return tx, nil, err
 	} else if class != nil {
 		tx.Class = *class

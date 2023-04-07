@@ -28,7 +28,7 @@ func (parser Parser) ParseDeclare(ctx context.Context, version data.Felt, raw *d
 		return tx, nil, err
 	}
 
-	if class, err := parser.Resolver.FindClassByHash(ctx, raw.ClassHash); err != nil {
+	if class, err := parser.Resolver.FindClassByHash(ctx, raw.ClassHash, tx.Height); err != nil {
 		return tx, nil, err
 	} else if class != nil {
 		tx.Class = *class

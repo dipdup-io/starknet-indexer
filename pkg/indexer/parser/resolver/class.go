@@ -7,6 +7,7 @@ import (
 	"github.com/dipdup-io/starknet-go-api/pkg/encoding"
 	"github.com/dipdup-io/starknet-indexer/internal/starknet"
 	"github.com/dipdup-io/starknet-indexer/internal/storage"
+	"github.com/rs/zerolog/log"
 )
 
 // ReceiveClass -
@@ -17,18 +18,24 @@ func (resolver *Resolver) ReceiveClass(ctx context.Context, class *storage.Class
 	}
 
 	if rawClass.RawAbi != nil {
-		class.Abi = storage.Bytes(rawClass.RawAbi)
-
 		a, err := rawClass.GetAbi()
 		if err != nil {
 			return err
 		}
+		class.Abi = storage.Bytes(rawClass.RawAbi)
 		interfaces, err := starknet.FindInterfaces(a)
 		if err != nil {
 			return err
 		}
 		class.Type = storage.NewClassType(interfaces...)
 		resolver.cache.SetAbiByClassHash(*class, a)
+	}
+
+	switch rawClass.ClassVersion {
+	case "0.1.0":
+		class.Cairo = 1
+	default:
+		class.Cairo = 0
 	}
 
 	resolver.addClass(class)
@@ -56,12 +63,13 @@ func (resolver *Resolver) FindClass(ctx context.Context, class *storage.Class) e
 }
 
 // FindClassByHash -
-func (resolver *Resolver) FindClassByHash(ctx context.Context, hash data.Felt) (*storage.Class, error) {
+func (resolver *Resolver) FindClassByHash(ctx context.Context, hash data.Felt, height uint64) (*storage.Class, error) {
 	if hash == "" {
 		return nil, nil
 	}
 	class := &storage.Class{
-		Hash: hash.Bytes(),
+		Hash:   hash.Bytes(),
+		Height: height,
 	}
 	err := resolver.FindClass(ctx, class)
 	return class, err
@@ -92,6 +100,7 @@ func (resolver *Resolver) parseClass(ctx context.Context, classHash []byte, heig
 	}
 	if class.Abi == nil {
 		if err := resolver.ReceiveClass(ctx, &class); err != nil {
+			log.Err(err).Msg("receive class error")
 			classes := resolver.blockContext.Classes()
 			delete(classes, encoding.EncodeHex(class.Hash))
 			return class, err

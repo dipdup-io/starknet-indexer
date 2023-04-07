@@ -130,7 +130,10 @@ func (r *Receiver) worker(ctx context.Context, height uint64) {
 		default:
 		}
 
-		response, err := r.api.GetStateUpdate(ctx, starknetData.BlockID{
+		requestCtx, cancel := context.WithTimeout(ctx, time.Second*30)
+		defer cancel()
+
+		response, err := r.api.GetStateUpdate(requestCtx, starknetData.BlockID{
 			Number: &height,
 		})
 		if err != nil {

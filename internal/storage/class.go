@@ -23,6 +23,7 @@ type Class struct {
 	Hash   []byte    `pg:",unique:class_hash"`
 	Abi    Bytes     `pg:",type:bytea"`
 	Height uint64    `pg:",use_zero"`
+	Cairo  int       `pg:",default:0,type:SMALLINT"`
 }
 
 // TableName -

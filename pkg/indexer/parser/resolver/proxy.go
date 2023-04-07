@@ -32,7 +32,7 @@ func (resolver *Resolver) Proxy(ctx context.Context, txCtx data.TxContext, class
 	if len(current.Abi) > 0 {
 		return resolver.cache.GetAbiByClass(current)
 	}
-	return a, errors.Errorf("can't find contract abi under proxy: %x contract=%x", class.Hash, contract.Hash)
+	return a, errors.Errorf("can't find contract abi under proxy: %x contract=%x", current.Hash, contract.Hash)
 }
 
 // UpgradeProxy -
@@ -75,15 +75,17 @@ func (resolver *Resolver) resolveHash(ctx context.Context, txCtx data.TxContext,
 	switch proxy.EntityType {
 	case storage.EntityTypeClass:
 		class := &storage.Class{
-			ID:   proxy.EntityID,
-			Hash: proxy.EntityHash,
+			ID:     proxy.EntityID,
+			Hash:   proxy.EntityHash,
+			Height: txCtx.Height,
 		}
 		err := resolver.FindClass(ctx, class)
 		return class, proxy.EntityHash, err
 	case storage.EntityTypeContract:
 		address := &storage.Address{
-			ID:   proxy.EntityID,
-			Hash: proxy.EntityHash,
+			ID:     proxy.EntityID,
+			Hash:   proxy.EntityHash,
+			Height: txCtx.Height,
 		}
 		if err := resolver.FindAddress(ctx, address); err != nil {
 			return nil, nil, err

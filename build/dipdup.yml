@@ -15,8 +15,7 @@ indexer:
   cache_dir: ${INDEXER_CACHE_DIR}
 
 grpc:
-  server:
-    bind: ${GRPC_BIND:-127.0.0.1:7779}
+  bind: ${GRPC_BIND:-127.0.0.1:7779}
 
 database:
   kind: postgres

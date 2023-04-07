@@ -134,6 +134,42 @@ func createIndices(ctx context.Context, conn *database.PgGo) error {
 		if _, err := tx.ExecContext(ctx, `CREATE INDEX IF NOT EXISTS storage_diff_contract_id_idx ON storage_diff (contract_id)`); err != nil {
 			return err
 		}
+
+		// Invoke
+		if _, err := tx.ExecContext(ctx, `CREATE INDEX IF NOT EXISTS invoke_height_idx ON invoke (height)`); err != nil {
+			return err
+		}
+
+		// Declare
+		if _, err := tx.ExecContext(ctx, `CREATE INDEX IF NOT EXISTS declare_height_idx ON declare (height)`); err != nil {
+			return err
+		}
+
+		// Deploy
+		if _, err := tx.ExecContext(ctx, `CREATE INDEX IF NOT EXISTS deploy_height_idx ON deploy (height)`); err != nil {
+			return err
+		}
+
+		// DeployAccount
+		if _, err := tx.ExecContext(ctx, `CREATE INDEX IF NOT EXISTS deploy_account_height_idx ON deploy_account (height)`); err != nil {
+			return err
+		}
+
+		// L1 handler
+		if _, err := tx.ExecContext(ctx, `CREATE INDEX IF NOT EXISTS l1_handler_height_idx ON l1_handler (height)`); err != nil {
+			return err
+		}
+
+		// Fee
+		if _, err := tx.ExecContext(ctx, `CREATE INDEX IF NOT EXISTS fee_height_idx ON fee (height)`); err != nil {
+			return err
+		}
+
+		// Internal
+		if _, err := tx.ExecContext(ctx, `CREATE INDEX IF NOT EXISTS internal_tx_height_idx ON internal_tx (height)`); err != nil {
+			return err
+		}
+
 		return nil
 	})
 }
