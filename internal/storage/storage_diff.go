@@ -24,6 +24,8 @@ type StorageDiff struct {
 	ContractID uint64
 	Key        []byte
 	Value      []byte
+
+	Contract Address `pg:"rel:has-one"`
 }
 
 // TableName -

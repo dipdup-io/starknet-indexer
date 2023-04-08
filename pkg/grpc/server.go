@@ -73,7 +73,11 @@ func (server *Server) listen(ctx context.Context) {
 			if !ok {
 				return
 			}
-			server.blockHandler(msg.(*storage.Block))
+			switch typedMsg := msg.(type) {
+			case *storage.Block:
+				server.blockHandler(typedMsg)
+			case []*storage.TokenBalance:
+			}
 		}
 	}
 }
@@ -84,10 +88,139 @@ func (module *Server) blockHandler(block *storage.Block) {
 		SubscriptionBlock,
 	)
 
+	for i := range block.Declare {
+		module.subscriptions.NotifyAll(
+			subscriptions.NewDeclareMessage(&block.Declare[i]),
+			SubscriptionDeclare,
+		)
+
+		module.notifyAboutFee(block.Declare[i].Fee)
+		module.notifyAboutInternals(block.Declare[i].Internals)
+		module.notifyAboutEvents(block.Declare[i].Events)
+		module.notifyAboutMessages(block.Declare[i].Messages)
+		module.notifyAboutTransfers(block.Declare[i].Transfers)
+	}
+	for i := range block.Deploy {
+		module.subscriptions.NotifyAll(
+			subscriptions.NewDeployMessage(&block.Deploy[i]),
+			SubscriptionDeploy,
+		)
+
+		module.notifyAboutFee(block.Deploy[i].Fee)
+		module.notifyAboutInternals(block.Deploy[i].Internals)
+		module.notifyAboutEvents(block.Deploy[i].Events)
+		module.notifyAboutMessages(block.Deploy[i].Messages)
+		module.notifyAboutTransfers(block.Deploy[i].Transfers)
+	}
+	for i := range block.DeployAccount {
+		module.subscriptions.NotifyAll(
+			subscriptions.NewDeployAccountMessage(&block.DeployAccount[i]),
+			SubscriptionDeployAccount,
+		)
+
+		module.notifyAboutFee(block.DeployAccount[i].Fee)
+		module.notifyAboutInternals(block.DeployAccount[i].Internals)
+		module.notifyAboutEvents(block.DeployAccount[i].Events)
+		module.notifyAboutMessages(block.DeployAccount[i].Messages)
+		module.notifyAboutTransfers(block.DeployAccount[i].Transfers)
+	}
+	for i := range block.Invoke {
+		module.subscriptions.NotifyAll(
+			subscriptions.NewInvokeMessage(&block.Invoke[i]),
+			SubscriptionInvoke,
+		)
+
+		module.notifyAboutFee(block.Invoke[i].Fee)
+		module.notifyAboutInternals(block.Invoke[i].Internals)
+		module.notifyAboutEvents(block.Invoke[i].Events)
+		module.notifyAboutMessages(block.Invoke[i].Messages)
+		module.notifyAboutTransfers(block.Invoke[i].Transfers)
+	}
+	for i := range block.L1Handler {
+		module.subscriptions.NotifyAll(
+			subscriptions.NewL1HandlerMessage(&block.L1Handler[i]),
+			SubscriptionL1Handler,
+		)
+
+		module.notifyAboutFee(block.L1Handler[i].Fee)
+		module.notifyAboutInternals(block.L1Handler[i].Internals)
+		module.notifyAboutEvents(block.L1Handler[i].Events)
+		module.notifyAboutMessages(block.L1Handler[i].Messages)
+		module.notifyAboutTransfers(block.L1Handler[i].Transfers)
+	}
+
+	for i := range block.StorageDiffs {
+		module.subscriptions.NotifyAll(
+			subscriptions.NewStorageDiffMessage(&block.StorageDiffs[i]),
+			SubscriptionStorageDiff,
+		)
+	}
+
 	module.subscriptions.NotifyAll(
 		subscriptions.NewEndMessage(),
 		SubscriptionEnd,
 	)
+}
+
+func (module *Server) notifyAboutInternals(txs []storage.Internal) {
+	for j := range txs {
+		module.subscriptions.NotifyAll(
+			subscriptions.NewInternalMessage(&txs[j]),
+			SubscriptionInternal,
+		)
+	}
+}
+
+func (module *Server) notifyAboutEvents(events []storage.Event) {
+	for j := range events {
+		module.subscriptions.NotifyAll(
+			subscriptions.NewEventMessage(&events[j]),
+			SubscriptionEvent,
+		)
+	}
+}
+
+func (module *Server) notifyAboutMessages(msgs []storage.Message) {
+	for j := range msgs {
+		module.subscriptions.NotifyAll(
+			subscriptions.NewStarknetMessage(&msgs[j]),
+			SubscriptionMessage,
+		)
+	}
+}
+
+func (module *Server) notifyAboutTransfers(transfers []storage.Transfer) {
+	for j := range transfers {
+		module.subscriptions.NotifyAll(
+			subscriptions.NewTransferMessage(&transfers[j]),
+			SubscriptionTransfer,
+		)
+		module.notifyAboutTokenBalances(transfers[j].TokenBalanceUpdates())
+	}
+}
+
+func (module *Server) notifyAboutTokenBalances(balances []storage.TokenBalance) {
+	for j := range balances {
+		module.subscriptions.NotifyAll(
+			subscriptions.NewTokenBalanceMessage(&balances[j]),
+			SubscriptionTokenBalance,
+		)
+	}
+}
+
+func (module *Server) notifyAboutFee(fee *storage.Fee) {
+	if fee == nil {
+		return
+	}
+	module.subscriptions.NotifyAll(
+		subscriptions.NewFeeMessage(fee),
+		SubscriptionFee,
+	)
+
+	module.notifyAboutInternals(fee.Internals)
+	module.notifyAboutEvents(fee.Events)
+	module.notifyAboutMessages(fee.Messages)
+	module.notifyAboutTransfers(fee.Transfers)
 }
 
 // Close -

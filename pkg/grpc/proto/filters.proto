@@ -10,36 +10,65 @@ message BetweenInteger {
 }
 
 message IntegerFilter {
-    uint64 gt = 1;
-    uint64 gte = 2;
-    uint64 lt = 3;
-    uint64 lte = 4;
-    uint64 eq = 5;
-    uint64 neq = 6; 
-    BetweenInteger between = 7;
+    oneof filter {
+        uint64 gt = 1;
+        uint64 gte = 2;
+        uint64 lt = 3;
+        uint64 lte = 4;
+        uint64 eq = 5;
+        uint64 neq = 6; 
+        BetweenInteger between = 7;
+    }
 }
 
 message TimeFilter {
-    uint64 gt = 1;
-    uint64 gte = 2;
-    uint64 lt = 3;
-    uint64 lte = 4;
-    BetweenInteger between = 5;
+    oneof filter {
+        uint64 gt = 1;
+        uint64 gte = 2;
+        uint64 lt = 3;
+        uint64 lte = 4;
+        BetweenInteger between = 5;
+    }
 }
 
 message EnumFilter {
-    uint64 eq = 1;
-    uint64 neq = 2;
-    repeated uint64 in = 3;
-    repeated uint64 notin = 4;
+    oneof filter {
+        uint64 eq = 1;
+        uint64 neq = 2;
+        IntegerArray in = 3;
+        IntegerArray notin = 4;
+    }
 }
 
 message StringFilter {
-    string eq = 1;
-    repeated string in = 2;
+    oneof filter {
+        string eq = 1;
+        StringArray in = 2;
+    }
 }
 
 message EqualityFilter {
-    string eq = 1;
-    string neq = 2;
+    oneof filter {
+        string eq = 1;
+        string neq = 2;
+    }
+}
+
+message BytesFilter {
+    oneof filter {
+        bytes eq = 1;
+        BytesArray in = 2;
+    }
+}
+
+message StringArray {
+    repeated string arr = 1;
+}
+
+message IntegerArray {
+    repeated uint64 arr = 1;
+}
+
+message BytesArray {
+    repeated bytes arr = 1;
 }

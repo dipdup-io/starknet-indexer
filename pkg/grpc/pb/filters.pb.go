@@ -80,13 +80,16 @@ type IntegerFilter struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Gt      uint64          `protobuf:"varint,1,opt,name=gt,proto3" json:"gt,omitempty"`
-	Gte     uint64          `protobuf:"varint,2,opt,name=gte,proto3" json:"gte,omitempty"`
-	Lt      uint64          `protobuf:"varint,3,opt,name=lt,proto3" json:"lt,omitempty"`
-	Lte     uint64          `protobuf:"varint,4,opt,name=lte,proto3" json:"lte,omitempty"`
-	Eq      uint64          `protobuf:"varint,5,opt,name=eq,proto3" json:"eq,omitempty"`
-	Neq     uint64          `protobuf:"varint,6,opt,name=neq,proto3" json:"neq,omitempty"`
-	Between *BetweenInteger `protobuf:"bytes,7,opt,name=between,proto3" json:"between,omitempty"`
+	// Types that are assignable to Filter:
+	//
+	//	*IntegerFilter_Gt
+	//	*IntegerFilter_Gte
+	//	*IntegerFilter_Lt
+	//	*IntegerFilter_Lte
+	//	*IntegerFilter_Eq
+	//	*IntegerFilter_Neq
+	//	*IntegerFilter_Between
+	Filter isIntegerFilter_Filter `protobuf_oneof:"filter"`
 }
 
 func (x *IntegerFilter) Reset() {
@@ -121,65 +124,121 @@ func (*IntegerFilter) Descriptor() ([]byte, []int) {
 	return file_github_com_dipdup_io_starknet_indexer_pkg_grpc_proto_filters_proto_rawDescGZIP(), []int{1}
 }
 
+func (m *IntegerFilter) GetFilter() isIntegerFilter_Filter {
+	if m != nil {
+		return m.Filter
+	}
+	return nil
+}
+
 func (x *IntegerFilter) GetGt() uint64 {
-	if x != nil {
+	if x, ok := x.GetFilter().(*IntegerFilter_Gt); ok {
 		return x.Gt
 	}
 	return 0
 }
 
 func (x *IntegerFilter) GetGte() uint64 {
-	if x != nil {
+	if x, ok := x.GetFilter().(*IntegerFilter_Gte); ok {
 		return x.Gte
 	}
 	return 0
 }
 
 func (x *IntegerFilter) GetLt() uint64 {
-	if x != nil {
+	if x, ok := x.GetFilter().(*IntegerFilter_Lt); ok {
 		return x.Lt
 	}
 	return 0
 }
 
 func (x *IntegerFilter) GetLte() uint64 {
-	if x != nil {
+	if x, ok := x.GetFilter().(*IntegerFilter_Lte); ok {
 		return x.Lte
 	}
 	return 0
 }
 
 func (x *IntegerFilter) GetEq() uint64 {
-	if x != nil {
+	if x, ok := x.GetFilter().(*IntegerFilter_Eq); ok {
 		return x.Eq
 	}
 	return 0
 }
 
 func (x *IntegerFilter) GetNeq() uint64 {
-	if x != nil {
+	if x, ok := x.GetFilter().(*IntegerFilter_Neq); ok {
 		return x.Neq
 	}
 	return 0
 }
 
 func (x *IntegerFilter) GetBetween() *BetweenInteger {
-	if x != nil {
+	if x, ok := x.GetFilter().(*IntegerFilter_Between); ok {
 		return x.Between
 	}
 	return nil
 }
+
+type isIntegerFilter_Filter interface {
+	isIntegerFilter_Filter()
+}
+
+type IntegerFilter_Gt struct {
+	Gt uint64 `protobuf:"varint,1,opt,name=gt,proto3,oneof"`
+}
+
+type IntegerFilter_Gte struct {
+	Gte uint64 `protobuf:"varint,2,opt,name=gte,proto3,oneof"`
+}
+
+type IntegerFilter_Lt struct {
+	Lt uint64 `protobuf:"varint,3,opt,name=lt,proto3,oneof"`
+}
+
+type IntegerFilter_Lte struct {
+	Lte uint64 `protobuf:"varint,4,opt,name=lte,proto3,oneof"`
+}
+
+type IntegerFilter_Eq struct {
+	Eq uint64 `protobuf:"varint,5,opt,name=eq,proto3,oneof"`
+}
+
+type IntegerFilter_Neq struct {
+	Neq uint64 `protobuf:"varint,6,opt,name=neq,proto3,oneof"`
+}
+
+type IntegerFilter_Between struct {
+	Between *BetweenInteger `protobuf:"bytes,7,opt,name=between,proto3,oneof"`
+}
+
+func (*IntegerFilter_Gt) isIntegerFilter_Filter() {}
+
+func (*IntegerFilter_Gte) isIntegerFilter_Filter() {}
+
+func (*IntegerFilter_Lt) isIntegerFilter_Filter() {}
+
+func (*IntegerFilter_Lte) isIntegerFilter_Filter() {}
+
+func (*IntegerFilter_Eq) isIntegerFilter_Filter() {}
+
+func (*IntegerFilter_Neq) isIntegerFilter_Filter() {}
+
+func (*IntegerFilter_Between) isIntegerFilter_Filter() {}
 
 type TimeFilter struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Gt      uint64          `protobuf:"varint,1,opt,name=gt,proto3" json:"gt,omitempty"`
-	Gte     uint64          `protobuf:"varint,2,opt,name=gte,proto3" json:"gte,omitempty"`
-	Lt      uint64          `protobuf:"varint,3,opt,name=lt,proto3" json:"lt,omitempty"`
-	Lte     uint64          `protobuf:"varint,4,opt,name=lte,proto3" json:"lte,omitempty"`
-	Between *BetweenInteger `protobuf:"bytes,5,opt,name=between,proto3" json:"between,omitempty"`
+	// Types that are assignable to Filter:
+	//
+	//	*TimeFilter_Gt
+	//	*TimeFilter_Gte
+	//	*TimeFilter_Lt
+	//	*TimeFilter_Lte
+	//	*TimeFilter_Between
+	Filter isTimeFilter_Filter `protobuf_oneof:"filter"`
 }
 
 func (x *TimeFilter) Reset() {
@@ -214,50 +273,94 @@ func (*TimeFilter) Descriptor() ([]byte, []int) {
 	return file_github_com_dipdup_io_starknet_indexer_pkg_grpc_proto_filters_proto_rawDescGZIP(), []int{2}
 }
 
+func (m *TimeFilter) GetFilter() isTimeFilter_Filter {
+	if m != nil {
+		return m.Filter
+	}
+	return nil
+}
+
 func (x *TimeFilter) GetGt() uint64 {
-	if x != nil {
+	if x, ok := x.GetFilter().(*TimeFilter_Gt); ok {
 		return x.Gt
 	}
 	return 0
 }
 
 func (x *TimeFilter) GetGte() uint64 {
-	if x != nil {
+	if x, ok := x.GetFilter().(*TimeFilter_Gte); ok {
 		return x.Gte
 	}
 	return 0
 }
 
 func (x *TimeFilter) GetLt() uint64 {
-	if x != nil {
+	if x, ok := x.GetFilter().(*TimeFilter_Lt); ok {
 		return x.Lt
 	}
 	return 0
 }
 
 func (x *TimeFilter) GetLte() uint64 {
-	if x != nil {
+	if x, ok := x.GetFilter().(*TimeFilter_Lte); ok {
 		return x.Lte
 	}
 	return 0
 }
 
 func (x *TimeFilter) GetBetween() *BetweenInteger {
-	if x != nil {
+	if x, ok := x.GetFilter().(*TimeFilter_Between); ok {
 		return x.Between
 	}
 	return nil
 }
+
+type isTimeFilter_Filter interface {
+	isTimeFilter_Filter()
+}
+
+type TimeFilter_Gt struct {
+	Gt uint64 `protobuf:"varint,1,opt,name=gt,proto3,oneof"`
+}
+
+type TimeFilter_Gte struct {
+	Gte uint64 `protobuf:"varint,2,opt,name=gte,proto3,oneof"`
+}
+
+type TimeFilter_Lt struct {
+	Lt uint64 `protobuf:"varint,3,opt,name=lt,proto3,oneof"`
+}
+
+type TimeFilter_Lte struct {
+	Lte uint64 `protobuf:"varint,4,opt,name=lte,proto3,oneof"`
+}
+
+type TimeFilter_Between struct {
+	Between *BetweenInteger `protobuf:"bytes,5,opt,name=between,proto3,oneof"`
+}
+
+func (*TimeFilter_Gt) isTimeFilter_Filter() {}
+
+func (*TimeFilter_Gte) isTimeFilter_Filter() {}
+
+func (*TimeFilter_Lt) isTimeFilter_Filter() {}
+
+func (*TimeFilter_Lte) isTimeFilter_Filter() {}
+
+func (*TimeFilter_Between) isTimeFilter_Filter() {}
 
 type EnumFilter struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Eq    uint64   `protobuf:"varint,1,opt,name=eq,proto3" json:"eq,omitempty"`
-	Neq   uint64   `protobuf:"varint,2,opt,name=neq,proto3" json:"neq,omitempty"`
-	In    []uint64 `protobuf:"varint,3,rep,packed,name=in,proto3" json:"in,omitempty"`
-	Notin []uint64 `protobuf:"varint,4,rep,packed,name=notin,proto3" json:"notin,omitempty"`
+	// Types that are assignable to Filter:
+	//
+	//	*EnumFilter_Eq
+	//	*EnumFilter_Neq
+	//	*EnumFilter_In
+	//	*EnumFilter_Notin
+	Filter isEnumFilter_Filter `protobuf_oneof:"filter"`
 }
 
 func (x *EnumFilter) Reset() {
@@ -292,41 +395,79 @@ func (*EnumFilter) Descriptor() ([]byte, []int) {
 	return file_github_com_dipdup_io_starknet_indexer_pkg_grpc_proto_filters_proto_rawDescGZIP(), []int{3}
 }
 
+func (m *EnumFilter) GetFilter() isEnumFilter_Filter {
+	if m != nil {
+		return m.Filter
+	}
+	return nil
+}
+
 func (x *EnumFilter) GetEq() uint64 {
-	if x != nil {
+	if x, ok := x.GetFilter().(*EnumFilter_Eq); ok {
 		return x.Eq
 	}
 	return 0
 }
 
 func (x *EnumFilter) GetNeq() uint64 {
-	if x != nil {
+	if x, ok := x.GetFilter().(*EnumFilter_Neq); ok {
 		return x.Neq
 	}
 	return 0
 }
 
-func (x *EnumFilter) GetIn() []uint64 {
-	if x != nil {
+func (x *EnumFilter) GetIn() *IntegerArray {
+	if x, ok := x.GetFilter().(*EnumFilter_In); ok {
 		return x.In
 	}
 	return nil
 }
 
-func (x *EnumFilter) GetNotin() []uint64 {
-	if x != nil {
+func (x *EnumFilter) GetNotin() *IntegerArray {
+	if x, ok := x.GetFilter().(*EnumFilter_Notin); ok {
 		return x.Notin
 	}
 	return nil
 }
+
+type isEnumFilter_Filter interface {
+	isEnumFilter_Filter()
+}
+
+type EnumFilter_Eq struct {
+	Eq uint64 `protobuf:"varint,1,opt,name=eq,proto3,oneof"`
+}
+
+type EnumFilter_Neq struct {
+	Neq uint64 `protobuf:"varint,2,opt,name=neq,proto3,oneof"`
+}
+
+type EnumFilter_In struct {
+	In *IntegerArray `protobuf:"bytes,3,opt,name=in,proto3,oneof"`
+}
+
+type EnumFilter_Notin struct {
+	Notin *IntegerArray `protobuf:"bytes,4,opt,name=notin,proto3,oneof"`
+}
+
+func (*EnumFilter_Eq) isEnumFilter_Filter() {}
+
+func (*EnumFilter_Neq) isEnumFilter_Filter() {}
+
+func (*EnumFilter_In) isEnumFilter_Filter() {}
+
+func (*EnumFilter_Notin) isEnumFilter_Filter() {}
 
 type StringFilter struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Eq string   `protobuf:"bytes,1,opt,name=eq,proto3" json:"eq,omitempty"`
-	In []string `protobuf:"bytes,2,rep,name=in,proto3" json:"in,omitempty"`
+	// Types that are assignable to Filter:
+	//
+	//	*StringFilter_Eq
+	//	*StringFilter_In
+	Filter isStringFilter_Filter `protobuf_oneof:"filter"`
 }
 
 func (x *StringFilter) Reset() {
@@ -361,27 +502,53 @@ func (*StringFilter) Descriptor() ([]byte, []int) {
 	return file_github_com_dipdup_io_starknet_indexer_pkg_grpc_proto_filters_proto_rawDescGZIP(), []int{4}
 }
 
+func (m *StringFilter) GetFilter() isStringFilter_Filter {
+	if m != nil {
+		return m.Filter
+	}
+	return nil
+}
+
 func (x *StringFilter) GetEq() string {
-	if x != nil {
+	if x, ok := x.GetFilter().(*StringFilter_Eq); ok {
 		return x.Eq
 	}
 	return ""
 }
 
-func (x *StringFilter) GetIn() []string {
-	if x != nil {
+func (x *StringFilter) GetIn() *StringArray {
+	if x, ok := x.GetFilter().(*StringFilter_In); ok {
 		return x.In
 	}
 	return nil
 }
+
+type isStringFilter_Filter interface {
+	isStringFilter_Filter()
+}
+
+type StringFilter_Eq struct {
+	Eq string `protobuf:"bytes,1,opt,name=eq,proto3,oneof"`
+}
+
+type StringFilter_In struct {
+	In *StringArray `protobuf:"bytes,2,opt,name=in,proto3,oneof"`
+}
+
+func (*StringFilter_Eq) isStringFilter_Filter() {}
+
+func (*StringFilter_In) isStringFilter_Filter() {}
 
 type EqualityFilter struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Eq  string `protobuf:"bytes,1,opt,name=eq,proto3" json:"eq,omitempty"`
-	Neq string `protobuf:"bytes,2,opt,name=neq,proto3" json:"neq,omitempty"`
+	// Types that are assignable to Filter:
+	//
+	//	*EqualityFilter_Eq
+	//	*EqualityFilter_Neq
+	Filter isEqualityFilter_Filter `protobuf_oneof:"filter"`
 }
 
 func (x *EqualityFilter) Reset() {
@@ -416,18 +583,263 @@ func (*EqualityFilter) Descriptor() ([]byte, []int) {
 	return file_github_com_dipdup_io_starknet_indexer_pkg_grpc_proto_filters_proto_rawDescGZIP(), []int{5}
 }
 
+func (m *EqualityFilter) GetFilter() isEqualityFilter_Filter {
+	if m != nil {
+		return m.Filter
+	}
+	return nil
+}
+
 func (x *EqualityFilter) GetEq() string {
-	if x != nil {
+	if x, ok := x.GetFilter().(*EqualityFilter_Eq); ok {
 		return x.Eq
 	}
 	return ""
 }
 
 func (x *EqualityFilter) GetNeq() string {
-	if x != nil {
+	if x, ok := x.GetFilter().(*EqualityFilter_Neq); ok {
 		return x.Neq
 	}
 	return ""
+}
+
+type isEqualityFilter_Filter interface {
+	isEqualityFilter_Filter()
+}
+
+type EqualityFilter_Eq struct {
+	Eq string `protobuf:"bytes,1,opt,name=eq,proto3,oneof"`
+}
+
+type EqualityFilter_Neq struct {
+	Neq string `protobuf:"bytes,2,opt,name=neq,proto3,oneof"`
+}
+
+func (*EqualityFilter_Eq) isEqualityFilter_Filter() {}
+
+func (*EqualityFilter_Neq) isEqualityFilter_Filter() {}
+
+type BytesFilter struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	// Types that are assignable to Filter:
+	//
+	//	*BytesFilter_Eq
+	//	*BytesFilter_In
+	Filter isBytesFilter_Filter `protobuf_oneof:"filter"`
+}
+
+func (x *BytesFilter) Reset() {
+	*x = BytesFilter{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_github_com_dipdup_io_starknet_indexer_pkg_grpc_proto_filters_proto_msgTypes[6]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *BytesFilter) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*BytesFilter) ProtoMessage() {}
+
+func (x *BytesFilter) ProtoReflect() protoreflect.Message {
+	mi := &file_github_com_dipdup_io_starknet_indexer_pkg_grpc_proto_filters_proto_msgTypes[6]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use BytesFilter.ProtoReflect.Descriptor instead.
+func (*BytesFilter) Descriptor() ([]byte, []int) {
+	return file_github_com_dipdup_io_starknet_indexer_pkg_grpc_proto_filters_proto_rawDescGZIP(), []int{6}
+}
+
+func (m *BytesFilter) GetFilter() isBytesFilter_Filter {
+	if m != nil {
+		return m.Filter
+	}
+	return nil
+}
+
+func (x *BytesFilter) GetEq() []byte {
+	if x, ok := x.GetFilter().(*BytesFilter_Eq); ok {
+		return x.Eq
+	}
+	return nil
+}
+
+func (x *BytesFilter) GetIn() *BytesArray {
+	if x, ok := x.GetFilter().(*BytesFilter_In); ok {
+		return x.In
+	}
+	return nil
+}
+
+type isBytesFilter_Filter interface {
+	isBytesFilter_Filter()
+}
+
+type BytesFilter_Eq struct {
+	Eq []byte `protobuf:"bytes,1,opt,name=eq,proto3,oneof"`
+}
+
+type BytesFilter_In struct {
+	In *BytesArray `protobuf:"bytes,2,opt,name=in,proto3,oneof"`
+}
+
+func (*BytesFilter_Eq) isBytesFilter_Filter() {}
+
+func (*BytesFilter_In) isBytesFilter_Filter() {}
+
+type StringArray struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Arr []string `protobuf:"bytes,1,rep,name=arr,proto3" json:"arr,omitempty"`
+}
+
+func (x *StringArray) Reset() {
+	*x = StringArray{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_github_com_dipdup_io_starknet_indexer_pkg_grpc_proto_filters_proto_msgTypes[7]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *StringArray) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*StringArray) ProtoMessage() {}
+
+func (x *StringArray) ProtoReflect() protoreflect.Message {
+	mi := &file_github_com_dipdup_io_starknet_indexer_pkg_grpc_proto_filters_proto_msgTypes[7]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use StringArray.ProtoReflect.Descriptor instead.
+func (*StringArray) Descriptor() ([]byte, []int) {
+	return file_github_com_dipdup_io_starknet_indexer_pkg_grpc_proto_filters_proto_rawDescGZIP(), []int{7}
+}
+
+func (x *StringArray) GetArr() []string {
+	if x != nil {
+		return x.Arr
+	}
+	return nil
+}
+
+type IntegerArray struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Arr []uint64 `protobuf:"varint,1,rep,packed,name=arr,proto3" json:"arr,omitempty"`
+}
+
+func (x *IntegerArray) Reset() {
+	*x = IntegerArray{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_github_com_dipdup_io_starknet_indexer_pkg_grpc_proto_filters_proto_msgTypes[8]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *IntegerArray) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*IntegerArray) ProtoMessage() {}
+
+func (x *IntegerArray) ProtoReflect() protoreflect.Message {
+	mi := &file_github_com_dipdup_io_starknet_indexer_pkg_grpc_proto_filters_proto_msgTypes[8]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use IntegerArray.ProtoReflect.Descriptor instead.
+func (*IntegerArray) Descriptor() ([]byte, []int) {
+	return file_github_com_dipdup_io_starknet_indexer_pkg_grpc_proto_filters_proto_rawDescGZIP(), []int{8}
+}
+
+func (x *IntegerArray) GetArr() []uint64 {
+	if x != nil {
+		return x.Arr
+	}
+	return nil
+}
+
+type BytesArray struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Arr [][]byte `protobuf:"bytes,1,rep,name=arr,proto3" json:"arr,omitempty"`
+}
+
+func (x *BytesArray) Reset() {
+	*x = BytesArray{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_github_com_dipdup_io_starknet_indexer_pkg_grpc_proto_filters_proto_msgTypes[9]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *BytesArray) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*BytesArray) ProtoMessage() {}
+
+func (x *BytesArray) ProtoReflect() protoreflect.Message {
+	mi := &file_github_com_dipdup_io_starknet_indexer_pkg_grpc_proto_filters_proto_msgTypes[9]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use BytesArray.ProtoReflect.Descriptor instead.
+func (*BytesArray) Descriptor() ([]byte, []int) {
+	return file_github_com_dipdup_io_starknet_indexer_pkg_grpc_proto_filters_proto_rawDescGZIP(), []int{9}
+}
+
+func (x *BytesArray) GetArr() [][]byte {
+	if x != nil {
+		return x.Arr
+	}
+	return nil
 }
 
 var File_github_com_dipdup_io_starknet_indexer_pkg_grpc_proto_filters_proto protoreflect.FileDescriptor
@@ -441,41 +853,62 @@ var file_github_com_dipdup_io_starknet_indexer_pkg_grpc_proto_filters_proto_rawD
 	0x65, 0x74, 0x77, 0x65, 0x65, 0x6e, 0x49, 0x6e, 0x74, 0x65, 0x67, 0x65, 0x72, 0x12, 0x12, 0x0a,
 	0x04, 0x66, 0x72, 0x6f, 0x6d, 0x18, 0x01, 0x20, 0x01, 0x28, 0x04, 0x52, 0x04, 0x66, 0x72, 0x6f,
 	0x6d, 0x12, 0x0e, 0x0a, 0x02, 0x74, 0x6f, 0x18, 0x02, 0x20, 0x01, 0x28, 0x04, 0x52, 0x02, 0x74,
-	0x6f, 0x22, 0xa6, 0x01, 0x0a, 0x0d, 0x49, 0x6e, 0x74, 0x65, 0x67, 0x65, 0x72, 0x46, 0x69, 0x6c,
-	0x74, 0x65, 0x72, 0x12, 0x0e, 0x0a, 0x02, 0x67, 0x74, 0x18, 0x01, 0x20, 0x01, 0x28, 0x04, 0x52,
-	0x02, 0x67, 0x74, 0x12, 0x10, 0x0a, 0x03, 0x67, 0x74, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x04,
-	0x52, 0x03, 0x67, 0x74, 0x65, 0x12, 0x0e, 0x0a, 0x02, 0x6c, 0x74, 0x18, 0x03, 0x20, 0x01, 0x28,
-	0x04, 0x52, 0x02, 0x6c, 0x74, 0x12, 0x10, 0x0a, 0x03, 0x6c, 0x74, 0x65, 0x18, 0x04, 0x20, 0x01,
-	0x28, 0x04, 0x52, 0x03, 0x6c, 0x74, 0x65, 0x12, 0x0e, 0x0a, 0x02, 0x65, 0x71, 0x18, 0x05, 0x20,
-	0x01, 0x28, 0x04, 0x52, 0x02, 0x65, 0x71, 0x12, 0x10, 0x0a, 0x03, 0x6e, 0x65, 0x71, 0x18, 0x06,
-	0x20, 0x01, 0x28, 0x04, 0x52, 0x03, 0x6e, 0x65, 0x71, 0x12, 0x2f, 0x0a, 0x07, 0x62, 0x65, 0x74,
-	0x77, 0x65, 0x65, 0x6e, 0x18, 0x07, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x15, 0x2e, 0x70, 0x72, 0x6f,
-	0x74, 0x6f, 0x2e, 0x42, 0x65, 0x74, 0x77, 0x65, 0x65, 0x6e, 0x49, 0x6e, 0x74, 0x65, 0x67, 0x65,
-	0x72, 0x52, 0x07, 0x62, 0x65, 0x74, 0x77, 0x65, 0x65, 0x6e, 0x22, 0x81, 0x01, 0x0a, 0x0a, 0x54,
-	0x69, 0x6d, 0x65, 0x46, 0x69, 0x6c, 0x74, 0x65, 0x72, 0x12, 0x0e, 0x0a, 0x02, 0x67, 0x74, 0x18,
-	0x01, 0x20, 0x01, 0x28, 0x04, 0x52, 0x02, 0x67, 0x74, 0x12, 0x10, 0x0a, 0x03, 0x67, 0x74, 0x65,
-	0x18, 0x02, 0x20, 0x01, 0x28, 0x04, 0x52, 0x03, 0x67, 0x74, 0x65, 0x12, 0x0e, 0x0a, 0x02, 0x6c,
-	0x74, 0x18, 0x03, 0x20, 0x01, 0x28, 0x04, 0x52, 0x02, 0x6c, 0x74, 0x12, 0x10, 0x0a, 0x03, 0x6c,
-	0x74, 0x65, 0x18, 0x04, 0x20, 0x01, 0x28, 0x04, 0x52, 0x03, 0x6c, 0x74, 0x65, 0x12, 0x2f, 0x0a,
+	0x6f, 0x22, 0xbe, 0x01, 0x0a, 0x0d, 0x49, 0x6e, 0x74, 0x65, 0x67, 0x65, 0x72, 0x46, 0x69, 0x6c,
+	0x74, 0x65, 0x72, 0x12, 0x10, 0x0a, 0x02, 0x67, 0x74, 0x18, 0x01, 0x20, 0x01, 0x28, 0x04, 0x48,
+	0x00, 0x52, 0x02, 0x67, 0x74, 0x12, 0x12, 0x0a, 0x03, 0x67, 0x74, 0x65, 0x18, 0x02, 0x20, 0x01,
+	0x28, 0x04, 0x48, 0x00, 0x52, 0x03, 0x67, 0x74, 0x65, 0x12, 0x10, 0x0a, 0x02, 0x6c, 0x74, 0x18,
+	0x03, 0x20, 0x01, 0x28, 0x04, 0x48, 0x00, 0x52, 0x02, 0x6c, 0x74, 0x12, 0x12, 0x0a, 0x03, 0x6c,
+	0x74, 0x65, 0x18, 0x04, 0x20, 0x01, 0x28, 0x04, 0x48, 0x00, 0x52, 0x03, 0x6c, 0x74, 0x65, 0x12,
+	0x10, 0x0a, 0x02, 0x65, 0x71, 0x18, 0x05, 0x20, 0x01, 0x28, 0x04, 0x48, 0x00, 0x52, 0x02, 0x65,
+	0x71, 0x12, 0x12, 0x0a, 0x03, 0x6e, 0x65, 0x71, 0x18, 0x06, 0x20, 0x01, 0x28, 0x04, 0x48, 0x00,
+	0x52, 0x03, 0x6e, 0x65, 0x71, 0x12, 0x31, 0x0a, 0x07, 0x62, 0x65, 0x74, 0x77, 0x65, 0x65, 0x6e,
+	0x18, 0x07, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x15, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2e, 0x42,
+	0x65, 0x74, 0x77, 0x65, 0x65, 0x6e, 0x49, 0x6e, 0x74, 0x65, 0x67, 0x65, 0x72, 0x48, 0x00, 0x52,
+	0x07, 0x62, 0x65, 0x74, 0x77, 0x65, 0x65, 0x6e, 0x42, 0x08, 0x0a, 0x06, 0x66, 0x69, 0x6c, 0x74,
+	0x65, 0x72, 0x22, 0x95, 0x01, 0x0a, 0x0a, 0x54, 0x69, 0x6d, 0x65, 0x46, 0x69, 0x6c, 0x74, 0x65,
+	0x72, 0x12, 0x10, 0x0a, 0x02, 0x67, 0x74, 0x18, 0x01, 0x20, 0x01, 0x28, 0x04, 0x48, 0x00, 0x52,
+	0x02, 0x67, 0x74, 0x12, 0x12, 0x0a, 0x03, 0x67, 0x74, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x04,
+	0x48, 0x00, 0x52, 0x03, 0x67, 0x74, 0x65, 0x12, 0x10, 0x0a, 0x02, 0x6c, 0x74, 0x18, 0x03, 0x20,
+	0x01, 0x28, 0x04, 0x48, 0x00, 0x52, 0x02, 0x6c, 0x74, 0x12, 0x12, 0x0a, 0x03, 0x6c, 0x74, 0x65,
+	0x18, 0x04, 0x20, 0x01, 0x28, 0x04, 0x48, 0x00, 0x52, 0x03, 0x6c, 0x74, 0x65, 0x12, 0x31, 0x0a,
 	0x07, 0x62, 0x65, 0x74, 0x77, 0x65, 0x65, 0x6e, 0x18, 0x05, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x15,
 	0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2e, 0x42, 0x65, 0x74, 0x77, 0x65, 0x65, 0x6e, 0x49, 0x6e,
-	0x74, 0x65, 0x67, 0x65, 0x72, 0x52, 0x07, 0x62, 0x65, 0x74, 0x77, 0x65, 0x65, 0x6e, 0x22, 0x54,
-	0x0a, 0x0a, 0x45, 0x6e, 0x75, 0x6d, 0x46, 0x69, 0x6c, 0x74, 0x65, 0x72, 0x12, 0x0e, 0x0a, 0x02,
-	0x65, 0x71, 0x18, 0x01, 0x20, 0x01, 0x28, 0x04, 0x52, 0x02, 0x65, 0x71, 0x12, 0x10, 0x0a, 0x03,
-	0x6e, 0x65, 0x71, 0x18, 0x02, 0x20, 0x01, 0x28, 0x04, 0x52, 0x03, 0x6e, 0x65, 0x71, 0x12, 0x0e,
-	0x0a, 0x02, 0x69, 0x6e, 0x18, 0x03, 0x20, 0x03, 0x28, 0x04, 0x52, 0x02, 0x69, 0x6e, 0x12, 0x14,
-	0x0a, 0x05, 0x6e, 0x6f, 0x74, 0x69, 0x6e, 0x18, 0x04, 0x20, 0x03, 0x28, 0x04, 0x52, 0x05, 0x6e,
-	0x6f, 0x74, 0x69, 0x6e, 0x22, 0x2e, 0x0a, 0x0c, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x46, 0x69,
-	0x6c, 0x74, 0x65, 0x72, 0x12, 0x0e, 0x0a, 0x02, 0x65, 0x71, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09,
-	0x52, 0x02, 0x65, 0x71, 0x12, 0x0e, 0x0a, 0x02, 0x69, 0x6e, 0x18, 0x02, 0x20, 0x03, 0x28, 0x09,
-	0x52, 0x02, 0x69, 0x6e, 0x22, 0x32, 0x0a, 0x0e, 0x45, 0x71, 0x75, 0x61, 0x6c, 0x69, 0x74, 0x79,
-	0x46, 0x69, 0x6c, 0x74, 0x65, 0x72, 0x12, 0x0e, 0x0a, 0x02, 0x65, 0x71, 0x18, 0x01, 0x20, 0x01,
-	0x28, 0x09, 0x52, 0x02, 0x65, 0x71, 0x12, 0x10, 0x0a, 0x03, 0x6e, 0x65, 0x71, 0x18, 0x02, 0x20,
-	0x01, 0x28, 0x09, 0x52, 0x03, 0x6e, 0x65, 0x71, 0x42, 0x33, 0x5a, 0x31, 0x67, 0x69, 0x74, 0x68,
-	0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x64, 0x69, 0x70, 0x64, 0x75, 0x70, 0x2d, 0x69, 0x6f,
-	0x2f, 0x73, 0x74, 0x61, 0x72, 0x6b, 0x6e, 0x65, 0x74, 0x2d, 0x69, 0x6e, 0x64, 0x65, 0x78, 0x65,
-	0x72, 0x2f, 0x70, 0x6b, 0x67, 0x2f, 0x67, 0x72, 0x70, 0x63, 0x2f, 0x70, 0x62, 0x62, 0x06, 0x70,
-	0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x74, 0x65, 0x67, 0x65, 0x72, 0x48, 0x00, 0x52, 0x07, 0x62, 0x65, 0x74, 0x77, 0x65, 0x65, 0x6e,
+	0x42, 0x08, 0x0a, 0x06, 0x66, 0x69, 0x6c, 0x74, 0x65, 0x72, 0x22, 0x90, 0x01, 0x0a, 0x0a, 0x45,
+	0x6e, 0x75, 0x6d, 0x46, 0x69, 0x6c, 0x74, 0x65, 0x72, 0x12, 0x10, 0x0a, 0x02, 0x65, 0x71, 0x18,
+	0x01, 0x20, 0x01, 0x28, 0x04, 0x48, 0x00, 0x52, 0x02, 0x65, 0x71, 0x12, 0x12, 0x0a, 0x03, 0x6e,
+	0x65, 0x71, 0x18, 0x02, 0x20, 0x01, 0x28, 0x04, 0x48, 0x00, 0x52, 0x03, 0x6e, 0x65, 0x71, 0x12,
+	0x25, 0x0a, 0x02, 0x69, 0x6e, 0x18, 0x03, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x13, 0x2e, 0x70, 0x72,
+	0x6f, 0x74, 0x6f, 0x2e, 0x49, 0x6e, 0x74, 0x65, 0x67, 0x65, 0x72, 0x41, 0x72, 0x72, 0x61, 0x79,
+	0x48, 0x00, 0x52, 0x02, 0x69, 0x6e, 0x12, 0x2b, 0x0a, 0x05, 0x6e, 0x6f, 0x74, 0x69, 0x6e, 0x18,
+	0x04, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x13, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2e, 0x49, 0x6e,
+	0x74, 0x65, 0x67, 0x65, 0x72, 0x41, 0x72, 0x72, 0x61, 0x79, 0x48, 0x00, 0x52, 0x05, 0x6e, 0x6f,
+	0x74, 0x69, 0x6e, 0x42, 0x08, 0x0a, 0x06, 0x66, 0x69, 0x6c, 0x74, 0x65, 0x72, 0x22, 0x50, 0x0a,
+	0x0c, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x46, 0x69, 0x6c, 0x74, 0x65, 0x72, 0x12, 0x10, 0x0a,
+	0x02, 0x65, 0x71, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x48, 0x00, 0x52, 0x02, 0x65, 0x71, 0x12,
+	0x24, 0x0a, 0x02, 0x69, 0x6e, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x12, 0x2e, 0x70, 0x72,
+	0x6f, 0x74, 0x6f, 0x2e, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x41, 0x72, 0x72, 0x61, 0x79, 0x48,
+	0x00, 0x52, 0x02, 0x69, 0x6e, 0x42, 0x08, 0x0a, 0x06, 0x66, 0x69, 0x6c, 0x74, 0x65, 0x72, 0x22,
+	0x40, 0x0a, 0x0e, 0x45, 0x71, 0x75, 0x61, 0x6c, 0x69, 0x74, 0x79, 0x46, 0x69, 0x6c, 0x74, 0x65,
+	0x72, 0x12, 0x10, 0x0a, 0x02, 0x65, 0x71, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x48, 0x00, 0x52,
+	0x02, 0x65, 0x71, 0x12, 0x12, 0x0a, 0x03, 0x6e, 0x65, 0x71, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09,
+	0x48, 0x00, 0x52, 0x03, 0x6e, 0x65, 0x71, 0x42, 0x08, 0x0a, 0x06, 0x66, 0x69, 0x6c, 0x74, 0x65,
+	0x72, 0x22, 0x4e, 0x0a, 0x0b, 0x42, 0x79, 0x74, 0x65, 0x73, 0x46, 0x69, 0x6c, 0x74, 0x65, 0x72,
+	0x12, 0x10, 0x0a, 0x02, 0x65, 0x71, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0c, 0x48, 0x00, 0x52, 0x02,
+	0x65, 0x71, 0x12, 0x23, 0x0a, 0x02, 0x69, 0x6e, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x11,
+	0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2e, 0x42, 0x79, 0x74, 0x65, 0x73, 0x41, 0x72, 0x72, 0x61,
+	0x79, 0x48, 0x00, 0x52, 0x02, 0x69, 0x6e, 0x42, 0x08, 0x0a, 0x06, 0x66, 0x69, 0x6c, 0x74, 0x65,
+	0x72, 0x22, 0x1f, 0x0a, 0x0b, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x41, 0x72, 0x72, 0x61, 0x79,
+	0x12, 0x10, 0x0a, 0x03, 0x61, 0x72, 0x72, 0x18, 0x01, 0x20, 0x03, 0x28, 0x09, 0x52, 0x03, 0x61,
+	0x72, 0x72, 0x22, 0x20, 0x0a, 0x0c, 0x49, 0x6e, 0x74, 0x65, 0x67, 0x65, 0x72, 0x41, 0x72, 0x72,
+	0x61, 0x79, 0x12, 0x10, 0x0a, 0x03, 0x61, 0x72, 0x72, 0x18, 0x01, 0x20, 0x03, 0x28, 0x04, 0x52,
+	0x03, 0x61, 0x72, 0x72, 0x22, 0x1e, 0x0a, 0x0a, 0x42, 0x79, 0x74, 0x65, 0x73, 0x41, 0x72, 0x72,
+	0x61, 0x79, 0x12, 0x10, 0x0a, 0x03, 0x61, 0x72, 0x72, 0x18, 0x01, 0x20, 0x03, 0x28, 0x0c, 0x52,
+	0x03, 0x61, 0x72, 0x72, 0x42, 0x33, 0x5a, 0x31, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63,
+	0x6f, 0x6d, 0x2f, 0x64, 0x69, 0x70, 0x64, 0x75, 0x70, 0x2d, 0x69, 0x6f, 0x2f, 0x73, 0x74, 0x61,
+	0x72, 0x6b, 0x6e, 0x65, 0x74, 0x2d, 0x69, 0x6e, 0x64, 0x65, 0x78, 0x65, 0x72, 0x2f, 0x70, 0x6b,
+	0x67, 0x2f, 0x67, 0x72, 0x70, 0x63, 0x2f, 0x70, 0x62, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f,
+	0x33,
 }
 
 var (
@@ -490,7 +923,7 @@ func file_github_com_dipdup_io_starknet_indexer_pkg_grpc_proto_filters_proto_raw
 	return file_github_com_dipdup_io_starknet_indexer_pkg_grpc_proto_filters_proto_rawDescData
 }
 
-var file_github_com_dipdup_io_starknet_indexer_pkg_grpc_proto_filters_proto_msgTypes = make([]protoimpl.MessageInfo, 6)
+var file_github_com_dipdup_io_starknet_indexer_pkg_grpc_proto_filters_proto_msgTypes = make([]protoimpl.MessageInfo, 10)
 var file_github_com_dipdup_io_starknet_indexer_pkg_grpc_proto_filters_proto_goTypes = []interface{}{
 	(*BetweenInteger)(nil), // 0: proto.BetweenInteger
 	(*IntegerFilter)(nil),  // 1: proto.IntegerFilter
@@ -498,15 +931,23 @@ var file_github_com_dipdup_io_starknet_indexer_pkg_grpc_proto_filters_proto_goTy
 	(*EnumFilter)(nil),     // 3: proto.EnumFilter
 	(*StringFilter)(nil),   // 4: proto.StringFilter
 	(*EqualityFilter)(nil), // 5: proto.EqualityFilter
+	(*BytesFilter)(nil),    // 6: proto.BytesFilter
+	(*StringArray)(nil),    // 7: proto.StringArray
+	(*IntegerArray)(nil),   // 8: proto.IntegerArray
+	(*BytesArray)(nil),     // 9: proto.BytesArray
 }
 var file_github_com_dipdup_io_starknet_indexer_pkg_grpc_proto_filters_proto_depIdxs = []int32{
 	0, // 0: proto.IntegerFilter.between:type_name -> proto.BetweenInteger
 	0, // 1: proto.TimeFilter.between:type_name -> proto.BetweenInteger
-	2, // [2:2] is the sub-list for method output_type
-	2, // [2:2] is the sub-list for method input_type
-	2, // [2:2] is the sub-list for extension type_name
-	2, // [2:2] is the sub-list for extension extendee
-	0, // [0:2] is the sub-list for field type_name
+	8, // 2: proto.EnumFilter.in:type_name -> proto.IntegerArray
+	8, // 3: proto.EnumFilter.notin:type_name -> proto.IntegerArray
+	7, // 4: proto.StringFilter.in:type_name -> proto.StringArray
+	9, // 5: proto.BytesFilter.in:type_name -> proto.BytesArray
+	6, // [6:6] is the sub-list for method output_type
+	6, // [6:6] is the sub-list for method input_type
+	6, // [6:6] is the sub-list for extension type_name
+	6, // [6:6] is the sub-list for extension extendee
+	0, // [0:6] is the sub-list for field type_name
 }
 
 func init() { file_github_com_dipdup_io_starknet_indexer_pkg_grpc_proto_filters_proto_init() }
@@ -587,6 +1028,88 @@ func file_github_com_dipdup_io_starknet_indexer_pkg_grpc_proto_filters_proto_ini
 				return nil
 			}
 		}
+		file_github_com_dipdup_io_starknet_indexer_pkg_grpc_proto_filters_proto_msgTypes[6].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*BytesFilter); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_github_com_dipdup_io_starknet_indexer_pkg_grpc_proto_filters_proto_msgTypes[7].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*StringArray); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_github_com_dipdup_io_starknet_indexer_pkg_grpc_proto_filters_proto_msgTypes[8].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*IntegerArray); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_github_com_dipdup_io_starknet_indexer_pkg_grpc_proto_filters_proto_msgTypes[9].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*BytesArray); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+	}
+	file_github_com_dipdup_io_starknet_indexer_pkg_grpc_proto_filters_proto_msgTypes[1].OneofWrappers = []interface{}{
+		(*IntegerFilter_Gt)(nil),
+		(*IntegerFilter_Gte)(nil),
+		(*IntegerFilter_Lt)(nil),
+		(*IntegerFilter_Lte)(nil),
+		(*IntegerFilter_Eq)(nil),
+		(*IntegerFilter_Neq)(nil),
+		(*IntegerFilter_Between)(nil),
+	}
+	file_github_com_dipdup_io_starknet_indexer_pkg_grpc_proto_filters_proto_msgTypes[2].OneofWrappers = []interface{}{
+		(*TimeFilter_Gt)(nil),
+		(*TimeFilter_Gte)(nil),
+		(*TimeFilter_Lt)(nil),
+		(*TimeFilter_Lte)(nil),
+		(*TimeFilter_Between)(nil),
+	}
+	file_github_com_dipdup_io_starknet_indexer_pkg_grpc_proto_filters_proto_msgTypes[3].OneofWrappers = []interface{}{
+		(*EnumFilter_Eq)(nil),
+		(*EnumFilter_Neq)(nil),
+		(*EnumFilter_In)(nil),
+		(*EnumFilter_Notin)(nil),
+	}
+	file_github_com_dipdup_io_starknet_indexer_pkg_grpc_proto_filters_proto_msgTypes[4].OneofWrappers = []interface{}{
+		(*StringFilter_Eq)(nil),
+		(*StringFilter_In)(nil),
+	}
+	file_github_com_dipdup_io_starknet_indexer_pkg_grpc_proto_filters_proto_msgTypes[5].OneofWrappers = []interface{}{
+		(*EqualityFilter_Eq)(nil),
+		(*EqualityFilter_Neq)(nil),
+	}
+	file_github_com_dipdup_io_starknet_indexer_pkg_grpc_proto_filters_proto_msgTypes[6].OneofWrappers = []interface{}{
+		(*BytesFilter_Eq)(nil),
+		(*BytesFilter_In)(nil),
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
@@ -594,7 +1117,7 @@ func file_github_com_dipdup_io_starknet_indexer_pkg_grpc_proto_filters_proto_ini
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_github_com_dipdup_io_starknet_indexer_pkg_grpc_proto_filters_proto_rawDesc,
 			NumEnums:      0,
-			NumMessages:   6,
+			NumMessages:   10,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

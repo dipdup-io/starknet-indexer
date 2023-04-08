@@ -38,7 +38,8 @@ type Event struct {
 	Name       string
 	ParsedData map[string]any
 
-	From Address `pg:"rel:has-one"`
+	From     Address `pg:"rel:has-one"`
+	Contract Address `pg:"rel:has-one"`
 }
 
 // TableName -

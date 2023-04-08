@@ -15,13 +15,35 @@ service IndexerService {
 }
 
 message SubscribeRequest {
-    uint64 start_block = 1;
-    bool head = 2;
-    TxRequest txs = 3;
+    bool head = 1;    
+    InvokeFilters invokes = 2;
+    DeclareFilters declares = 3;
+    DeployFilters deploys = 4;
+    DeployAccountFilters deploy_accounts = 5;
+    L1HandlerFilter l1_handlers = 6;
+    InternalFilter internals = 7;
+    FeeFilter fees = 8;
+    EventFilter events = 9;
+    MessageFilter msgs = 10;
+    TransferFilter transfers = 11;
+    StorageDiffFilter storage_diffs = 12;
+    TokenBalanceFilter token_balances = 13;
 }
 
 message Subscription {
     SubscribeResponse response = 1;
     Block block = 2;
-    bool end_of_block = 3;
+    Declare declare = 3;
+    Deploy deploy = 4;
+    DeployAccount deploy_account = 5;
+    Event event = 6;
+    Fee fee = 7;
+    Internal internal = 8;
+    Invoke invoke = 9;
+    L1Handler l1_handler = 10;
+    StarknetMessage message = 11;
+    StorageDiff storage_diff = 12;
+    TokenBalance token_balance = 13;
+    Transfer transfer = 14;
+    bool end_of_block = 15;
 }

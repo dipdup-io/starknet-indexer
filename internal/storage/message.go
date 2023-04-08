@@ -37,8 +37,9 @@ type Message struct {
 	Nonce      decimal.Decimal `pg:",type:numeric,use_zero"`
 	Payload    []string        `pg:",array"`
 
-	From Address `pg:"rel:has-one"`
-	To   Address `pg:"rel:has-one"`
+	From     Address `pg:"rel:has-one"`
+	To       Address `pg:"rel:has-one"`
+	Contract Address `pg:"rel:has-one"`
 }
 
 // TableName -
