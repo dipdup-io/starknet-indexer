@@ -169,6 +169,7 @@ func Event(model *storage.Event) *pb.Event {
 		From:     model.From.Hash,
 		Keys:     model.Keys,
 		Data:     model.Data,
+		Name:     model.Name,
 	}
 
 	if model.ParsedData != nil {

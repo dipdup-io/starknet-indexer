@@ -7,6 +7,9 @@ indexer:
 tester:
 	cd cmd/tester && go run . -c ../../build/dipdup.yml
 
+starknet_id:
+	cd cmd/starknet_id && go run . -c ../../cmd/starknet_id/dipdup.yml
+
 build-proto:
 	protoc \
 		-I=${GOPATH}/src \

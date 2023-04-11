@@ -57,7 +57,7 @@ func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 
 	client := grpc.NewClient(*cfg.GRPC)
-	print := printer.NewPrinter()
+	print := NewPrinter()
 
 	if err := modules.Connect(client, print, grpc.OutputMessages, printer.InputName); err != nil {
 		log.Panic().Err(err).Msg("module connect")

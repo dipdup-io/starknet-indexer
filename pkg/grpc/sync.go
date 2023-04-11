@@ -230,10 +230,10 @@ func (module *Server) sync(ctx context.Context, subscriptionID uint64, req *pb.S
 func (module *Server) syncTables(ctx context.Context, tables tables, targetHeight, subscriptionID uint64, stream pb.IndexerService_SubscribeServer) error {
 	for i := range tables {
 		tables[i].Reset()
+		tables[i].SetTargetHeight(targetHeight)
 		if err := tables[i].Receive(ctx); err != nil {
 			return err
 		}
-		tables[i].SetTargetHeight(targetHeight)
 	}
 
 	for !tables.Finished() {

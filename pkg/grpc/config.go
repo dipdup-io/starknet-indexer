@@ -44,6 +44,47 @@ func (f Subscription) ToGrpcFilter() *pb.SubscribeRequest {
 	return req
 }
 
+// InvokeFilters -
+type InvokeFilters struct {
+	Height         *IntegerFilter    `yaml:"height" validate:"omitempty"`
+	Time           *TimeFilter       `yaml:"time" validate:"omitempty"`
+	Status         *EnumFilter       `yaml:"status" validate:"omitempty"`
+	Version        *EnumFilter       `yaml:"version" validate:"omitempty"`
+	Contract       *BytesFilter      `yaml:"contract" validate:"omitempty"`
+	Selector       *EqualityFilter   `yaml:"selector" validate:"omitempty"`
+	Entrypoint     *StringFilter     `yaml:"entrypoint" validate:"omitempty"`
+	ParsedCalldata map[string]string `yaml:"parsed_calldata" validate:"omitempty"`
+	Id             *IntegerFilter    `yaml:"id" validate:"omitempty"`
+}
+
+// ToGrpcFilter -
+func (f InvokeFilters) ToGrpcFilter() *pb.InvokeFilters {
+	fltr := new(pb.InvokeFilters)
+
+	if f.Height != nil {
+		fltr.Height = f.Height.ToGrpcFilter()
+	}
+	if f.Time != nil {
+		fltr.Time = f.Time.ToGrpcFilter()
+	}
+	if f.Contract != nil {
+		fltr.Contract = f.Contract.ToGrpcFilter()
+	}
+	if f.Status != nil {
+		fltr.Status = f.Status.ToGrpcFilter()
+	}
+	if f.Version != nil {
+		fltr.Version = f.Version.ToGrpcFilter()
+	}
+	if f.Id != nil {
+		fltr.Id = f.Id.ToGrpcFilter()
+	}
+	if f.ParsedCalldata != nil {
+		fltr.ParsedCalldata = f.ParsedCalldata
+	}
+	return fltr
+}
+
 // EventFilter -
 type EventFilter struct {
 	Height     *IntegerFilter    `yaml:"height" validate:"omitempty"`
@@ -256,5 +297,63 @@ func (f BetweenInteger) ToGrpcFilter() *pb.BetweenInteger {
 	fltr := new(pb.BetweenInteger)
 	fltr.From = f.From
 	fltr.To = f.To
+	return fltr
+}
+
+// EnumFilter -
+type EnumFilter struct {
+	Eq    uint64   `yaml:"eq" validate:"omitempty"`
+	Neq   uint64   `yaml:"neq" validate:"omitempty"`
+	In    []uint64 `yaml:"in" validate:"omitempty"`
+	Notin []uint64 `yaml:"notin" validate:"omitempty"`
+}
+
+// ToGrpcFilter -
+func (f EnumFilter) ToGrpcFilter() *pb.EnumFilter {
+	fltr := new(pb.EnumFilter)
+	switch {
+	case f.Eq > 0:
+		fltr.Filter = &pb.EnumFilter_Eq{
+			Eq: f.Eq,
+		}
+	case f.Neq > 0:
+		fltr.Filter = &pb.EnumFilter_Neq{
+			Neq: f.Neq,
+		}
+	case len(f.In) > 0:
+		fltr.Filter = &pb.EnumFilter_In{
+			In: &pb.IntegerArray{
+				Arr: f.In,
+			},
+		}
+	case len(f.Notin) > 0:
+		fltr.Filter = &pb.EnumFilter_Notin{
+			Notin: &pb.IntegerArray{
+				Arr: f.Notin,
+			},
+		}
+	}
+	return fltr
+}
+
+// EqualityFilter -
+type EqualityFilter struct {
+	Eq  string `yaml:"eq" validate:"omitempty"`
+	Neq string `yaml:"neq" validate:"omitempty"`
+}
+
+// ToGrpcFilter -
+func (f EqualityFilter) ToGrpcFilter() *pb.EqualityFilter {
+	fltr := new(pb.EqualityFilter)
+	switch {
+	case f.Eq != "":
+		fltr.Filter = &pb.EqualityFilter_Eq{
+			Eq: f.Eq,
+		}
+	case f.Neq != "":
+		fltr.Filter = &pb.EqualityFilter_Neq{
+			Neq: f.Neq,
+		}
+	}
 	return fltr
 }

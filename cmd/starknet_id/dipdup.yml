@@ -6,6 +6,7 @@ grpc:
   server_address: ${GRPC_BIND:-127.0.0.1:7779}
   subscriptions:
     straknet_id:
+      head: true
       events:
         contract:
           eq: 0x05dbdedc203e92749e2e746e2d40a768d966bd243df04a6b712e222bc040a9af

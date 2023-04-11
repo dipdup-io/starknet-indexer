@@ -85,6 +85,7 @@ func (s *Subscription) Filter(msg *Message) bool {
 	if s.blocks {
 		return true
 	}
+	// TODO: think about filter subscriptions
 
 	return false
 }
