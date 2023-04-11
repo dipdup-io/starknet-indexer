@@ -156,9 +156,9 @@ func addSort(q *orm.Query, field string, order sdk.SortOrder) *orm.Query {
 		return q
 	}
 	if order == sdk.SortOrderAsc {
-		return q.OrderExpr("? asc", field)
+		return q.OrderExpr("? asc", pg.Ident(field))
 	}
-	return q.OrderExpr("? desc", field)
+	return q.OrderExpr("? desc", pg.Ident(field))
 }
 
 func optionsFilter(q *orm.Query, opts ...storage.FilterOption) *orm.Query {

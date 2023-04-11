@@ -8,7 +8,7 @@ grpc:
     straknet_id:
       events:
         contract:
-          eq: 0x0798e884450c19e072d6620fefdbeb7387d0453d3fd51d95f5ace1f17633d88b
+          eq: 0x05dbdedc203e92749e2e746e2d40a768d966bd243df04a6b712e222bc040a9af
         name:
           in:
             - Transfer
@@ -17,7 +17,7 @@ grpc:
     naming:
       events:
         contract:
-          eq: 0x05cf267a0af6101667013fc6bd3f6c11116a14cda9b8c4b1198520d59f900b17
+          eq: 0x06ac597f8116f886fa1c97a23fa4e08299975ecaf6b598873ca6792b9bbfb678
         name:
           in:
             - domain_to_addr_update
@@ -28,6 +28,6 @@ grpc:
     braavos:
       events:
         contract:
-          eq: 0x0660b2cd3c93528d4edf790610404414ba3f03e0d45c814d686d628583cb34de
+          eq: 0x03448896d4a0df143f98c9eeccc7e279bf3c2008bda2ad2759f5b20ed263585f
         name:
           eq: domain_to_addr_update

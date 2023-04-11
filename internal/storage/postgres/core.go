@@ -179,6 +179,9 @@ func createIndices(ctx context.Context, conn *database.PgGo) error {
 		if _, err := tx.ExecContext(ctx, `CREATE INDEX IF NOT EXISTS event_contract_id_idx ON event (contract_id, id)`); err != nil {
 			return err
 		}
+		if _, err := tx.ExecContext(ctx, `CREATE INDEX IF NOT EXISTS event_name_idx ON event (name, id)`); err != nil {
+			return err
+		}
 
 		// Message
 		if _, err := tx.ExecContext(ctx, `CREATE INDEX IF NOT EXISTS message_height_idx ON message (height)`); err != nil {

@@ -4,12 +4,12 @@ go 1.19
 
 // replace github.com/dipdup-io/starknet-go-api => /usr/local/go/src/github.com/dipdup-io/starknet-go-api
 
-replace github.com/dipdup-net/indexer-sdk => /usr/local/go/src/github.com/dipdup-net/indexer-sdk
+// replace github.com/dipdup-net/indexer-sdk => /usr/local/go/src/github.com/dipdup-net/indexer-sdk
 
 require (
 	github.com/dipdup-io/starknet-go-api v0.0.0-20230406094402-d186f0234213
 	github.com/dipdup-net/go-lib v0.2.29
-	github.com/dipdup-net/indexer-sdk v0.0.0-20230328204533-290eee37f74f
+	github.com/dipdup-net/indexer-sdk v0.0.0-20230411153716-64fa5b10af27
 	github.com/dipdup-net/workerpool v0.0.2
 	github.com/go-pg/pg/v10 v10.11.0
 	github.com/karlseguin/ccache/v2 v2.0.8
