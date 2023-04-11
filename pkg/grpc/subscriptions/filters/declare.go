@@ -30,6 +30,10 @@ func (f Declare) Filter(data storage.Declare) bool {
 		return true
 	}
 
+	if !validInteger(f.Id, data.ID) {
+		return false
+	}
+
 	if !validInteger(f.Height, data.Height) {
 		return false
 	}

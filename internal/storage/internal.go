@@ -11,6 +11,23 @@ type IInternal interface {
 	storage.Table[*Internal]
 
 	Copiable[Internal]
+	Filterable[Internal, InternalFilter]
+}
+
+// InternalFilter -
+type InternalFilter struct {
+	ID             IntegerFilter
+	Height         IntegerFilter
+	Time           TimeFilter
+	Status         EnumFilter
+	Contract       BytesFilter
+	Caller         BytesFilter
+	Class          BytesFilter
+	Selector       EqualityFilter
+	Entrypoint     StringFilter
+	EntrypointType EnumFilter
+	CallType       EnumFilter
+	ParsedCalldata map[string]string
 }
 
 // Internal -
@@ -57,4 +74,9 @@ type Internal struct {
 // TableName -
 func (Internal) TableName() string {
 	return "internal_tx"
+}
+
+// GetHeight -
+func (invoke Internal) GetHeight() uint64 {
+	return invoke.Height
 }

@@ -10,6 +10,7 @@ import (
 	"github.com/dipdup-net/indexer-sdk/pkg/storage/postgres"
 	"github.com/go-pg/pg/v10"
 	"github.com/go-pg/pg/v10/orm"
+	"github.com/rs/zerolog/log"
 )
 
 // Storage -
@@ -116,6 +117,7 @@ func initDatabase(ctx context.Context, conn *database.PgGo) error {
 }
 
 func createIndices(ctx context.Context, conn *database.PgGo) error {
+	log.Info().Msg("creating indexes...")
 	return conn.DB().RunInTransaction(ctx, func(tx *pg.Tx) error {
 		// Address
 		if _, err := tx.ExecContext(ctx, `CREATE INDEX IF NOT EXISTS address_hash_idx ON address (hash)`); err != nil {
@@ -167,6 +169,19 @@ func createIndices(ctx context.Context, conn *database.PgGo) error {
 
 		// Internal
 		if _, err := tx.ExecContext(ctx, `CREATE INDEX IF NOT EXISTS internal_tx_height_idx ON internal_tx (height)`); err != nil {
+			return err
+		}
+
+		// Event
+		if _, err := tx.ExecContext(ctx, `CREATE INDEX IF NOT EXISTS event_height_idx ON event (height)`); err != nil {
+			return err
+		}
+		if _, err := tx.ExecContext(ctx, `CREATE INDEX IF NOT EXISTS event_contract_id_idx ON event (contract_id, id)`); err != nil {
+			return err
+		}
+
+		// Message
+		if _, err := tx.ExecContext(ctx, `CREATE INDEX IF NOT EXISTS message_height_idx ON message (height)`); err != nil {
 			return err
 		}
 

@@ -12,14 +12,13 @@ import (
 // ParseDeclare -
 func (parser Parser) ParseDeclare(ctx context.Context, version data.Felt, raw *data.Declare, block storage.Block, trace sequencer.Trace, receipts sequencer.Receipt) (storage.Declare, *storage.Fee, error) {
 	tx := storage.Declare{
-		ID:        parser.Resolver.NextTxId(),
-		Height:    block.Height,
-		Time:      block.Time,
-		Status:    block.Status,
-		Hash:      trace.TransactionHash.Bytes(),
-		Signature: raw.Signature,
-		MaxFee:    raw.MaxFee.Decimal(),
-		Nonce:     raw.Nonce.Decimal(),
+		ID:     parser.Resolver.NextTxId(),
+		Height: block.Height,
+		Time:   block.Time,
+		Status: block.Status,
+		Hash:   trace.TransactionHash.Bytes(),
+		MaxFee: raw.MaxFee.Decimal(),
+		Nonce:  raw.Nonce.Decimal(),
 	}
 
 	var err error

@@ -10,8 +10,17 @@ import (
 type IStorageDiff interface {
 	storage.Table[*StorageDiff]
 	Copiable[StorageDiff]
+	Filterable[StorageDiff, StorageDiffFilter]
 
 	GetOnBlock(ctx context.Context, height, contractId uint64, key []byte) (StorageDiff, error)
+}
+
+// StorageDiffFilter -
+type StorageDiffFilter struct {
+	ID       IntegerFilter
+	Height   IntegerFilter
+	Contract BytesFilter
+	Key      EqualityFilter
 }
 
 // StorageDiff -
@@ -31,4 +40,9 @@ type StorageDiff struct {
 // TableName -
 func (StorageDiff) TableName() string {
 	return "storage_diff"
+}
+
+// GetHeight -
+func (sd StorageDiff) GetHeight() uint64 {
+	return sd.Height
 }

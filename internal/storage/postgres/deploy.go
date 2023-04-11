@@ -23,16 +23,6 @@ func NewDeploy(db *database.PgGo) *Deploy {
 	}
 }
 
-// ByHeight -
-func (d *Deploy) ByHeight(ctx context.Context, height, limit, offset uint64) (response []storage.Deploy, err error) {
-	err = d.DB().ModelContext(ctx, (*storage.Deploy)(nil)).
-		Where("height = ?", height).
-		Limit(int(limit)).
-		Offset(int(offset)).
-		Select(&response)
-	return
-}
-
 // InsertByCopy -
 func (d *Deploy) InsertByCopy(txs []storage.Deploy) (io.Reader, string, error) {
 	if len(txs) == 0 {
@@ -112,4 +102,20 @@ func (d *Deploy) InsertByCopy(txs []storage.Deploy) (io.Reader, string, error) {
 
 	query := fmt.Sprintf(`COPY %s FROM STDIN WITH (FORMAT csv, ESCAPE '\', QUOTE '"', DELIMITER ',')`, storage.Deploy{}.TableName())
 	return strings.NewReader(builder.String()), query, nil
+}
+
+// Filter -
+func (d *Deploy) Filter(ctx context.Context, fltr storage.DeployFilter, opts ...storage.FilterOption) ([]storage.Deploy, error) {
+	q := d.DB().ModelContext(ctx, (*storage.Deploy)(nil))
+	q = integerFilter(q, "id", fltr.ID)
+	q = integerFilter(q, "height", fltr.Height)
+	q = timeFilter(q, "time", fltr.Time)
+	q = enumFilter(q, "status", fltr.Status)
+	q = addressFilter(q, "hash", fltr.Class, "Class")
+	q = jsonFilter(q, "parsed_calldata", fltr.ParsedCalldata)
+	q = optionsFilter(q, opts...)
+
+	var result []storage.Deploy
+	err := q.Select(&result)
+	return result, err
 }

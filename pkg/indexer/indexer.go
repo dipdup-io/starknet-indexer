@@ -117,6 +117,7 @@ func New(
 
 // Start -
 func (indexer *Indexer) Start(ctx context.Context) {
+	log.Info().Msg("starting indexer...")
 	if err := indexer.init(ctx); err != nil {
 		log.Err(err).Msg("state initializing error")
 		return

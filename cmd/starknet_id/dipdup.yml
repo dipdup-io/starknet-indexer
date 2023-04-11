@@ -1,0 +1,33 @@
+version: 0.0.1
+
+log_level: ${LOG_LEVEL:-info}
+
+grpc:
+  server_address: ${GRPC_BIND:-127.0.0.1:7779}
+  subscriptions:
+    straknet_id:
+      events:
+        contract:
+          eq: 0x0798e884450c19e072d6620fefdbeb7387d0453d3fd51d95f5ace1f17633d88b
+        name:
+          in:
+            - Transfer
+            - VerifierDataUpdate
+            - on_inft_equipped
+    naming:
+      events:
+        contract:
+          eq: 0x05cf267a0af6101667013fc6bd3f6c11116a14cda9b8c4b1198520d59f900b17
+        name:
+          in:
+            - domain_to_addr_update
+            - addr_to_domain_update
+            - starknet_id_update
+            - domain_transfer
+            - reset_subdomains_update
+    braavos:
+      events:
+        contract:
+          eq: 0x0660b2cd3c93528d4edf790610404414ba3f03e0d45c814d686d628583cb34de
+        name:
+          eq: domain_to_addr_update

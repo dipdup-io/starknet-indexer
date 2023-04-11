@@ -10,6 +10,23 @@ import (
 type IFee interface {
 	storage.Table[*Fee]
 	Copiable[Fee]
+	Filterable[Fee, FeeFilter]
+}
+
+// FeeFilter -
+type FeeFilter struct {
+	ID             IntegerFilter
+	Height         IntegerFilter
+	Time           TimeFilter
+	Status         EnumFilter
+	Contract       BytesFilter
+	Caller         BytesFilter
+	Class          BytesFilter
+	Selector       EqualityFilter
+	Entrypoint     StringFilter
+	EntrypointType EnumFilter
+	CallType       EnumFilter
+	ParsedCalldata map[string]string
 }
 
 // Fee -
@@ -52,4 +69,9 @@ type Fee struct {
 // TableName -
 func (Fee) TableName() string {
 	return "fee"
+}
+
+// GetHeight -
+func (f Fee) GetHeight() uint64 {
+	return f.Height
 }

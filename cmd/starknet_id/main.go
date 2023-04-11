@@ -6,16 +6,13 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/dipdup-io/starknet-indexer/internal/starknet"
-	"github.com/dipdup-io/starknet-indexer/internal/storage/postgres"
 	"github.com/dipdup-io/starknet-indexer/pkg/grpc"
-	"github.com/dipdup-io/starknet-indexer/pkg/indexer"
 	"github.com/dipdup-net/go-lib/config"
 	"github.com/dipdup-net/indexer-sdk/pkg/modules"
-	"github.com/spf13/cobra"
-
+	"github.com/dipdup-net/indexer-sdk/pkg/modules/printer"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
+	"github.com/spf13/cobra"
 )
 
 var (
@@ -57,49 +54,53 @@ func main() {
 	}
 	zerolog.SetGlobalLevel(logLevel)
 
-	if err := starknet.LoadBridgedTokens(cfg.Indexer.BridgedTokensFile); err != nil {
-		log.Panic().Err(err).Msg("loading bridged tokens")
-		return
-	}
-
 	ctx, cancel := context.WithCancel(context.Background())
 
-	postgres, err := postgres.Create(ctx, cfg.Database)
-	if err != nil {
-		log.Panic().Err(err).Msg("postgres connection")
+	client := grpc.NewClient(*cfg.GRPC)
+	print := printer.NewPrinter()
+
+	if err := modules.Connect(client, print, grpc.OutputMessages, printer.InputName); err != nil {
+		log.Panic().Err(err).Msg("module connect")
 		return
 	}
 
-	indexerModule := indexer.New(cfg.Indexer, postgres)
-
-	grpcModule, err := grpc.NewServer(
-		cfg.GRPC, postgres,
-	)
-	if err != nil {
-		log.Panic().Err(err).Msg("creating grpc module")
-		cancel()
+	if err := client.Connect(ctx); err != nil {
+		log.Panic().Err(err).Msg("grpc connect")
 		return
 	}
 
-	if err := modules.Connect(indexerModule, grpcModule, indexer.OutputBlocks, grpc.InputBlocks); err != nil {
-		log.Panic().Err(err).Msg("creating modules connection")
-		cancel()
-		return
-	}
+	client.Start(ctx)
+	print.Start(ctx)
 
-	grpcModule.Start(ctx)
-	indexerModule.Start(ctx)
+	subscriptions := make([]uint64, 0)
+	for name, sub := range cfg.GRPC.Subscriptions {
+		log.Info().Str("topic", name).Msg("subscribing...")
+		req := sub.ToGrpcFilter()
+		subId, err := client.Subscribe(ctx, req)
+		if err != nil {
+			log.Panic().Err(err).Msg("subscribing error")
+			return
+		}
+		subscriptions = append(subscriptions, subId)
+	}
 
 	signals := make(chan os.Signal, 1)
 	signal.Notify(signals, os.Interrupt, syscall.SIGTERM, syscall.SIGINT)
 
 	<-signals
+
+	for i := range subscriptions {
+		if err := client.Unsubscribe(ctx, subscriptions[i]); err != nil {
+			log.Panic().Err(err).Msg("unsubscribing")
+		}
+	}
+
 	cancel()
 
-	if err := indexerModule.Close(); err != nil {
-		log.Panic().Err(err).Msg("closing indexer")
+	if err := print.Close(); err != nil {
+		log.Panic().Err(err).Msg("closing printer")
 	}
-	if err := grpcModule.Close(); err != nil {
+	if err := client.Close(); err != nil {
 		log.Panic().Err(err).Msg("closing grpc server")
 	}
 

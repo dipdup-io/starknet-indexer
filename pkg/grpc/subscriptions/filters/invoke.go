@@ -31,6 +31,10 @@ func (f Invoke) Filter(data storage.Invoke) bool {
 		return true
 	}
 
+	if !validInteger(f.Id, data.ID) {
+		return false
+	}
+
 	if !validInteger(f.Height, data.Height) {
 		return false
 	}

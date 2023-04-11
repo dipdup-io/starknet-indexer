@@ -24,7 +24,6 @@ func (parser Parser) ParseInvokeV0(ctx context.Context, raw *data.Invoke, block 
 		Status:             block.Status,
 		Hash:               trace.TransactionHash.Bytes(),
 		EntrypointSelector: raw.EntrypointSelector.Bytes(),
-		Signature:          raw.Signature,
 		CallData:           raw.Calldata,
 		MaxFee:             raw.MaxFee.Decimal(),
 		Nonce:              raw.Nonce.Decimal(),

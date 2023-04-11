@@ -15,6 +15,7 @@ message InvokeFilters {
     EqualityFilter selector = 6;
     StringFilter entrypoint = 7;
     map<string, string> parsed_calldata = 8;
+    IntegerFilter id = 9;
 }
 
 message DeclareFilters {
@@ -22,6 +23,7 @@ message DeclareFilters {
     TimeFilter time = 2;
     EnumFilter status = 3;
     EnumFilter version = 4;
+    IntegerFilter id = 5;
 }
 
 message DeployFilters {
@@ -30,6 +32,7 @@ message DeployFilters {
     EnumFilter status = 3;
     BytesFilter class = 4;
     map<string, string> parsed_calldata = 5;
+    IntegerFilter id = 6;
 }
 
 message DeployAccountFilters {
@@ -38,6 +41,7 @@ message DeployAccountFilters {
     EnumFilter status = 3;
     BytesFilter class = 4;
     map<string, string> parsed_calldata = 5;
+    IntegerFilter id = 6;
 }
 
 message L1HandlerFilter {
@@ -48,6 +52,7 @@ message L1HandlerFilter {
     EqualityFilter selector = 5;
     StringFilter entrypoint = 6;
     map<string, string> parsed_calldata = 7;
+    IntegerFilter id = 8;
 }
 
 message InternalFilter {
@@ -62,6 +67,7 @@ message InternalFilter {
     EnumFilter entrypoint_type = 9;
     EnumFilter call_type = 10;
     map<string, string> parsed_calldata = 11;
+    IntegerFilter id = 12;
 }
 
 message FeeFilter {
@@ -76,15 +82,17 @@ message FeeFilter {
     EnumFilter entrypoint_type = 9;
     EnumFilter call_type = 10;
     map<string, string> parsed_calldata = 11;
+    IntegerFilter id = 12;
 }
 
 message EventFilter {
     IntegerFilter height = 1;
     TimeFilter time = 2;
     BytesFilter contract = 3;
-    StringFilter from = 4;
-    EqualityFilter name = 5;
+    BytesFilter from = 4;
+    StringFilter name = 5;
     map<string, string> parsed_data = 6;
+    IntegerFilter id = 7;
 }
 
 
@@ -95,6 +103,7 @@ message MessageFilter {
     BytesFilter from = 4;
     BytesFilter to = 5;
     EqualityFilter selector = 6;
+    IntegerFilter id = 7;
 }
 
 message TransferFilter {
@@ -104,12 +113,14 @@ message TransferFilter {
     BytesFilter from = 4;
     BytesFilter to = 5;
     StringFilter token_id = 6;
+    IntegerFilter id = 7;
 }
 
 message StorageDiffFilter {
     IntegerFilter height = 1;
     BytesFilter contract = 2;
     EqualityFilter key = 3;
+    IntegerFilter id = 4;
 }
 
 message TokenBalanceFilter {

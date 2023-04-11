@@ -1,7 +1,6 @@
 package filters
 
 import (
-	"github.com/dipdup-io/starknet-go-api/pkg/encoding"
 	"github.com/dipdup-io/starknet-indexer/internal/storage"
 	"github.com/dipdup-io/starknet-indexer/pkg/grpc/pb"
 )
@@ -31,6 +30,10 @@ func (f *Event) Filter(data storage.Event) bool {
 		return true
 	}
 
+	if !validInteger(f.Id, data.ID) {
+		return false
+	}
+
 	if !validInteger(f.Height, data.Height) {
 		return false
 	}
@@ -40,15 +43,15 @@ func (f *Event) Filter(data storage.Event) bool {
 	}
 
 	// TODO: think about passing contract address
-	// if !validString(f.Contract, encoding.EncodeHex(data.Contract.Hash)) {
-	// 	return false
-	// }
-
-	if !validString(f.From, encoding.EncodeHex(data.From.Hash)) {
+	if !validBytes(f.Contract, data.Contract.Hash) {
 		return false
 	}
 
-	if !validEquality(f.Name, data.Name) {
+	if !validBytes(f.From, data.From.Hash) {
+		return false
+	}
+
+	if !validString(f.Name, data.Name) {
 		return false
 	}
 

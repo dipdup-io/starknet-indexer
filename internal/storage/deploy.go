@@ -1,7 +1,6 @@
 package storage
 
 import (
-	"context"
 	"time"
 
 	"github.com/dipdup-net/indexer-sdk/pkg/storage"
@@ -11,8 +10,17 @@ import (
 type IDeploy interface {
 	storage.Table[*Deploy]
 	Copiable[Deploy]
+	Filterable[Deploy, DeployFilter]
+}
 
-	ByHeight(ctx context.Context, height, limit, offset uint64) ([]Deploy, error)
+// DeployFilter -
+type DeployFilter struct {
+	ID             IntegerFilter
+	Height         IntegerFilter
+	Time           TimeFilter
+	Status         EnumFilter
+	Class          BytesFilter
+	ParsedCalldata map[string]string
 }
 
 // Deploy -
@@ -47,4 +55,9 @@ type Deploy struct {
 // TableName -
 func (Deploy) TableName() string {
 	return "deploy"
+}
+
+// GetHeight -
+func (d Deploy) GetHeight() uint64 {
+	return d.Height
 }

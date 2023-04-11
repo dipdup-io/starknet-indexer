@@ -6,6 +6,7 @@ import (
 	"github.com/dipdup-io/starknet-indexer/internal/storage"
 	"github.com/dipdup-net/go-lib/database"
 	"github.com/dipdup-net/indexer-sdk/pkg/storage/postgres"
+	"github.com/go-pg/pg/v10"
 )
 
 // Address -
@@ -22,8 +23,20 @@ func NewAddress(db *database.PgGo) *Address {
 
 // GetByHash -
 func (a *Address) GetByHash(ctx context.Context, hash []byte) (address storage.Address, err error) {
-	err = a.DB().Model(&address).
+	err = a.DB().ModelContext(ctx, &address).
 		Where("hash = ?", hash).
+		Select(&address)
+	return
+}
+
+// GetAddresses -
+func (a *Address) GetAddresses(ctx context.Context, ids ...uint64) (address []storage.Address, err error) {
+	if len(ids) == 0 {
+		return nil, nil
+	}
+
+	err = a.DB().ModelContext(ctx, (*storage.Address)(nil)).
+		Where("id IN (?)", pg.In(ids)).
 		Select(&address)
 	return
 }

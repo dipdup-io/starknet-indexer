@@ -23,16 +23,6 @@ func NewInvoke(db *database.PgGo) *Invoke {
 	}
 }
 
-// ByHeight -
-func (invoke *Invoke) ByHeight(ctx context.Context, height, limit, offset uint64) (response []storage.Invoke, err error) {
-	err = invoke.DB().ModelContext(ctx, (*storage.Invoke)(nil)).
-		Where("height = ?", height).
-		Limit(int(limit)).
-		Offset(int(offset)).
-		Select(&response)
-	return
-}
-
 // InsertByCopy -
 func (invoke *Invoke) InsertByCopy(txs []storage.Invoke) (io.Reader, string, error) {
 	if len(txs) == 0 {
@@ -113,12 +103,6 @@ func (invoke *Invoke) InsertByCopy(txs []storage.Invoke) (io.Reader, string, err
 		if err := builder.WriteByte(','); err != nil {
 			return nil, "", err
 		}
-		if err := writeStringArray(builder, txs[i].Signature...); err != nil {
-			return nil, "", err
-		}
-		if err := builder.WriteByte(','); err != nil {
-			return nil, "", err
-		}
 		if err := writeStringArray(builder, txs[i].CallData...); err != nil {
 			return nil, "", err
 		}
@@ -136,4 +120,23 @@ func (invoke *Invoke) InsertByCopy(txs []storage.Invoke) (io.Reader, string, err
 
 	query := fmt.Sprintf(`COPY %s FROM STDIN WITH (FORMAT CSV, ESCAPE E'\\', DELIMITER ',')`, storage.Invoke{}.TableName())
 	return strings.NewReader(builder.String()), query, nil
+}
+
+// Filter -
+func (invoke *Invoke) Filter(ctx context.Context, fltr storage.InvokeFilter, opts ...storage.FilterOption) ([]storage.Invoke, error) {
+	q := invoke.DB().ModelContext(ctx, (*storage.Invoke)(nil))
+	q = integerFilter(q, "id", fltr.ID)
+	q = integerFilter(q, "height", fltr.Height)
+	q = timeFilter(q, "time", fltr.Time)
+	q = enumFilter(q, "status", fltr.Status)
+	q = enumFilter(q, "version", fltr.Version)
+	q = addressFilter(q, "hash", fltr.Contract, "Contract")
+	q = equalityFilter(q, "selector", fltr.Selector)
+	q = stringFilter(q, "entrypoint", fltr.Entrypoint)
+	q = jsonFilter(q, "parsed_calldata", fltr.ParsedCalldata)
+	q = optionsFilter(q, opts...)
+
+	var result []storage.Invoke
+	err := q.Select(&result)
+	return result, err
 }

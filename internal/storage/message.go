@@ -10,6 +10,19 @@ import (
 // IMessage -
 type IMessage interface {
 	storage.Table[*Message]
+
+	Filterable[Message, MessageFilter]
+}
+
+// MessageFilter -
+type MessageFilter struct {
+	ID       IntegerFilter
+	Height   IntegerFilter
+	Time     TimeFilter
+	Contract BytesFilter
+	From     BytesFilter
+	To       BytesFilter
+	Selector EqualityFilter
 }
 
 // Message -
@@ -45,4 +58,9 @@ type Message struct {
 // TableName -
 func (Message) TableName() string {
 	return "message"
+}
+
+// GetHeight -
+func (msg Message) GetHeight() uint64 {
+	return msg.Height
 }

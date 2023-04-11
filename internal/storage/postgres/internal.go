@@ -1,6 +1,7 @@
 package postgres
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"strings"
@@ -162,4 +163,26 @@ func (db Internal) InsertByCopy(txs []storage.Internal) (io.Reader, string, erro
 
 	query := fmt.Sprintf(`COPY %s FROM STDIN WITH (FORMAT csv, ESCAPE '\', QUOTE '"', DELIMITER ',')`, storage.Internal{}.TableName())
 	return strings.NewReader(builder.String()), query, nil
+}
+
+// Filter -
+func (d *Internal) Filter(ctx context.Context, fltr storage.InternalFilter, opts ...storage.FilterOption) ([]storage.Internal, error) {
+	q := d.DB().ModelContext(ctx, (*storage.Internal)(nil))
+	q = integerFilter(q, "id", fltr.ID)
+	q = integerFilter(q, "height", fltr.Height)
+	q = timeFilter(q, "time", fltr.Time)
+	q = enumFilter(q, "status", fltr.Status)
+	q = addressFilter(q, "hash", fltr.Contract, "Contract")
+	q = addressFilter(q, "hash", fltr.Caller, "Caller")
+	q = addressFilter(q, "hash", fltr.Class, "Class")
+	q = equalityFilter(q, "selector", fltr.Selector)
+	q = stringFilter(q, "entrypoint", fltr.Entrypoint)
+	q = enumFilter(q, "entrypoint_type", fltr.EntrypointType)
+	q = enumFilter(q, "call_type", fltr.CallType)
+	q = jsonFilter(q, "parsed_calldata", fltr.ParsedCalldata)
+	q = optionsFilter(q, opts...)
+
+	var result []storage.Internal
+	err := q.Select(&result)
+	return result, err
 }

@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/dipdup-io/starknet-indexer/internal/storage"
+	"github.com/dipdup-io/starknet-indexer/internal/storage/postgres"
 	"github.com/dipdup-io/starknet-indexer/pkg/grpc/pb"
 	"github.com/dipdup-io/starknet-indexer/pkg/grpc/subscriptions"
 	"github.com/dipdup-net/indexer-sdk/pkg/modules"
@@ -23,6 +24,8 @@ type Server struct {
 	*grpcSDK.Server
 	pb.UnimplementedIndexerServiceServer
 
+	db postgres.Storage
+
 	input         *modules.Input
 	subscriptions *grpcSDK.Subscriptions[*subscriptions.Message, *pb.Subscription]
 
@@ -32,6 +35,7 @@ type Server struct {
 // NewServer -
 func NewServer(
 	cfg *grpcSDK.ServerConfig,
+	db postgres.Storage,
 ) (*Server, error) {
 	server, err := grpcSDK.NewServer(cfg)
 	if err != nil {
@@ -40,6 +44,7 @@ func NewServer(
 
 	return &Server{
 		Server:        server,
+		db:            db,
 		input:         modules.NewInput(InputBlocks),
 		subscriptions: grpcSDK.NewSubscriptions[*subscriptions.Message, *pb.Subscription](),
 

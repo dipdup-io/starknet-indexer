@@ -4,7 +4,7 @@ go 1.19
 
 // replace github.com/dipdup-io/starknet-go-api => /usr/local/go/src/github.com/dipdup-io/starknet-go-api
 
-// replace github.com/dipdup-net/indexer-sdk => /usr/local/go/src/github.com/dipdup-net/indexer-sdk
+replace github.com/dipdup-net/indexer-sdk => /usr/local/go/src/github.com/dipdup-net/indexer-sdk
 
 require (
 	github.com/dipdup-io/starknet-go-api v0.0.0-20230406094402-d186f0234213
@@ -22,12 +22,13 @@ require (
 
 require (
 	github.com/goccy/go-json v0.10.2
-	github.com/golang/protobuf v1.5.2
+	golang.org/x/exp v0.0.0-20230206171751-46f607a40771
 	google.golang.org/grpc v1.50.1
 	google.golang.org/protobuf v1.28.1
 )
 
 require (
+	github.com/golang/protobuf v1.5.2 // indirect
 	golang.org/x/net v0.8.0 // indirect
 	google.golang.org/genproto v0.0.0-20220930163606-c98284e70a91 // indirect
 )
@@ -63,7 +64,7 @@ require (
 	golang.org/x/sys v0.6.0 // indirect
 	golang.org/x/text v0.8.0 // indirect
 	golang.org/x/time v0.3.0 // indirect
-	gopkg.in/yaml.v3 v3.0.1 // indirect
+	gopkg.in/yaml.v3 v3.0.1
 	gorm.io/driver/mysql v1.4.7 // indirect
 	gorm.io/driver/postgres v1.5.0 // indirect
 	gorm.io/driver/sqlite v1.4.4 // indirect

@@ -78,3 +78,17 @@ func (sd *StorageDiff) InsertByCopy(diffs []storage.StorageDiff) (io.Reader, str
 	) FROM STDIN WITH (FORMAT csv, ESCAPE '\', QUOTE '"', DELIMITER ',')`, storage.StorageDiff{}.TableName())
 	return strings.NewReader(builder.String()), query, nil
 }
+
+// Filter -
+func (sd *StorageDiff) Filter(ctx context.Context, fltr storage.StorageDiffFilter, opts ...storage.FilterOption) ([]storage.StorageDiff, error) {
+	q := sd.DB().ModelContext(ctx, (*storage.StorageDiff)(nil))
+	q = integerFilter(q, "id", fltr.ID)
+	q = integerFilter(q, "height", fltr.Height)
+	q = addressFilter(q, "hash", fltr.Contract, "Contract")
+	q = equalityFilter(q, "key", fltr.Key)
+	q = optionsFilter(q, opts...)
+
+	var result []storage.StorageDiff
+	err := q.Select(&result)
+	return result, err
+}

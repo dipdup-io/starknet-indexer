@@ -58,19 +58,18 @@ func SubscriptionDeclare(id uint64, msg *subscriptions.Message) *pb.Subscription
 // Declare -
 func Declare(model *storage.Declare) *pb.Declare {
 	pbDeclare := &pb.Declare{
-		Id:        model.ID,
-		Height:    model.Height,
-		Time:      uint64(model.Time.Unix()),
-		Version:   model.Version,
-		Position:  uint64(model.Position),
-		Sender:    model.Sender.Hash,
-		Contract:  model.Contract.Hash,
-		Class:     model.Class.Hash,
-		Status:    uint64(model.Status),
-		Hash:      model.Hash,
-		MaxFee:    model.MaxFee.String(),
-		Nonce:     model.Nonce.String(),
-		Signature: model.Signature,
+		Id:       model.ID,
+		Height:   model.Height,
+		Time:     uint64(model.Time.Unix()),
+		Version:  model.Version,
+		Position: uint64(model.Position),
+		Sender:   model.Sender.Hash,
+		Contract: model.Contract.Hash,
+		Class:    model.Class.Hash,
+		Status:   uint64(model.Status),
+		Hash:     model.Hash,
+		MaxFee:   model.MaxFee.String(),
+		Nonce:    model.Nonce.String(),
 	}
 	return pbDeclare
 }
@@ -286,7 +285,6 @@ func Invoke(model *storage.Invoke) *pb.Invoke {
 		MaxFee:     model.MaxFee.String(),
 		Nonce:      model.Nonce.String(),
 		Entrypoint: model.Entrypoint,
-		Signature:  model.Signature,
 	}
 
 	if model.ParsedCalldata != nil {
@@ -324,7 +322,6 @@ func L1Handler(model *storage.L1Handler) *pb.L1Handler {
 		MaxFee:     model.MaxFee.String(),
 		Nonce:      model.Nonce.String(),
 		Entrypoint: model.Entrypoint,
-		Signature:  model.Signature,
 	}
 
 	if model.ParsedCalldata != nil {

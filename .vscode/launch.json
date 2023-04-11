@@ -26,6 +26,17 @@
                 "${workspaceFolder}/build/dipdup.yml"
             ],
             "envFile": "${workspaceFolder}/.env"
+        }, {
+            "name": "Launch Starknet Id",
+            "type": "go",
+            "request": "launch",
+            "mode": "debug",
+            "program": "${workspaceFolder}/cmd/starknet_id",
+            "args": [
+                "-c",
+                "${workspaceFolder}/cmd/starknet_id/dipdup.yml"
+            ],
+            "envFile": "${workspaceFolder}/.env"
         }
     ]
 }

@@ -19,7 +19,7 @@ func (module *Server) Subscribe(req *pb.SubscribeRequest, stream pb.IndexerServi
 		module.subscriptions,
 		subscriptions.NewSubscription(req),
 		func(id uint64) error {
-			return module.sync(id, req, stream)
+			return module.sync(stream.Context(), id, req, stream)
 		},
 	)
 }
@@ -27,9 +27,4 @@ func (module *Server) Subscribe(req *pb.SubscribeRequest, stream pb.IndexerServi
 // Unsubscribe -
 func (module *Server) Unsubscribe(ctx context.Context, req *generalPB.UnsubscribeRequest) (*generalPB.UnsubscribeResponse, error) {
 	return grpcSDK.DefaultUnsubscribe(ctx, module.subscriptions, req.Id)
-}
-
-// TODO: implement
-func (module *Server) sync(subscriptionID uint64, req *pb.SubscribeRequest, stream pb.IndexerService_SubscribeServer) error {
-	return nil
 }

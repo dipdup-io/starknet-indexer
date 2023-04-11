@@ -1,6 +1,7 @@
 package postgres
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"strings"
@@ -121,4 +122,21 @@ func (t *Transfer) InsertByCopy(transfers []storage.Transfer) (io.Reader, string
 		height, time, contract_id, from_id, to_id, amount, token_id, invoke_id, declare_id, deploy_id, deploy_account_id, l1_handler_id, fee_id, internal_id
 	) FROM STDIN WITH (FORMAT csv, ESCAPE '\', QUOTE '"', DELIMITER ',')`, storage.Transfer{}.TableName())
 	return strings.NewReader(builder.String()), query, nil
+}
+
+// Filter -
+func (t *Transfer) Filter(ctx context.Context, fltr storage.TransferFilter, opts ...storage.FilterOption) ([]storage.Transfer, error) {
+	q := t.DB().ModelContext(ctx, (*storage.Transfer)(nil))
+	q = integerFilter(q, "id", fltr.ID)
+	q = integerFilter(q, "height", fltr.Height)
+	q = timeFilter(q, "time", fltr.Time)
+	q = addressFilter(q, "hash", fltr.Contract, "Contract")
+	q = addressFilter(q, "hash", fltr.From, "From")
+	q = addressFilter(q, "hash", fltr.To, "To")
+	q = stringFilter(q, "token_id", fltr.TokenId)
+	q = optionsFilter(q, opts...)
+
+	var result []storage.Transfer
+	err := q.Select(&result)
+	return result, err
 }

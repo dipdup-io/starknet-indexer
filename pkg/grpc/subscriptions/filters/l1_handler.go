@@ -31,6 +31,10 @@ func (f L1Handler) Filter(data storage.L1Handler) bool {
 		return true
 	}
 
+	if !validInteger(f.Id, data.ID) {
+		return false
+	}
+
 	if !validInteger(f.Height, data.Height) {
 		return false
 	}
