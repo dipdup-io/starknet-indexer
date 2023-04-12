@@ -1,11 +1,13 @@
 package filters
 
 import (
-	"bytes"
+	"context"
 	"strings"
 	"time"
 
+	"github.com/dipdup-io/starknet-indexer/internal/storage"
 	"github.com/dipdup-io/starknet-indexer/pkg/grpc/pb"
+	"github.com/pkg/errors"
 )
 
 func validInteger(f *pb.IntegerFilter, i uint64) bool {
@@ -42,7 +44,7 @@ func validTime(f *pb.TimeFilter, t time.Time) bool {
 
 	switch typ := f.Filter.(type) {
 	case *pb.TimeFilter_Between:
-		// TODO: implement
+		return unixTime > typ.Between.From && unixTime < typ.Between.To
 	case *pb.TimeFilter_Gt:
 		return unixTime > typ.Gt
 	case *pb.TimeFilter_Gte:
@@ -65,7 +67,6 @@ func validString(f *pb.StringFilter, s string) bool {
 	case *pb.StringFilter_Eq:
 		return s == typ.Eq
 	case *pb.StringFilter_In:
-		// TODO: rewrite on map
 		for i := range typ.In.Arr {
 			if typ.In.Arr[i] == s {
 				return true
@@ -149,14 +150,12 @@ func validEnum(f *pb.EnumFilter, val uint64) bool {
 	case *pb.EnumFilter_Neq:
 		return typ.Neq != val
 	case *pb.EnumFilter_In:
-		// TODO: make via map
 		for i := range typ.In.Arr {
 			if typ.In.Arr[i] == val {
 				return true
 			}
 		}
 	case *pb.EnumFilter_Notin:
-		// TODO: make via map
 		for i := range typ.Notin.Arr {
 			if typ.Notin.Arr[i] == val {
 				return false
@@ -167,20 +166,64 @@ func validEnum(f *pb.EnumFilter, val uint64) bool {
 	return false
 }
 
-func validBytes(f *pb.BytesFilter, b []byte) bool {
+type ids map[uint64]struct{}
+
+// In -
+func (m ids) In(i uint64) bool {
+	_, ok := m[i]
+	return ok
+}
+
+func fillAddressMapFromBytesFilter(ctx context.Context, address storage.IAddress, f *pb.BytesFilter, out ids) error {
 	if f == nil {
-		return true
+		return nil
 	}
 
 	switch typ := f.Filter.(type) {
 	case *pb.BytesFilter_Eq:
-		return bytes.Equal(typ.Eq, b)
+		a, err := address.GetByHash(ctx, typ.Eq)
+		if err != nil {
+			return errors.Wrapf(err, "%x", typ.Eq)
+		}
+		out[a.ID] = struct{}{}
 	case *pb.BytesFilter_In:
+		if typ.In == nil {
+			return nil
+		}
 		for i := range typ.In.Arr {
-			if bytes.Equal(typ.In.Arr[i], b) {
-				return true
+			a, err := address.GetByHash(ctx, typ.In.Arr[i])
+			if err != nil {
+				return errors.Wrapf(err, "%x", typ.In.Arr[i])
 			}
+			out[a.ID] = struct{}{}
 		}
 	}
-	return false
+	return nil
+}
+
+func fillClassMapFromBytesFilter(ctx context.Context, class storage.IClass, f *pb.BytesFilter, out ids) error {
+	if f == nil {
+		return nil
+	}
+
+	switch typ := f.Filter.(type) {
+	case *pb.BytesFilter_Eq:
+		a, err := class.GetByHash(ctx, typ.Eq)
+		if err != nil {
+			return errors.Wrapf(err, "%x", typ.Eq)
+		}
+		out[a.ID] = struct{}{}
+	case *pb.BytesFilter_In:
+		if typ.In == nil {
+			return nil
+		}
+		for i := range typ.In.Arr {
+			a, err := class.GetByHash(ctx, typ.In.Arr[i])
+			if err != nil {
+				return errors.Wrapf(err, "%x", typ.In.Arr[i])
+			}
+			out[a.ID] = struct{}{}
+		}
+	}
+	return nil
 }

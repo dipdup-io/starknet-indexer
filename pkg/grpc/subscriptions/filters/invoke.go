@@ -1,6 +1,8 @@
 package filters
 
 import (
+	"context"
+
 	"github.com/dipdup-io/starknet-go-api/pkg/encoding"
 	"github.com/dipdup-io/starknet-indexer/internal/storage"
 	"github.com/dipdup-io/starknet-indexer/pkg/grpc/pb"
@@ -9,26 +11,34 @@ import (
 // Invoke -
 type Invoke struct {
 	*pb.InvokeFilters
-	isEmpty bool
+	isEmpty   bool
+	contracts ids
 }
 
 // NewInvoke -
-func NewInvoke(req *pb.InvokeFilters) Invoke {
+func NewInvoke(ctx context.Context, address storage.IAddress, req *pb.InvokeFilters) (Invoke, error) {
 	invoke := Invoke{
-		isEmpty: true,
+		isEmpty:   true,
+		contracts: make(ids),
 	}
 	if req == nil {
-		return invoke
+		return invoke, nil
 	}
 	invoke.isEmpty = false
 	invoke.InvokeFilters = req
-	return invoke
+	if err := fillAddressMapFromBytesFilter(ctx, address, req.Contract, invoke.contracts); err != nil {
+		return invoke, err
+	}
+	return invoke, nil
 }
 
 // Filter -
 func (f Invoke) Filter(data storage.Invoke) bool {
 	if f.isEmpty {
 		return true
+	}
+	if f.InvokeFilters == nil {
+		return false
 	}
 
 	if !validInteger(f.Id, data.ID) {
@@ -51,8 +61,10 @@ func (f Invoke) Filter(data storage.Invoke) bool {
 		return false
 	}
 
-	if !validBytes(f.Contract, data.Contract.Hash) {
-		return false
+	if f.Contract != nil {
+		if !f.contracts.In(data.ContractID) {
+			return false
+		}
 	}
 
 	if !validString(f.Entrypoint, data.Entrypoint) {

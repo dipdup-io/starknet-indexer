@@ -14,10 +14,14 @@ import (
 // //////////////////////////////////////////////
 // Subscribe -
 func (module *Server) Subscribe(req *pb.SubscribeRequest, stream pb.IndexerService_SubscribeServer) error {
+	subscription, err := subscriptions.NewSubscription(stream.Context(), module.db, req)
+	if err != nil {
+		return err
+	}
 	return grpcSDK.DefaultSubscribeOn[*subscriptions.Message, *pb.Subscription](
 		stream,
 		module.subscriptions,
-		subscriptions.NewSubscription(req),
+		subscription,
 		func(id uint64) error {
 			return module.sync(stream.Context(), id, req, stream)
 		},

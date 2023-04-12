@@ -14,22 +14,21 @@ type ClientConfig struct {
 	Subscriptions map[string]Subscription `yaml:"subscriptions" validate:"required"`
 }
 
-// TODO: implement all filters
 // Subscription -
 type Subscription struct {
-	Head                 bool                     `yaml:"head" validate:"omitempty"`
-	InvokeFilters        *pb.InvokeFilters        `yaml:"invokes" validate:"omitempty"`
-	DeclareFilters       *pb.DeclareFilters       `yaml:"filters" validate:"omitempty"`
-	DeployFilters        *pb.DeployFilters        `yaml:"deploys" validate:"omitempty"`
-	DeployAccountFilters *pb.DeployAccountFilters `yaml:"deploy_accounts" validate:"omitempty"`
-	L1HandlerFilter      *pb.L1HandlerFilter      `yaml:"l1_handlers" validate:"omitempty"`
-	InternalFilter       *pb.InternalFilter       `yaml:"internals" validate:"omitempty"`
-	FeeFilter            *pb.FeeFilter            `yaml:"fees" validate:"omitempty"`
-	EventFilter          *EventFilter             `yaml:"events" validate:"omitempty"`
-	MessageFilter        *pb.MessageFilter        `yaml:"messages" validate:"omitempty"`
-	TransferFilter       *pb.TransferFilter       `yaml:"transfers" validate:"omitempty"`
-	StorageDiffFilter    *pb.StorageDiffFilter    `yaml:"storage_diffs" validate:"omitempty"`
-	TokenBalanceFilter   *pb.TokenBalanceFilter   `yaml:"token_balances" validate:"omitempty"`
+	Head                 bool                  `yaml:"head" validate:"omitempty"`
+	InvokeFilters        *InvokeFilters        `yaml:"invokes" validate:"omitempty"`
+	DeclareFilters       *DeclareFilters       `yaml:"filters" validate:"omitempty"`
+	DeployFilters        *DeployFilters        `yaml:"deploys" validate:"omitempty"`
+	DeployAccountFilters *DeployAccountFilters `yaml:"deploy_accounts" validate:"omitempty"`
+	L1HandlerFilter      *L1HandlerFilters     `yaml:"l1_handlers" validate:"omitempty"`
+	InternalFilter       *InternalFilters      `yaml:"internals" validate:"omitempty"`
+	FeeFilter            *FeeFilters           `yaml:"fees" validate:"omitempty"`
+	EventFilter          *EventFilter          `yaml:"events" validate:"omitempty"`
+	MessageFilter        *MessageFilter        `yaml:"messages" validate:"omitempty"`
+	TransferFilter       *TransferFilter       `yaml:"transfers" validate:"omitempty"`
+	StorageDiffFilter    *StorageDiffFilter    `yaml:"storage_diffs" validate:"omitempty"`
+	TokenBalanceFilter   *TokenBalanceFilter   `yaml:"token_balances" validate:"omitempty"`
 }
 
 // ToGrpcFilter -
@@ -42,6 +41,150 @@ func (f Subscription) ToGrpcFilter() *pb.SubscribeRequest {
 	}
 
 	return req
+}
+
+// DeclareFilters -
+type DeclareFilters struct {
+	Height  *IntegerFilter `yaml:"height" validate:"omitempty"`
+	Time    *TimeFilter    `yaml:"time" validate:"omitempty"`
+	Status  *EnumFilter    `yaml:"status" validate:"omitempty"`
+	Version *EnumFilter    `yaml:"version" validate:"omitempty"`
+	Id      *IntegerFilter `yaml:"id" validate:"omitempty"`
+}
+
+// ToGrpcFilter -
+func (f DeclareFilters) ToGrpcFilter() *pb.DeclareFilters {
+	fltr := new(pb.DeclareFilters)
+
+	if f.Height != nil {
+		fltr.Height = f.Height.ToGrpcFilter()
+	}
+	if f.Time != nil {
+		fltr.Time = f.Time.ToGrpcFilter()
+	}
+	if f.Status != nil {
+		fltr.Status = f.Status.ToGrpcFilter()
+	}
+	if f.Version != nil {
+		fltr.Version = f.Version.ToGrpcFilter()
+	}
+	if f.Id != nil {
+		fltr.Id = f.Id.ToGrpcFilter()
+	}
+	return fltr
+}
+
+// DeployFilters -
+type DeployFilters struct {
+	Height         *IntegerFilter    `yaml:"height" validate:"omitempty"`
+	Time           *TimeFilter       `yaml:"time" validate:"omitempty"`
+	Status         *EnumFilter       `yaml:"status" validate:"omitempty"`
+	Class          *BytesFilter      `yaml:"class" validate:"omitempty"`
+	ParsedCalldata map[string]string `yaml:"parsed_calldata" validate:"omitempty"`
+	Id             *IntegerFilter    `yaml:"id" validate:"omitempty"`
+}
+
+// ToGrpcFilter -
+func (f DeployFilters) ToGrpcFilter() *pb.DeployFilters {
+	fltr := new(pb.DeployFilters)
+
+	if f.Height != nil {
+		fltr.Height = f.Height.ToGrpcFilter()
+	}
+	if f.Time != nil {
+		fltr.Time = f.Time.ToGrpcFilter()
+	}
+	if f.Class != nil {
+		fltr.Class = f.Class.ToGrpcFilter()
+	}
+	if f.Status != nil {
+		fltr.Status = f.Status.ToGrpcFilter()
+	}
+	if f.Id != nil {
+		fltr.Id = f.Id.ToGrpcFilter()
+	}
+	if f.ParsedCalldata != nil {
+		fltr.ParsedCalldata = f.ParsedCalldata
+	}
+	return fltr
+}
+
+// DeployAccountFilters -
+type DeployAccountFilters struct {
+	Height         *IntegerFilter    `yaml:"height" validate:"omitempty"`
+	Time           *TimeFilter       `yaml:"time" validate:"omitempty"`
+	Status         *EnumFilter       `yaml:"status" validate:"omitempty"`
+	Class          *BytesFilter      `yaml:"class" validate:"omitempty"`
+	ParsedCalldata map[string]string `yaml:"parsed_calldata" validate:"omitempty"`
+	Id             *IntegerFilter    `yaml:"id" validate:"omitempty"`
+}
+
+// ToGrpcFilter -
+func (f DeployAccountFilters) ToGrpcFilter() *pb.DeployAccountFilters {
+	fltr := new(pb.DeployAccountFilters)
+
+	if f.Height != nil {
+		fltr.Height = f.Height.ToGrpcFilter()
+	}
+	if f.Time != nil {
+		fltr.Time = f.Time.ToGrpcFilter()
+	}
+	if f.Class != nil {
+		fltr.Class = f.Class.ToGrpcFilter()
+	}
+	if f.Status != nil {
+		fltr.Status = f.Status.ToGrpcFilter()
+	}
+	if f.Id != nil {
+		fltr.Id = f.Id.ToGrpcFilter()
+	}
+	if f.ParsedCalldata != nil {
+		fltr.ParsedCalldata = f.ParsedCalldata
+	}
+	return fltr
+}
+
+// L1HandlerFilters -
+type L1HandlerFilters struct {
+	Height         *IntegerFilter    `yaml:"height" validate:"omitempty"`
+	Time           *TimeFilter       `yaml:"time" validate:"omitempty"`
+	Status         *EnumFilter       `yaml:"status" validate:"omitempty"`
+	Contract       *BytesFilter      `yaml:"contract" validate:"omitempty"`
+	Selector       *EqualityFilter   `yaml:"selector" validate:"omitempty"`
+	Entrypoint     *StringFilter     `yaml:"entrypoint" validate:"omitempty"`
+	ParsedCalldata map[string]string `yaml:"parsed_calldata" validate:"omitempty"`
+	Id             *IntegerFilter    `yaml:"id" validate:"omitempty"`
+}
+
+// ToGrpcFilter -
+func (f L1HandlerFilters) ToGrpcFilter() *pb.L1HandlerFilter {
+	fltr := new(pb.L1HandlerFilter)
+
+	if f.Height != nil {
+		fltr.Height = f.Height.ToGrpcFilter()
+	}
+	if f.Time != nil {
+		fltr.Time = f.Time.ToGrpcFilter()
+	}
+	if f.Contract != nil {
+		fltr.Contract = f.Contract.ToGrpcFilter()
+	}
+	if f.Status != nil {
+		fltr.Status = f.Status.ToGrpcFilter()
+	}
+	if f.Id != nil {
+		fltr.Id = f.Id.ToGrpcFilter()
+	}
+	if f.ParsedCalldata != nil {
+		fltr.ParsedCalldata = f.ParsedCalldata
+	}
+	if f.Entrypoint != nil {
+		fltr.Entrypoint = f.Entrypoint.ToGrpcFilter()
+	}
+	if f.Selector != nil {
+		fltr.Selector = f.Selector.ToGrpcFilter()
+	}
+	return fltr
 }
 
 // InvokeFilters -
@@ -75,6 +218,130 @@ func (f InvokeFilters) ToGrpcFilter() *pb.InvokeFilters {
 	}
 	if f.Version != nil {
 		fltr.Version = f.Version.ToGrpcFilter()
+	}
+	if f.Id != nil {
+		fltr.Id = f.Id.ToGrpcFilter()
+	}
+	if f.ParsedCalldata != nil {
+		fltr.ParsedCalldata = f.ParsedCalldata
+	}
+	if f.Entrypoint != nil {
+		fltr.Entrypoint = f.Entrypoint.ToGrpcFilter()
+	}
+	if f.Selector != nil {
+		fltr.Selector = f.Selector.ToGrpcFilter()
+	}
+	return fltr
+}
+
+// InternalFilters -
+type InternalFilters struct {
+	Height         *IntegerFilter    `yaml:"height" validate:"omitempty"`
+	Time           *TimeFilter       `yaml:"time" validate:"omitempty"`
+	Status         *EnumFilter       `yaml:"status" validate:"omitempty"`
+	Contract       *BytesFilter      `yaml:"contract" validate:"omitempty"`
+	Caller         *BytesFilter      `yaml:"caller" validate:"omitempty"`
+	Class          *BytesFilter      `yaml:"class" validate:"omitempty"`
+	Selector       *EqualityFilter   `yaml:"selector" validate:"omitempty"`
+	Entrypoint     *StringFilter     `yaml:"entrypoint" validate:"omitempty"`
+	EntrypointType *EnumFilter       `yaml:"entrypoint_type" validate:"omitempty"`
+	CallType       *EnumFilter       `yaml:"call_type" validate:"omitempty"`
+	ParsedCalldata map[string]string `yaml:"parsed_calldata" validate:"omitempty"`
+	Id             *IntegerFilter    `yaml:"id" validate:"omitempty"`
+}
+
+// ToGrpcFilter -
+func (f InternalFilters) ToGrpcFilter() *pb.InternalFilter {
+	fltr := new(pb.InternalFilter)
+
+	if f.Height != nil {
+		fltr.Height = f.Height.ToGrpcFilter()
+	}
+	if f.Time != nil {
+		fltr.Time = f.Time.ToGrpcFilter()
+	}
+	if f.Contract != nil {
+		fltr.Contract = f.Contract.ToGrpcFilter()
+	}
+	if f.Caller != nil {
+		fltr.Caller = f.Caller.ToGrpcFilter()
+	}
+	if f.Class != nil {
+		fltr.Class = f.Class.ToGrpcFilter()
+	}
+	if f.Status != nil {
+		fltr.Status = f.Status.ToGrpcFilter()
+	}
+	if f.CallType != nil {
+		fltr.CallType = f.CallType.ToGrpcFilter()
+	}
+	if f.EntrypointType != nil {
+		fltr.CallType = f.EntrypointType.ToGrpcFilter()
+	}
+	if f.Entrypoint != nil {
+		fltr.Entrypoint = f.Entrypoint.ToGrpcFilter()
+	}
+	if f.Selector != nil {
+		fltr.Selector = f.Selector.ToGrpcFilter()
+	}
+	if f.Id != nil {
+		fltr.Id = f.Id.ToGrpcFilter()
+	}
+	if f.ParsedCalldata != nil {
+		fltr.ParsedCalldata = f.ParsedCalldata
+	}
+	return fltr
+}
+
+// FeeFilters -
+type FeeFilters struct {
+	Height         *IntegerFilter    `yaml:"height" validate:"omitempty"`
+	Time           *TimeFilter       `yaml:"time" validate:"omitempty"`
+	Status         *EnumFilter       `yaml:"status" validate:"omitempty"`
+	Contract       *BytesFilter      `yaml:"contract" validate:"omitempty"`
+	Caller         *BytesFilter      `yaml:"caller" validate:"omitempty"`
+	Class          *BytesFilter      `yaml:"class" validate:"omitempty"`
+	Selector       *EqualityFilter   `yaml:"selector" validate:"omitempty"`
+	Entrypoint     *StringFilter     `yaml:"entrypoint" validate:"omitempty"`
+	EntrypointType *EnumFilter       `yaml:"entrypoint_type" validate:"omitempty"`
+	CallType       *EnumFilter       `yaml:"call_type" validate:"omitempty"`
+	ParsedCalldata map[string]string `yaml:"parsed_calldata" validate:"omitempty"`
+	Id             *IntegerFilter    `yaml:"id" validate:"omitempty"`
+}
+
+// ToGrpcFilter -
+func (f FeeFilters) ToGrpcFilter() *pb.FeeFilter {
+	fltr := new(pb.FeeFilter)
+
+	if f.Height != nil {
+		fltr.Height = f.Height.ToGrpcFilter()
+	}
+	if f.Time != nil {
+		fltr.Time = f.Time.ToGrpcFilter()
+	}
+	if f.Contract != nil {
+		fltr.Contract = f.Contract.ToGrpcFilter()
+	}
+	if f.Caller != nil {
+		fltr.Caller = f.Caller.ToGrpcFilter()
+	}
+	if f.Class != nil {
+		fltr.Class = f.Class.ToGrpcFilter()
+	}
+	if f.Status != nil {
+		fltr.Status = f.Status.ToGrpcFilter()
+	}
+	if f.CallType != nil {
+		fltr.CallType = f.CallType.ToGrpcFilter()
+	}
+	if f.EntrypointType != nil {
+		fltr.CallType = f.EntrypointType.ToGrpcFilter()
+	}
+	if f.Entrypoint != nil {
+		fltr.Entrypoint = f.Entrypoint.ToGrpcFilter()
+	}
+	if f.Selector != nil {
+		fltr.Selector = f.Selector.ToGrpcFilter()
 	}
 	if f.Id != nil {
 		fltr.Id = f.Id.ToGrpcFilter()
@@ -120,6 +387,134 @@ func (f EventFilter) ToGrpcFilter() *pb.EventFilter {
 	}
 	if f.ParsedData != nil {
 		fltr.ParsedData = f.ParsedData
+	}
+	return fltr
+}
+
+// MessageFilter -
+type MessageFilter struct {
+	Height   *IntegerFilter  `yaml:"height" validate:"omitempty"`
+	Time     *TimeFilter     `yaml:"time" validate:"omitempty"`
+	Contract *BytesFilter    `yaml:"contract" validate:"omitempty"`
+	From     *BytesFilter    `yaml:"from" validate:"omitempty"`
+	To       *BytesFilter    `yaml:"to" validate:"omitempty"`
+	Selector *EqualityFilter `yaml:"selector" validate:"omitempty"`
+	Id       *IntegerFilter  `yaml:"id" validate:"omitempty"`
+}
+
+// ToGrpcFilter -
+func (f MessageFilter) ToGrpcFilter() *pb.MessageFilter {
+	fltr := new(pb.MessageFilter)
+
+	if f.Height != nil {
+		fltr.Height = f.Height.ToGrpcFilter()
+	}
+	if f.Time != nil {
+		fltr.Time = f.Time.ToGrpcFilter()
+	}
+	if f.Contract != nil {
+		fltr.Contract = f.Contract.ToGrpcFilter()
+	}
+	if f.From != nil {
+		fltr.From = f.From.ToGrpcFilter()
+	}
+	if f.To != nil {
+		fltr.To = f.To.ToGrpcFilter()
+	}
+	if f.Id != nil {
+		fltr.Id = f.Id.ToGrpcFilter()
+	}
+	if f.Selector != nil {
+		fltr.Selector = f.Selector.ToGrpcFilter()
+	}
+	return fltr
+}
+
+// TransferFilter -
+type TransferFilter struct {
+	Height   *IntegerFilter `yaml:"height" validate:"omitempty"`
+	Time     *TimeFilter    `yaml:"time" validate:"omitempty"`
+	Contract *BytesFilter   `yaml:"contract" validate:"omitempty"`
+	From     *BytesFilter   `yaml:"from" validate:"omitempty"`
+	To       *BytesFilter   `yaml:"to" validate:"omitempty"`
+	TokenId  *StringFilter  `yaml:"token_id" validate:"omitempty"`
+	Id       *IntegerFilter `yaml:"id" validate:"omitempty"`
+}
+
+// ToGrpcFilter -
+func (f TransferFilter) ToGrpcFilter() *pb.TransferFilter {
+	fltr := new(pb.TransferFilter)
+
+	if f.Height != nil {
+		fltr.Height = f.Height.ToGrpcFilter()
+	}
+	if f.Time != nil {
+		fltr.Time = f.Time.ToGrpcFilter()
+	}
+	if f.Contract != nil {
+		fltr.Contract = f.Contract.ToGrpcFilter()
+	}
+	if f.From != nil {
+		fltr.From = f.From.ToGrpcFilter()
+	}
+	if f.To != nil {
+		fltr.To = f.To.ToGrpcFilter()
+	}
+	if f.Id != nil {
+		fltr.Id = f.Id.ToGrpcFilter()
+	}
+	if f.TokenId != nil {
+		fltr.TokenId = f.TokenId.ToGrpcFilter()
+	}
+	return fltr
+}
+
+// StorageDiffFilter -
+type StorageDiffFilter struct {
+	Height   *IntegerFilter  `yaml:"height" validate:"omitempty"`
+	Contract *BytesFilter    `yaml:"contract" validate:"omitempty"`
+	Key      *EqualityFilter `yaml:"key" validate:"omitempty"`
+	Id       *IntegerFilter  `yaml:"id" validate:"omitempty"`
+}
+
+// ToGrpcFilter -
+func (f StorageDiffFilter) ToGrpcFilter() *pb.StorageDiffFilter {
+	fltr := new(pb.StorageDiffFilter)
+
+	if f.Height != nil {
+		fltr.Height = f.Height.ToGrpcFilter()
+	}
+	if f.Contract != nil {
+		fltr.Contract = f.Contract.ToGrpcFilter()
+	}
+	if f.Key != nil {
+		fltr.Key = f.Key.ToGrpcFilter()
+	}
+	if f.Id != nil {
+		fltr.Id = f.Id.ToGrpcFilter()
+	}
+	return fltr
+}
+
+// TokenBalanceFilter -
+type TokenBalanceFilter struct {
+	Owner    *BytesFilter  `yaml:"owner" validate:"omitempty"`
+	Contract *BytesFilter  `yaml:"contract" validate:"omitempty"`
+	TokenId  *StringFilter `yaml:"token_id" validate:"omitempty"`
+}
+
+// ToGrpcFilter -
+func (f TokenBalanceFilter) ToGrpcFilter() *pb.TokenBalanceFilter {
+	fltr := new(pb.TokenBalanceFilter)
+
+	if f.Owner != nil {
+		fltr.Owner = f.Owner.ToGrpcFilter()
+	}
+	if f.Contract != nil {
+		fltr.Contract = f.Contract.ToGrpcFilter()
+	}
+	if f.TokenId != nil {
+		fltr.TokenId = f.TokenId.ToGrpcFilter()
 	}
 	return fltr
 }

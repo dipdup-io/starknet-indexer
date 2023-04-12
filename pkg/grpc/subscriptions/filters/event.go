@@ -1,6 +1,8 @@
 package filters
 
 import (
+	"context"
+
 	"github.com/dipdup-io/starknet-indexer/internal/storage"
 	"github.com/dipdup-io/starknet-indexer/pkg/grpc/pb"
 )
@@ -9,25 +11,39 @@ import (
 type Event struct {
 	*pb.EventFilter
 	isEmpty bool
+
+	contracts ids
+	from      ids
 }
 
 // NewEvent -
-func NewEvent(req *pb.EventFilter) Event {
+func NewEvent(ctx context.Context, address storage.IAddress, req *pb.EventFilter) (Event, error) {
 	event := Event{
-		isEmpty: true,
+		isEmpty:   true,
+		contracts: make(ids),
+		from:      make(ids),
 	}
 	if req == nil {
-		return event
+		return event, nil
 	}
 	event.isEmpty = false
 	event.EventFilter = req
-	return event
+	if err := fillAddressMapFromBytesFilter(ctx, address, req.Contract, event.contracts); err != nil {
+		return event, err
+	}
+	if err := fillAddressMapFromBytesFilter(ctx, address, req.From, event.from); err != nil {
+		return event, err
+	}
+	return event, nil
 }
 
 // Filter -
 func (f *Event) Filter(data storage.Event) bool {
 	if f.isEmpty {
 		return true
+	}
+	if f.EventFilter == nil {
+		return false
 	}
 
 	if !validInteger(f.Id, data.ID) {
@@ -42,13 +58,16 @@ func (f *Event) Filter(data storage.Event) bool {
 		return false
 	}
 
-	// TODO: think about passing contract address
-	if !validBytes(f.Contract, data.Contract.Hash) {
-		return false
+	if f.Contract != nil {
+		if !f.contracts.In(data.ContractID) {
+			return false
+		}
 	}
 
-	if !validBytes(f.From, data.From.Hash) {
-		return false
+	if f.From != nil {
+		if !f.from.In(data.FromID) {
+			return false
+		}
 	}
 
 	if !validString(f.Name, data.Name) {

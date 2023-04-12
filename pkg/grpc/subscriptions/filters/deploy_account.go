@@ -1,6 +1,8 @@
 package filters
 
 import (
+	"context"
+
 	"github.com/dipdup-io/starknet-indexer/internal/storage"
 	"github.com/dipdup-io/starknet-indexer/pkg/grpc/pb"
 )
@@ -9,25 +11,36 @@ import (
 type DeployAccount struct {
 	*pb.DeployAccountFilters
 	isEmpty bool
+
+	classes ids
 }
 
 // NewDeployAccount -
-func NewDeployAccount(req *pb.DeployAccountFilters) DeployAccount {
+func NewDeployAccount(ctx context.Context, class storage.IClass, req *pb.DeployAccountFilters) (DeployAccount, error) {
 	deploy := DeployAccount{
 		isEmpty: true,
+		classes: make(ids),
 	}
 	if req == nil {
-		return deploy
+		return deploy, nil
 	}
 	deploy.isEmpty = false
 	deploy.DeployAccountFilters = req
-	return deploy
+
+	if err := fillClassMapFromBytesFilter(ctx, class, req.Class, deploy.classes); err != nil {
+		return deploy, err
+	}
+
+	return deploy, nil
 }
 
 // Filter -
 func (f DeployAccount) Filter(data storage.DeployAccount) bool {
 	if f.isEmpty {
 		return true
+	}
+	if f.DeployAccountFilters == nil {
+		return false
 	}
 
 	if !validInteger(f.Id, data.ID) {
@@ -46,8 +59,10 @@ func (f DeployAccount) Filter(data storage.DeployAccount) bool {
 		return false
 	}
 
-	if !validBytes(f.Class, data.Class.Hash) {
-		return false
+	if f.Class != nil {
+		if !f.classes.In(data.ClassID) {
+			return false
+		}
 	}
 
 	if !validMap(f.ParsedCalldata, data.ParsedCalldata) {

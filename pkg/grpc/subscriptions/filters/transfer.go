@@ -1,6 +1,8 @@
 package filters
 
 import (
+	"context"
+
 	"github.com/dipdup-io/starknet-indexer/internal/storage"
 	"github.com/dipdup-io/starknet-indexer/pkg/grpc/pb"
 )
@@ -9,25 +11,42 @@ import (
 type Transfer struct {
 	*pb.TransferFilter
 	isEmpty bool
+
+	contracts ids
+	from      ids
+	to        ids
 }
 
 // NewTransfer -
-func NewTransfer(req *pb.TransferFilter) Transfer {
+func NewTransfer(ctx context.Context, address storage.IAddress, req *pb.TransferFilter) (Transfer, error) {
 	transfer := Transfer{
 		isEmpty: true,
 	}
 	if req == nil {
-		return transfer
+		return transfer, nil
 	}
 	transfer.isEmpty = false
 	transfer.TransferFilter = req
-	return transfer
+
+	if err := fillAddressMapFromBytesFilter(ctx, address, req.Contract, transfer.contracts); err != nil {
+		return transfer, err
+	}
+	if err := fillAddressMapFromBytesFilter(ctx, address, req.From, transfer.from); err != nil {
+		return transfer, err
+	}
+	if err := fillAddressMapFromBytesFilter(ctx, address, req.To, transfer.to); err != nil {
+		return transfer, err
+	}
+	return transfer, nil
 }
 
 // Filter -
 func (f Transfer) Filter(data storage.Transfer) bool {
 	if f.isEmpty {
 		return true
+	}
+	if f.TransferFilter == nil {
+		return false
 	}
 
 	if !validInteger(f.Id, data.ID) {
@@ -42,16 +61,22 @@ func (f Transfer) Filter(data storage.Transfer) bool {
 		return false
 	}
 
-	if !validBytes(f.Contract, data.Contract.Hash) {
-		return false
+	if f.Contract != nil {
+		if !f.contracts.In(data.ContractID) {
+			return false
+		}
 	}
 
-	if !validBytes(f.From, data.From.Hash) {
-		return false
+	if f.From != nil {
+		if !f.from.In(data.FromID) {
+			return false
+		}
 	}
 
-	if !validBytes(f.To, data.To.Hash) {
-		return false
+	if f.To != nil {
+		if !f.to.In(data.ToID) {
+			return false
+		}
 	}
 
 	if !validString(f.TokenId, data.TokenID.String()) {

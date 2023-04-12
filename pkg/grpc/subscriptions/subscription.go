@@ -1,6 +1,9 @@
 package subscriptions
 
 import (
+	"context"
+
+	"github.com/dipdup-io/starknet-indexer/internal/storage/postgres"
 	"github.com/dipdup-io/starknet-indexer/pkg/grpc/pb"
 	"github.com/dipdup-io/starknet-indexer/pkg/grpc/subscriptions/filters"
 )
@@ -25,12 +28,12 @@ type Subscription struct {
 }
 
 // NewSubscription -
-func NewSubscription(req *pb.SubscribeRequest) *Subscription {
+func NewSubscription(ctx context.Context, db postgres.Storage, req *pb.SubscribeRequest) (*Subscription, error) {
 	all := &Subscription{
 		data: make(chan *pb.Subscription, 1024),
 	}
 	if req == nil {
-		return all
+		return all, nil
 	}
 	all.blocks = req.Head
 
@@ -38,40 +41,84 @@ func NewSubscription(req *pb.SubscribeRequest) *Subscription {
 		all.declares = filters.NewDeclare(req.Declares)
 	}
 	if req.Deploys != nil {
-		all.deploys = filters.NewDeploy(req.Deploys)
+		fltr, err := filters.NewDeploy(ctx, db.Class, req.Deploys)
+		if err != nil {
+			return nil, err
+		}
+		all.deploys = fltr
 	}
 	if req.DeployAccounts != nil {
-		all.deployAccounts = filters.NewDeployAccount(req.DeployAccounts)
+		fltr, err := filters.NewDeployAccount(ctx, db.Class, req.DeployAccounts)
+		if err != nil {
+			return nil, err
+		}
+		all.deployAccounts = fltr
 	}
 	if req.Events != nil {
-		all.events = filters.NewEvent(req.Events)
+		fltr, err := filters.NewEvent(ctx, db.Address, req.Events)
+		if err != nil {
+			return nil, err
+		}
+		all.events = fltr
 	}
 	if req.Fees != nil {
-		all.fees = filters.NewFee(req.Fees)
+		fltr, err := filters.NewFee(ctx, db.Address, db.Class, req.Fees)
+		if err != nil {
+			return nil, err
+		}
+		all.fees = fltr
 	}
 	if req.Internals != nil {
-		all.internals = filters.NewInternal(req.Internals)
+		fltr, err := filters.NewInternal(ctx, db.Address, db.Class, req.Internals)
+		if err != nil {
+			return nil, err
+		}
+		all.internals = fltr
 	}
 	if req.Invokes != nil {
-		all.invokes = filters.NewInvoke(req.Invokes)
+		fltr, err := filters.NewInvoke(ctx, db.Address, req.Invokes)
+		if err != nil {
+			return nil, err
+		}
+		all.invokes = fltr
 	}
 	if req.L1Handlers != nil {
-		all.l1Handlers = filters.NewL1Handler(req.L1Handlers)
+		fltr, err := filters.NewL1Handler(ctx, db.Address, req.L1Handlers)
+		if err != nil {
+			return nil, err
+		}
+		all.l1Handlers = fltr
 	}
 	if req.Msgs != nil {
-		all.messages = filters.NewMessage(req.Msgs)
+		fltr, err := filters.NewMessage(ctx, db.Address, req.Msgs)
+		if err != nil {
+			return nil, err
+		}
+		all.messages = fltr
 	}
 	if req.StorageDiffs != nil {
-		all.storageDiffs = filters.NewStorageDiff(req.StorageDiffs)
+		fltr, err := filters.NewStorageDiff(ctx, db.Address, req.StorageDiffs)
+		if err != nil {
+			return nil, err
+		}
+		all.storageDiffs = fltr
 	}
 	if req.TokenBalances != nil {
-		all.tokenBalances = filters.NewTokenBalance(req.TokenBalances)
+		fltr, err := filters.NewTokenBalance(ctx, db.Address, req.TokenBalances)
+		if err != nil {
+			return nil, err
+		}
+		all.tokenBalances = fltr
 	}
 	if req.Transfers != nil {
-		all.transfers = filters.NewTransfer(req.Transfers)
+		fltr, err := filters.NewTransfer(ctx, db.Address, req.Transfers)
+		if err != nil {
+			return nil, err
+		}
+		all.transfers = fltr
 	}
 
-	return all
+	return all, nil
 }
 
 // Filter -
@@ -82,10 +129,45 @@ func (s *Subscription) Filter(msg *Message) bool {
 	if msg.EndOfBlock {
 		return true
 	}
-	if s.blocks {
+	if s.blocks && msg.Block != nil {
 		return true
 	}
-	// TODO: think about filter subscriptions
+	if msg.Declare != nil && s.declares.Filter(*msg.Declare) {
+		return true
+	}
+	if msg.Deploy != nil && s.deploys.Filter(*msg.Deploy) {
+		return true
+	}
+	if msg.DeployAccount != nil && s.deployAccounts.Filter(*msg.DeployAccount) {
+		return true
+	}
+	if msg.Event != nil && s.events.Filter(*msg.Event) {
+		return true
+	}
+	if msg.Fee != nil && s.fees.Filter(*msg.Fee) {
+		return true
+	}
+	if msg.Internal != nil && s.internals.Filter(*msg.Internal) {
+		return true
+	}
+	if msg.Invoke != nil && s.invokes.Filter(*msg.Invoke) {
+		return true
+	}
+	if msg.L1Handler != nil && s.l1Handlers.Filter(*msg.L1Handler) {
+		return true
+	}
+	if msg.Message != nil && s.messages.Filter(*msg.Message) {
+		return true
+	}
+	if msg.StorageDiff != nil && s.storageDiffs.Filter(*msg.StorageDiff) {
+		return true
+	}
+	if msg.TokenBalance != nil && s.tokenBalances.Filter(*msg.TokenBalance) {
+		return true
+	}
+	if msg.Transfer != nil && s.transfers.Filter(*msg.Transfer) {
+		return true
+	}
 
 	return false
 }

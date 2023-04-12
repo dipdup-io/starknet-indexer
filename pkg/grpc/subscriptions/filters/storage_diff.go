@@ -1,6 +1,8 @@
 package filters
 
 import (
+	"context"
+
 	"github.com/dipdup-io/starknet-go-api/pkg/encoding"
 	"github.com/dipdup-io/starknet-indexer/internal/storage"
 	"github.com/dipdup-io/starknet-indexer/pkg/grpc/pb"
@@ -10,25 +12,34 @@ import (
 type StorageDiff struct {
 	*pb.StorageDiffFilter
 	isEmpty bool
+
+	contracts ids
 }
 
 // NewStorageDiff -
-func NewStorageDiff(req *pb.StorageDiffFilter) StorageDiff {
+func NewStorageDiff(ctx context.Context, address storage.IAddress, req *pb.StorageDiffFilter) (StorageDiff, error) {
 	sd := StorageDiff{
-		isEmpty: true,
+		isEmpty:   true,
+		contracts: make(ids),
 	}
 	if req == nil {
-		return sd
+		return sd, nil
 	}
 	sd.isEmpty = false
 	sd.StorageDiffFilter = req
-	return sd
+	if err := fillAddressMapFromBytesFilter(ctx, address, req.Contract, sd.contracts); err != nil {
+		return sd, err
+	}
+	return sd, nil
 }
 
 // Filter -
 func (f StorageDiff) Filter(data storage.StorageDiff) bool {
 	if f.isEmpty {
 		return true
+	}
+	if f.StorageDiffFilter == nil {
+		return false
 	}
 
 	if !validInteger(f.Id, data.ID) {
@@ -39,9 +50,10 @@ func (f StorageDiff) Filter(data storage.StorageDiff) bool {
 		return false
 	}
 
-	// TODO: think about passing contract address
-	if !validBytes(f.Contract, data.Contract.Hash) {
-		return false
+	if f.Contract != nil {
+		if !f.contracts.In(data.ContractID) {
+			return false
+		}
 	}
 
 	if !validEquality(f.Key, encoding.EncodeHex(data.Key)) {

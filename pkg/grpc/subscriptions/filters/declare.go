@@ -29,6 +29,9 @@ func (f Declare) Filter(data storage.Declare) bool {
 	if f.isEmpty {
 		return true
 	}
+	if f.DeclareFilters == nil {
+		return false
+	}
 
 	if !validInteger(f.Id, data.ID) {
 		return false

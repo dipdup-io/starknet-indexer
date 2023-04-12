@@ -1,6 +1,8 @@
 package filters
 
 import (
+	"context"
+
 	"github.com/dipdup-io/starknet-indexer/internal/storage"
 	"github.com/dipdup-io/starknet-indexer/pkg/grpc/pb"
 )
@@ -9,25 +11,34 @@ import (
 type Deploy struct {
 	*pb.DeployFilters
 	isEmpty bool
+
+	classes ids
 }
 
 // NewDeploy -
-func NewDeploy(req *pb.DeployFilters) Deploy {
+func NewDeploy(ctx context.Context, class storage.IClass, req *pb.DeployFilters) (Deploy, error) {
 	deploy := Deploy{
 		isEmpty: true,
+		classes: make(ids),
 	}
 	if req == nil {
-		return deploy
+		return deploy, nil
 	}
 	deploy.isEmpty = false
 	deploy.DeployFilters = req
-	return deploy
+	if err := fillClassMapFromBytesFilter(ctx, class, req.Class, deploy.classes); err != nil {
+		return deploy, err
+	}
+	return deploy, nil
 }
 
 // Filter -
 func (f Deploy) Filter(data storage.Deploy) bool {
 	if f.isEmpty {
 		return true
+	}
+	if f.DeployFilters == nil {
+		return false
 	}
 
 	if !validInteger(f.Id, data.ID) {
@@ -46,8 +57,10 @@ func (f Deploy) Filter(data storage.Deploy) bool {
 		return false
 	}
 
-	if !validBytes(f.Class, data.Class.Hash) {
-		return false
+	if f.Class != nil {
+		if !f.classes.In(data.ClassID) {
+			return false
+		}
 	}
 
 	if !validMap(f.ParsedCalldata, data.ParsedCalldata) {

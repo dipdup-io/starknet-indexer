@@ -1,6 +1,8 @@
 package filters
 
 import (
+	"context"
+
 	"github.com/dipdup-io/starknet-go-api/pkg/encoding"
 	"github.com/dipdup-io/starknet-indexer/internal/storage"
 	"github.com/dipdup-io/starknet-indexer/pkg/grpc/pb"
@@ -10,25 +12,46 @@ import (
 type Fee struct {
 	*pb.FeeFilter
 	isEmpty bool
+
+	contracts ids
+	callers   ids
+	class     ids
 }
 
 // NewFee -
-func NewFee(req *pb.FeeFilter) Fee {
+func NewFee(ctx context.Context, address storage.IAddress, class storage.IClass, req *pb.FeeFilter) (Fee, error) {
 	fee := Fee{
-		isEmpty: true,
+		isEmpty:   true,
+		contracts: make(ids),
+		callers:   make(ids),
+		class:     make(ids),
 	}
 	if req == nil {
-		return fee
+		return fee, nil
 	}
 	fee.isEmpty = false
 	fee.FeeFilter = req
-	return fee
+
+	if err := fillAddressMapFromBytesFilter(ctx, address, req.Contract, fee.contracts); err != nil {
+		return fee, err
+	}
+	if err := fillAddressMapFromBytesFilter(ctx, address, req.Caller, fee.callers); err != nil {
+		return fee, err
+	}
+	if err := fillClassMapFromBytesFilter(ctx, class, req.Class, fee.class); err != nil {
+		return fee, err
+	}
+
+	return fee, nil
 }
 
 // Filter -
 func (f Fee) Filter(data storage.Fee) bool {
 	if f.isEmpty {
 		return true
+	}
+	if f.FeeFilter == nil {
+		return false
 	}
 
 	if !validInteger(f.Id, data.ID) {
@@ -47,16 +70,22 @@ func (f Fee) Filter(data storage.Fee) bool {
 		return false
 	}
 
-	if !validBytes(f.Contract, data.Contract.Hash) {
-		return false
+	if f.Contract != nil {
+		if !f.contracts.In(data.ContractID) {
+			return false
+		}
 	}
 
-	if !validBytes(f.Caller, data.Caller.Hash) {
-		return false
+	if f.Caller != nil {
+		if !f.callers.In(data.CallerID) {
+			return false
+		}
 	}
 
-	if !validBytes(f.Class, data.Class.Hash) {
-		return false
+	if f.Class != nil {
+		if !f.class.In(data.ClassID) {
+			return false
+		}
 	}
 
 	if !validString(f.Entrypoint, data.Entrypoint) {
