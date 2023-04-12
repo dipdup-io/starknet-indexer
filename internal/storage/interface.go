@@ -74,3 +74,27 @@ func WithAscSortByIdFilter() FilterOption {
 		opt.SortOrder = storage.SortOrderAsc
 	}
 }
+
+// Models - list all models
+var Models = []storage.Model{
+	&State{},
+	&Address{},
+	&Class{},
+	&StorageDiff{},
+	&Block{},
+	&Invoke{},
+	&Declare{},
+	&Deploy{},
+	&DeployAccount{},
+	&L1Handler{},
+	&Internal{},
+	&Event{},
+	&Message{},
+	&Transfer{},
+	&Fee{},
+	&ERC20{},
+	&ERC721{},
+	&ERC1155{},
+	&TokenBalance{},
+	&Proxy{},
+}

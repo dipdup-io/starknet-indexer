@@ -7,10 +7,12 @@ import (
 	"syscall"
 
 	"github.com/dipdup-io/starknet-indexer/internal/starknet"
+	"github.com/dipdup-io/starknet-indexer/internal/storage"
 	"github.com/dipdup-io/starknet-indexer/internal/storage/postgres"
 	"github.com/dipdup-io/starknet-indexer/pkg/grpc"
 	"github.com/dipdup-io/starknet-indexer/pkg/indexer"
 	"github.com/dipdup-net/go-lib/config"
+	"github.com/dipdup-net/go-lib/hasura"
 	"github.com/dipdup-net/indexer-sdk/pkg/modules"
 	"github.com/spf13/cobra"
 
@@ -68,6 +70,21 @@ func main() {
 	if err != nil {
 		log.Panic().Err(err).Msg("postgres connection")
 		return
+	}
+
+	if cfg.Hasura != nil {
+		models := make([]any, len(storage.Models))
+		for i := range storage.Models {
+			models[i] = storage.Models[i]
+		}
+		if err := hasura.Create(ctx, hasura.GenerateArgs{
+			Config:         cfg.Hasura,
+			DatabaseConfig: cfg.Database,
+			Models:         models,
+		}); err != nil {
+			log.Panic().Err(err).Msg("hasura initialization")
+			return
+		}
 	}
 
 	indexerModule := indexer.New(cfg.Indexer, postgres)

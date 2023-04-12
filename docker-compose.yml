@@ -9,10 +9,13 @@ services:
     env_file:
       - .env
     restart: always
+    ports:
+      - 127.0.0.1:7779:7779
     environment:
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-changeme}
     depends_on:
       - db
+      - hasura
     logging: &straknet-dipdup-logging
       options:
         max-size: 10m
@@ -35,6 +38,20 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    logging: *straknet-dipdup-logging
+
+  hasura:
+    image: hasura/graphql-engine:v2.22.0
+    ports:
+      - 127.0.0.1:8080:8080
+    restart: always
+    environment:
+      - HASURA_GRAPHQL_DATABASE_URL=postgres://dipdup:${POSTGRES_PASSWORD:-changeme}@db:5432/starknet
+      - HASURA_GRAPHQL_ENABLE_CONSOLE=true
+      - HASURA_GRAPHQL_DEV_MODE=true
+      - HASURA_GRAPHQL_ENABLED_LOG_TYPES=startup, http-log, webhook-log, websocket-log, query-log
+      - HASURA_GRAPHQL_ADMIN_SECRET=${ADMIN_SECRET:-changeme}
+      - HASURA_GRAPHQL_UNAUTHORIZED_ROLE=user
     logging: *straknet-dipdup-logging
 
 volumes:

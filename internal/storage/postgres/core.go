@@ -6,7 +6,6 @@ import (
 	models "github.com/dipdup-io/starknet-indexer/internal/storage"
 	"github.com/dipdup-net/go-lib/config"
 	"github.com/dipdup-net/go-lib/database"
-	"github.com/dipdup-net/indexer-sdk/pkg/storage"
 	"github.com/dipdup-net/indexer-sdk/pkg/storage/postgres"
 	"github.com/go-pg/pg/v10"
 	"github.com/go-pg/pg/v10/orm"
@@ -82,28 +81,7 @@ func Create(ctx context.Context, cfg config.Database) (Storage, error) {
 }
 
 func initDatabase(ctx context.Context, conn *database.PgGo) error {
-	for _, data := range []storage.Model{
-		&models.State{},
-		&models.Address{},
-		&models.Class{},
-		&models.StorageDiff{},
-		&models.Block{},
-		&models.Invoke{},
-		&models.Declare{},
-		&models.Deploy{},
-		&models.DeployAccount{},
-		&models.L1Handler{},
-		&models.Internal{},
-		&models.Event{},
-		&models.Message{},
-		&models.Transfer{},
-		&models.Fee{},
-		&models.ERC20{},
-		&models.ERC721{},
-		&models.ERC1155{},
-		&models.TokenBalance{},
-		&models.Proxy{},
-	} {
+	for _, data := range models.Models {
 		if err := conn.DB().WithContext(ctx).Model(data).CreateTable(&orm.CreateTableOptions{
 			IfNotExists: true,
 		}); err != nil {

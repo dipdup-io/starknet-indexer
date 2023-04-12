@@ -33,5 +33,7 @@ WORKDIR /app/straknet-indexer/
 COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 COPY --from=builder /go/bin/indexer /go/bin/indexer
 COPY ./build/dipdup.yml ./
+COPY ./build/interfaces ./interfaces
+COPY ./build/bridged_tokens ./
 
 ENTRYPOINT ["/go/bin/indexer", "-c", "dipdup.yml"]
