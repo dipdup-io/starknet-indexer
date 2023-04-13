@@ -12,6 +12,7 @@ import (
 	"github.com/dipdup-net/indexer-sdk/pkg/modules"
 	grpcSDK "github.com/dipdup-net/indexer-sdk/pkg/modules/grpc"
 	"github.com/pkg/errors"
+	"github.com/rs/zerolog/log"
 )
 
 // input names
@@ -78,10 +79,10 @@ func (server *Server) listen(ctx context.Context) {
 			if !ok {
 				return
 			}
-			switch typedMsg := msg.(type) {
-			case *storage.Block:
-				server.blockHandler(typedMsg)
-			case []*storage.TokenBalance:
+			if block, ok := msg.(*storage.Block); ok {
+				server.blockHandler(block)
+			} else {
+				log.Warn().Msgf("unknown message type: %T", msg)
 			}
 		}
 	}

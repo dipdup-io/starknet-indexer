@@ -7,9 +7,9 @@ go 1.19
 // replace github.com/dipdup-net/indexer-sdk => /usr/local/go/src/github.com/dipdup-net/indexer-sdk
 
 require (
-	github.com/dipdup-io/starknet-go-api v0.0.0-20230406094402-d186f0234213
+	github.com/dipdup-io/starknet-go-api v0.0.0-20230413122611-f6c55bf5127e
 	github.com/dipdup-net/go-lib v0.2.30
-	github.com/dipdup-net/indexer-sdk v0.0.0-20230411153716-64fa5b10af27
+	github.com/dipdup-net/indexer-sdk v0.0.0-20230413120903-791a286443f9
 	github.com/dipdup-net/workerpool v0.0.2
 	github.com/go-pg/pg/v10 v10.11.0
 	github.com/karlseguin/ccache/v2 v2.0.8
@@ -22,6 +22,7 @@ require (
 
 require (
 	github.com/goccy/go-json v0.10.2
+	github.com/tfkhsr/jsonschema v0.0.0-20180218143334-273afdd5a88c
 	golang.org/x/exp v0.0.0-20230206171751-46f607a40771
 	google.golang.org/grpc v1.50.1
 	google.golang.org/protobuf v1.28.1

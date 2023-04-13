@@ -16,10 +16,12 @@ github.com/decred/dcrd/dcrec/secp256k1/v4 v4.1.0 h1:HbphB4TFFXpv7MNrT52FGrrgVXF1
 github.com/decred/dcrd/dcrec/secp256k1/v4 v4.1.0/go.mod h1:DZGJHZMqrU4JJqFAWUS2UO1+lbSKsdiOoYi9Zzey7Fc=
 github.com/dipdup-io/starknet-go-api v0.0.0-20230406094402-d186f0234213 h1:OmPZeXvoQ8giE1oZOAo2Q+n0Nq5gI0gUJ+pBa5du2AM=
 github.com/dipdup-io/starknet-go-api v0.0.0-20230406094402-d186f0234213/go.mod h1:3d0ONfMaPzptT0a8aqnkhIyRrLvdPfS3pddsT2gUhOg=
+github.com/dipdup-io/starknet-go-api v0.0.0-20230413122611-f6c55bf5127e h1:gu/OqrS8S5ZIdnalHieWpgtx/Fg8TIInj8sSYGvrBQM=
+github.com/dipdup-io/starknet-go-api v0.0.0-20230413122611-f6c55bf5127e/go.mod h1:Dh1ZUXPbmjiIsfTYeYl3BzK8HuvQOTyrg2CcpQiSOD8=
 github.com/dipdup-net/go-lib v0.2.30 h1:pFGXdGOCvO375uPFU8a+hO4KztyjAszCje3j7vrU0Ec=
 github.com/dipdup-net/go-lib v0.2.30/go.mod h1:oXILRskGR7bXvuFyc6B8prCKOjGJdDc76kMcf65EvcE=
-github.com/dipdup-net/indexer-sdk v0.0.0-20230411153716-64fa5b10af27 h1:h7qvxg9Vz71GlixItsp1KrAPGgieJMbc432t7XknxGU=
-github.com/dipdup-net/indexer-sdk v0.0.0-20230411153716-64fa5b10af27/go.mod h1:WZsLr9ElN3ImgLmtwhK0YZ0WgzMxYyBPXfZR7Z3DZXA=
+github.com/dipdup-net/indexer-sdk v0.0.0-20230413120903-791a286443f9 h1:ciwPsLGIIbQrnwI00RKeEfCuL+pvgUVezKW7Ngkedr0=
+github.com/dipdup-net/indexer-sdk v0.0.0-20230413120903-791a286443f9/go.mod h1:WZsLr9ElN3ImgLmtwhK0YZ0WgzMxYyBPXfZR7Z3DZXA=
 github.com/dipdup-net/workerpool v0.0.2 h1:k0LMr52FdNj8AsV5KFgRLG7+tPxwLLJwHSDZqqXJESY=
 github.com/dipdup-net/workerpool v0.0.2/go.mod h1:wd9wCXcBW3sZrXTFBDVln52JUJnHTxxKwa5/G/oyn9g=
 github.com/envoyproxy/go-control-plane v0.9.1-0.20191026205805-5f8ba28d4473/go.mod h1:YTl/9mNaCwkRvm6d1a2C3ymFceY/DCBVvsKhRF0iEA4=
@@ -159,6 +161,8 @@ github.com/stretchr/testify v1.8.0/go.mod h1:yNjHg4UonilssWZ8iaSj1OCr/vHnekPRkoO
 github.com/stretchr/testify v1.8.1/go.mod h1:w2LPCIKwWwSfY2zedu0+kehJoqGctiVI29o6fzry7u4=
 github.com/stretchr/testify v1.8.2 h1:+h33VjcLVPDHtOdpUCuF+7gSuG3yGIftsP1YvFihtJ8=
 github.com/stretchr/testify v1.8.2/go.mod h1:w2LPCIKwWwSfY2zedu0+kehJoqGctiVI29o6fzry7u4=
+github.com/tfkhsr/jsonschema v0.0.0-20180218143334-273afdd5a88c h1:FiJHojQ8AwCcltJnytC3Xkj37gW2WTzUzGl3AEYL+5U=
+github.com/tfkhsr/jsonschema v0.0.0-20180218143334-273afdd5a88c/go.mod h1:zhGMpmE6P0Eml0MgFIc5TljSWlr/hbNSmig8KiVEodo=
 github.com/tmthrgd/go-hex v0.0.0-20190904060850-447a3041c3bc h1:9lRDQMhESg+zvGYmW5DyG0UqvY96Bu5QYsTLvCHdrgo=
 github.com/tmthrgd/go-hex v0.0.0-20190904060850-447a3041c3bc/go.mod h1:bciPuU6GHm1iF1pBvUfxfsH0Wmnc2VbpgvbI9ZWuIRs=
 github.com/vmihailenco/bufpool v0.1.11 h1:gOq2WmBrq0i2yW5QJ16ykccQ4wH9UyEsgLm6czKAd94=

@@ -12,6 +12,9 @@ import "github.com/dipdup-io/starknet-indexer/pkg/grpc/proto/response.proto";
 service IndexerService {
     rpc Subscribe(SubscribeRequest) returns(stream Subscription);
     rpc Unsubscribe(UnsubscribeRequest) returns (UnsubscribeResponse);
+
+    rpc JSONSchemaForClass(Bytes) returns(Bytes);
+    rpc JSONSchemaForContract(Bytes) returns(Bytes);
 }
 
 message SubscribeRequest {
@@ -46,4 +49,21 @@ message Subscription {
     TokenBalance token_balance = 13;
     Transfer transfer = 14;
     bool end_of_block = 15;
+}
+
+message Bytes {
+    bytes data = 1;
+}
+
+message JsonSchema {
+    repeated JsonSchemaItem functions = 1;
+    repeated JsonSchemaItem l1_handlers = 2;
+    repeated JsonSchemaItem constructors = 3;
+    repeated JsonSchemaItem events = 4;
+    repeated JsonSchemaItem structs = 5;
+}
+
+message JsonSchemaItem {
+    string name = 1;
+    bytes schema = 2;
 }

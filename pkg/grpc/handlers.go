@@ -3,10 +3,14 @@ package grpc
 import (
 	"context"
 
+	"github.com/dipdup-io/starknet-go-api/pkg/abi"
+	"github.com/dipdup-io/starknet-indexer/internal/starknet"
 	"github.com/dipdup-io/starknet-indexer/pkg/grpc/pb"
 	"github.com/dipdup-io/starknet-indexer/pkg/grpc/subscriptions"
 	grpcSDK "github.com/dipdup-net/indexer-sdk/pkg/modules/grpc"
 	generalPB "github.com/dipdup-net/indexer-sdk/pkg/modules/grpc/pb"
+	"github.com/goccy/go-json"
+	"github.com/pkg/errors"
 )
 
 // //////////////////////////////////////////////
@@ -31,4 +35,67 @@ func (module *Server) Subscribe(req *pb.SubscribeRequest, stream pb.IndexerServi
 // Unsubscribe -
 func (module *Server) Unsubscribe(ctx context.Context, req *generalPB.UnsubscribeRequest) (*generalPB.UnsubscribeResponse, error) {
 	return grpcSDK.DefaultUnsubscribe(ctx, module.subscriptions, req.Id)
+}
+
+// JSONSchemaForClass -
+func (module *Server) JSONSchemaForClass(ctx context.Context, req *pb.Bytes) (*pb.Bytes, error) {
+	hash := req.GetData()
+	if !starknet.HashValidator(hash) {
+		return nil, errors.Errorf("invalid starknet hash (length must be 32): %x", hash)
+	}
+	class, err := module.db.Class.GetByHash(ctx, hash)
+	if err != nil {
+		return nil, errors.Wrapf(err, "receiving class error %x", hash)
+	}
+
+	if len(class.Abi) == 0 {
+		return nil, errors.Errorf("empty abi for class %x", class.Hash)
+	}
+
+	var a abi.Abi
+	if err := json.Unmarshal(class.Abi, &a); err != nil {
+		return nil, errors.Wrapf(err, "can't unmarshal abi %x", hash)
+	}
+
+	schema := a.JsonSchema()
+	b, err := json.Marshal(schema)
+	if err != nil {
+		return nil, errors.Wrap(err, "can't marshal json schema")
+	}
+	return &pb.Bytes{
+		Data: b,
+	}, nil
+}
+
+// JSONSchemaForContract -
+func (module *Server) JSONSchemaForContract(ctx context.Context, req *pb.Bytes) (*pb.Bytes, error) {
+	hash := req.GetData()
+	if !starknet.HashValidator(hash) {
+		return nil, errors.Errorf("invalid starknet hash (length must be 32): %x", hash)
+	}
+	contract, err := module.db.Address.GetByHash(ctx, hash)
+	if err != nil {
+		return nil, errors.Wrapf(err, "receiving contract error %x", hash)
+	}
+	if contract.ClassID == nil {
+		return nil, errors.Wrapf(err, "unknown class for contract %x", hash)
+	}
+	class, err := module.db.Class.GetByID(ctx, *contract.ClassID)
+	if err != nil {
+		return nil, errors.Wrapf(err, "receiving class error for contract %x", hash)
+	}
+
+	var a abi.Abi
+	if err := json.Unmarshal(class.Abi, &a); err != nil {
+		return nil, errors.Wrapf(err, "can't unmarshal abi %x", hash)
+	}
+
+	schema := a.JsonSchema()
+	b, err := json.Marshal(schema)
+	if err != nil {
+		return nil, errors.Wrap(err, "can't marshal json schema")
+	}
+	return &pb.Bytes{
+		Data: b,
+	}, nil
 }

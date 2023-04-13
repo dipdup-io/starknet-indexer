@@ -25,6 +25,8 @@ const _ = grpc.SupportPackageIsVersion7
 type IndexerServiceClient interface {
 	Subscribe(ctx context.Context, in *SubscribeRequest, opts ...grpc.CallOption) (IndexerService_SubscribeClient, error)
 	Unsubscribe(ctx context.Context, in *pb.UnsubscribeRequest, opts ...grpc.CallOption) (*pb.UnsubscribeResponse, error)
+	JSONSchemaForClass(ctx context.Context, in *Bytes, opts ...grpc.CallOption) (*Bytes, error)
+	JSONSchemaForContract(ctx context.Context, in *Bytes, opts ...grpc.CallOption) (*Bytes, error)
 }
 
 type indexerServiceClient struct {
@@ -76,12 +78,32 @@ func (c *indexerServiceClient) Unsubscribe(ctx context.Context, in *pb.Unsubscri
 	return out, nil
 }
 
+func (c *indexerServiceClient) JSONSchemaForClass(ctx context.Context, in *Bytes, opts ...grpc.CallOption) (*Bytes, error) {
+	out := new(Bytes)
+	err := c.cc.Invoke(ctx, "/proto.IndexerService/JSONSchemaForClass", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *indexerServiceClient) JSONSchemaForContract(ctx context.Context, in *Bytes, opts ...grpc.CallOption) (*Bytes, error) {
+	out := new(Bytes)
+	err := c.cc.Invoke(ctx, "/proto.IndexerService/JSONSchemaForContract", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // IndexerServiceServer is the server API for IndexerService service.
 // All implementations must embed UnimplementedIndexerServiceServer
 // for forward compatibility
 type IndexerServiceServer interface {
 	Subscribe(*SubscribeRequest, IndexerService_SubscribeServer) error
 	Unsubscribe(context.Context, *pb.UnsubscribeRequest) (*pb.UnsubscribeResponse, error)
+	JSONSchemaForClass(context.Context, *Bytes) (*Bytes, error)
+	JSONSchemaForContract(context.Context, *Bytes) (*Bytes, error)
 	mustEmbedUnimplementedIndexerServiceServer()
 }
 
@@ -94,6 +116,12 @@ func (UnimplementedIndexerServiceServer) Subscribe(*SubscribeRequest, IndexerSer
 }
 func (UnimplementedIndexerServiceServer) Unsubscribe(context.Context, *pb.UnsubscribeRequest) (*pb.UnsubscribeResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Unsubscribe not implemented")
+}
+func (UnimplementedIndexerServiceServer) JSONSchemaForClass(context.Context, *Bytes) (*Bytes, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method JSONSchemaForClass not implemented")
+}
+func (UnimplementedIndexerServiceServer) JSONSchemaForContract(context.Context, *Bytes) (*Bytes, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method JSONSchemaForContract not implemented")
 }
 func (UnimplementedIndexerServiceServer) mustEmbedUnimplementedIndexerServiceServer() {}
 
@@ -147,6 +175,42 @@ func _IndexerService_Unsubscribe_Handler(srv interface{}, ctx context.Context, d
 	return interceptor(ctx, in, info, handler)
 }
 
+func _IndexerService_JSONSchemaForClass_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Bytes)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(IndexerServiceServer).JSONSchemaForClass(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/proto.IndexerService/JSONSchemaForClass",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(IndexerServiceServer).JSONSchemaForClass(ctx, req.(*Bytes))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _IndexerService_JSONSchemaForContract_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Bytes)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(IndexerServiceServer).JSONSchemaForContract(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/proto.IndexerService/JSONSchemaForContract",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(IndexerServiceServer).JSONSchemaForContract(ctx, req.(*Bytes))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // IndexerService_ServiceDesc is the grpc.ServiceDesc for IndexerService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -157,6 +221,14 @@ var IndexerService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Unsubscribe",
 			Handler:    _IndexerService_Unsubscribe_Handler,
+		},
+		{
+			MethodName: "JSONSchemaForClass",
+			Handler:    _IndexerService_JSONSchemaForClass_Handler,
+		},
+		{
+			MethodName: "JSONSchemaForContract",
+			Handler:    _IndexerService_JSONSchemaForContract_Handler,
 		},
 	},
 	Streams: []grpc.StreamDesc{

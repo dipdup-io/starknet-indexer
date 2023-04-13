@@ -20,6 +20,8 @@ services:
       options:
         max-size: 10m
         max-file: "5"
+    volumes:
+      - /etc/starknet:/etc/starknet
 
   db:
     image: postgres:15
