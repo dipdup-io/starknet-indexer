@@ -18,6 +18,8 @@ github.com/dipdup-io/starknet-go-api v0.0.0-20230406094402-d186f0234213 h1:OmPZe
 github.com/dipdup-io/starknet-go-api v0.0.0-20230406094402-d186f0234213/go.mod h1:3d0ONfMaPzptT0a8aqnkhIyRrLvdPfS3pddsT2gUhOg=
 github.com/dipdup-io/starknet-go-api v0.0.0-20230413122611-f6c55bf5127e h1:gu/OqrS8S5ZIdnalHieWpgtx/Fg8TIInj8sSYGvrBQM=
 github.com/dipdup-io/starknet-go-api v0.0.0-20230413122611-f6c55bf5127e/go.mod h1:Dh1ZUXPbmjiIsfTYeYl3BzK8HuvQOTyrg2CcpQiSOD8=
+github.com/dipdup-io/starknet-go-api v0.0.0-20230413125159-fbff541b1683 h1:YlaUd3D7qoQkZkq4e+rnxmwHBIM7w/So5z3z+senrYw=
+github.com/dipdup-io/starknet-go-api v0.0.0-20230413125159-fbff541b1683/go.mod h1:Dh1ZUXPbmjiIsfTYeYl3BzK8HuvQOTyrg2CcpQiSOD8=
 github.com/dipdup-net/go-lib v0.2.30 h1:pFGXdGOCvO375uPFU8a+hO4KztyjAszCje3j7vrU0Ec=
 github.com/dipdup-net/go-lib v0.2.30/go.mod h1:oXILRskGR7bXvuFyc6B8prCKOjGJdDc76kMcf65EvcE=
 github.com/dipdup-net/indexer-sdk v0.0.0-20230413120903-791a286443f9 h1:ciwPsLGIIbQrnwI00RKeEfCuL+pvgUVezKW7Ngkedr0=
