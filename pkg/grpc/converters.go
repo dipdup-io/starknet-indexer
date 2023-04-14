@@ -257,6 +257,13 @@ func Internal(model *storage.Internal) *pb.Internal {
 		}
 		pbModel.ParsedCalldata = parsed
 	}
+	if model.ParsedResult != nil {
+		parsed, err := json.Marshal(model.ParsedResult)
+		if err != nil {
+			return pbModel
+		}
+		pbModel.ParsedResult = parsed
+	}
 	return pbModel
 }
 

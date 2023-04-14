@@ -115,6 +115,7 @@ message Internal {
     repeated string result = 13;
     string entrypoint = 14;
     bytes parsed_calldata = 15;
+    bytes parsed_result = 16;
 }
 
 message Invoke {
