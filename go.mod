@@ -8,7 +8,7 @@ go 1.19
 
 require (
 	github.com/dipdup-io/starknet-go-api v0.0.0-20230413125159-fbff541b1683
-	github.com/dipdup-net/go-lib v0.2.30
+	github.com/dipdup-net/go-lib v0.2.31
 	github.com/dipdup-net/indexer-sdk v0.0.0-20230413120903-791a286443f9
 	github.com/dipdup-net/workerpool v0.0.2
 	github.com/go-pg/pg/v10 v10.11.0
@@ -30,7 +30,6 @@ require (
 
 require (
 	github.com/golang/protobuf v1.5.2 // indirect
-	github.com/iancoleman/strcase v0.2.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect

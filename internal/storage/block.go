@@ -31,7 +31,7 @@ type Block struct {
 	DeclareCount       int `pg:",use_zero"`
 	DeployCount        int `pg:",use_zero"`
 	DeployAccountCount int `pg:",use_zero"`
-	L1HandlerCount     int `pg:",use_zero"`
+	L1HandlerCount     int `pg:"l1_handler_count,use_zero"`
 	StorageDiffCount   int `pg:",use_zero"`
 
 	Status           Status

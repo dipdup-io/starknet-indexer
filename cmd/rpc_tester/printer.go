@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"sync"
+	"sync/atomic"
 
 	"github.com/dipdup-io/starknet-indexer/pkg/grpc/pb"
 	"github.com/dipdup-net/indexer-sdk/pkg/modules/printer"
@@ -13,6 +14,8 @@ import (
 type Printer struct {
 	*printer.Printer
 
+	eventCounters map[string]*atomic.Uint64
+
 	wg *sync.WaitGroup
 }
 
@@ -20,6 +23,7 @@ type Printer struct {
 func NewPrinter() *Printer {
 	return &Printer{
 		printer.NewPrinter(),
+		make(map[string]*atomic.Uint64),
 		new(sync.WaitGroup),
 	}
 }
@@ -56,6 +60,8 @@ func (p *Printer) listen(ctx context.Context) {
 						Uint64("subscription", typ.Response.Id).
 						Msg("end of block")
 				case typ.Event != nil:
+					p.incrementEventCounter(typ.Event.Name)
+
 					log.Info().
 						Str("name", typ.Event.Name).
 						Uint64("height", typ.Event.Height).
@@ -78,8 +84,23 @@ func (p *Printer) listen(ctx context.Context) {
 // Close -
 func (p *Printer) Close() error {
 	p.wg.Wait()
+
+	for name, counter := range p.eventCounters {
+		log.Info().Str("event", name).Uint64("count", counter.Load()).Msg("events were handled")
+	}
+
 	if err := p.Printer.Close(); err != nil {
 		return err
 	}
 	return nil
+}
+
+func (p *Printer) incrementEventCounter(name string) {
+	if counter, ok := p.eventCounters[name]; ok {
+		counter.Add(1)
+	} else {
+		counter := new(atomic.Uint64)
+		counter.Add(1)
+		p.eventCounters[name] = counter
+	}
 }
