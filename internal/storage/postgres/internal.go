@@ -155,6 +155,12 @@ func (db Internal) InsertByCopy(txs []storage.Internal) (io.Reader, string, erro
 		if err := writeMap(builder, txs[i].ParsedCalldata); err != nil {
 			return nil, "", err
 		}
+		if err := builder.WriteByte(','); err != nil {
+			return nil, "", err
+		}
+		if err := writeMap(builder, txs[i].ParsedResult); err != nil {
+			return nil, "", err
+		}
 
 		if err := builder.WriteByte('\n'); err != nil {
 			return nil, "", err

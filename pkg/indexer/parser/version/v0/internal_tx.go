@@ -136,47 +136,57 @@ func (parser InternalTxParser) Parse(ctx context.Context, txCtx parserData.TxCon
 	isChangeModules := bytes.Equal(tx.Selector, encoding.ChangeModuleEntrypointSelector)
 	_, hasChangeModules := contractAbi.Functions[encoding.ChangeModulesEntrypoint]
 
-	if len(tx.Selector) > 0 && !isExecute && !isChangeModules {
-		if _, has := contractAbi.GetByTypeAndSelector(internal.EntrypointType, encoding.EncodeHex(tx.Selector)); !has {
-			if tx.Class.ID == 0 {
-				class, err := parser.Cache.GetClassById(ctx, *tx.Contract.ClassID)
+	if len(tx.Selector) > 0 {
+		if !(isExecute || isChangeModules) {
+			if _, has := contractAbi.GetByTypeAndSelector(internal.EntrypointType, encoding.EncodeHex(tx.Selector)); !has {
+				if tx.Class.ID == 0 {
+					class, err := parser.Cache.GetClassById(ctx, *tx.Contract.ClassID)
+					if err != nil {
+						return tx, err
+					}
+					tx.Class = *class
+				}
+				contractAbi, err = parser.Resolver.Proxy(ctx, txCtx, tx.Class, tx.Contract, tx.Selector)
 				if err != nil {
 					return tx, err
 				}
-				tx.Class = *class
+				if tx.Class.Type.Is(storage.ClassTypeProxy) {
+					proxyId = tx.ContractID
+				}
 			}
-			contractAbi, err = parser.Resolver.Proxy(ctx, txCtx, tx.Class, tx.Contract, tx.Selector)
+		}
+
+		if len(internal.Calldata) > 0 {
+			switch {
+			case isExecute && !hasExecute:
+				tx.Entrypoint = encoding.ExecuteEntrypoint
+				tx.ParsedCalldata, err = abi.DecodeExecuteCallData(internal.Calldata)
+			case isChangeModules && !hasChangeModules:
+				tx.Entrypoint = encoding.ChangeModulesEntrypoint
+				tx.ParsedCalldata, err = abi.DecodeChangeModulesCallData(internal.Calldata)
+			default:
+				tx.ParsedCalldata, tx.Entrypoint, err = decode.InternalCalldata(contractAbi, tx.Selector, internal.Calldata, tx.EntrypointType)
+			}
+
 			if err != nil {
-				return tx, err
-			}
-			if tx.Class.Type.Is(storage.ClassTypeProxy) {
-				proxyId = tx.ContractID
-			}
-		}
-	}
-
-	if len(internal.Calldata) > 0 && len(tx.Selector) > 0 {
-		switch {
-		case isExecute && !hasExecute:
-			tx.Entrypoint = encoding.ExecuteEntrypoint
-			tx.ParsedCalldata, err = abi.DecodeExecuteCallData(internal.Calldata)
-		case isChangeModules && !hasChangeModules:
-			tx.Entrypoint = encoding.ChangeModulesEntrypoint
-			tx.ParsedCalldata, err = abi.DecodeChangeModulesCallData(internal.Calldata)
-		default:
-			switch tx.EntrypointType {
-			case storage.EntrypointTypeExternal:
-				tx.ParsedCalldata, tx.Entrypoint, err = decode.CalldataBySelector(contractAbi, tx.Selector, tx.Calldata)
-			case storage.EntrypointTypeConstructor:
-				tx.ParsedCalldata, err = decode.CalldataForConstructor(contractAbi, tx.Calldata)
-			case storage.EntrypointTypeL1Handler:
-				tx.ParsedCalldata, tx.Entrypoint, err = decode.CalldataForL1Handler(contractAbi, tx.Selector, tx.Calldata)
+				if !errors.Is(err, abi.ErrNoLenField) {
+					return tx, err
+				}
 			}
 		}
 
-		if err != nil {
-			if !errors.Is(err, abi.ErrNoLenField) {
-				return tx, err
+		if len(internal.Result) > 0 {
+			switch {
+			case isExecute && !hasExecute:
+			case isChangeModules && !hasChangeModules:
+				tx.ParsedResult, err = abi.DecodeChangeModulesResult(internal.Result)
+			default:
+				tx.ParsedResult, err = decode.Result(contractAbi, internal.Result, tx.Selector, tx.EntrypointType)
+			}
+			if err != nil {
+				if !errors.Is(err, abi.ErrNoLenField) {
+					return tx, err
+				}
 			}
 		}
 	}

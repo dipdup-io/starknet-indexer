@@ -65,8 +65,11 @@ func (t *table[T, F]) Push(arr []T) {
 func (t *table[T, F]) Pop() (T, bool) {
 	result, ok := t.getFirst()
 	if ok {
+		t.end = t.targetHeight < result.GetHeight()
+		if t.end {
+			return result, false
+		}
 		t.Data = t.Data[1:]
-		t.end = len(t.Data) == 0 || t.targetHeight < t.GetHeight()
 	}
 	return result, ok
 }

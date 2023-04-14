@@ -58,6 +58,7 @@ type Internal struct {
 	Result         []string `pg:",array"`
 	Calldata       []string `pg:",array"`
 	ParsedCalldata map[string]any
+	ParsedResult   map[string]any
 
 	Class     Class      `pg:"rel:has-one"`
 	Caller    Address    `pg:"rel:has-one"`

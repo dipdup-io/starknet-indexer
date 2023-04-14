@@ -148,7 +148,7 @@ func addOffset(q *orm.Query, offset int) *orm.Query {
 	if offset == 0 {
 		return q
 	}
-	return q.Limit(offset)
+	return q.Offset(offset)
 }
 
 func addSort(q *orm.Query, field string, order sdk.SortOrder) *orm.Query {
