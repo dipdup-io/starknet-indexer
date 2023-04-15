@@ -109,6 +109,23 @@ func addressFilter(q *orm.Query, name string, fltr storage.BytesFilter, joinColu
 	return q
 }
 
+func idFilter(q *orm.Query, name string, fltr storage.IdFilter, joinColumn string) *orm.Query {
+	if name == "" || joinColumn == "" {
+		return q
+	}
+
+	switch {
+	case fltr.Eq > 0:
+		q = q.Relation(joinColumn)
+		q = q.Where("? = ?", pg.Safe(name), fltr.Eq)
+	case len(fltr.In) > 0:
+		q = q.Relation(joinColumn)
+		q = q.Where("? IN (?)", pg.Safe(name), pg.In(fltr.In))
+	}
+
+	return q
+}
+
 func jsonFilter(q *orm.Query, name string, fltr map[string]string) *orm.Query {
 	if len(fltr) > 0 {
 		q.Where("? is not null", pg.Ident(name))

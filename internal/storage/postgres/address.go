@@ -40,3 +40,16 @@ func (a *Address) GetAddresses(ctx context.Context, ids ...uint64) (address []st
 		Select(&address)
 	return
 }
+
+// GetIdsByHash -
+func (a *Address) GetIdsByHash(ctx context.Context, hash [][]byte) (ids []uint64, err error) {
+	if len(hash) == 0 {
+		return
+	}
+
+	err = a.DB().ModelContext(ctx, (*storage.Address)(nil)).
+		Column("id").
+		Where("hash in (?)", pg.In(hash)).
+		Select(&ids)
+	return
+}

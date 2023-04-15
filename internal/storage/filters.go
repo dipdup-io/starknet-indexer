@@ -51,3 +51,9 @@ type BytesFilter struct {
 	Eq []byte
 	In [][]byte
 }
+
+// IdFilter -
+type IdFilter struct {
+	Eq uint64
+	In []uint64
+}

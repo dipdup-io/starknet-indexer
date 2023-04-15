@@ -1,7 +1,10 @@
 package grpc
 
 import (
+	"context"
+
 	"github.com/dipdup-io/starknet-indexer/internal/storage"
+	"github.com/dipdup-io/starknet-indexer/internal/storage/postgres"
 	"github.com/dipdup-io/starknet-indexer/pkg/grpc/pb"
 )
 
@@ -20,12 +23,16 @@ type subscriptionFilters struct {
 	transfer      *storage.TransferFilter
 }
 
-func newSubscriptionFilters(req *pb.SubscribeRequest) subscriptionFilters {
+func newSubscriptionFilters(ctx context.Context, req *pb.SubscribeRequest, db postgres.Storage) (subscriptionFilters, error) {
+	event, err := eventFilter(ctx, db.Address, req.GetEvents())
+	if err != nil {
+		return subscriptionFilters{}, err
+	}
 	return subscriptionFilters{
 		declare:       declareFilter(req.GetDeclares()),
 		deploy:        deployFilter(req.GetDeploys()),
 		deployAccount: deployAccountFilter(req.GetDeployAccounts()),
-		event:         eventFilter(req.GetEvents()),
+		event:         event,
 		fee:           feeFilter(req.GetFees()),
 		internal:      internalFilter(req.GetInternals()),
 		invoke:        invokeFilter(req.GetInvokes()),
@@ -34,7 +41,7 @@ func newSubscriptionFilters(req *pb.SubscribeRequest) subscriptionFilters {
 		storageDiff:   storageDiffFilter(req.GetStorageDiffs()),
 		tokenBalance:  tokenBalanceFilter(req.GetTokenBalances()),
 		transfer:      transferFilter(req.GetTransfers()),
-	}
+	}, nil
 }
 
 func declareFilter(fltr *pb.DeclareFilters) *storage.DeclareFilter {
@@ -78,19 +85,29 @@ func deployAccountFilter(fltr *pb.DeployAccountFilters) *storage.DeployAccountFi
 	}
 }
 
-func eventFilter(fltr *pb.EventFilter) *storage.EventFilter {
+func eventFilter(ctx context.Context, address storage.IAddress, fltr *pb.EventFilter) (*storage.EventFilter, error) {
 	if fltr == nil {
-		return nil
+		return nil, nil
 	}
+
+	contractFilter, err := idFilter(ctx, address, fltr.Contract)
+	if err != nil {
+		return nil, err
+	}
+	fromFilter, err := idFilter(ctx, address, fltr.From)
+	if err != nil {
+		return nil, err
+	}
+
 	return &storage.EventFilter{
 		ID:         integerFilter(fltr.Id),
 		Height:     integerFilter(fltr.Height),
 		Time:       timeFilter(fltr.Time),
-		Contract:   bytesFilter(fltr.Contract),
-		From:       bytesFilter(fltr.From),
+		Contract:   contractFilter,
+		From:       fromFilter,
 		Name:       stringFilter(fltr.Name),
 		ParsedData: fltr.GetParsedData(),
-	}
+	}, nil
 }
 
 func feeFilter(fltr *pb.FeeFilter) *storage.FeeFilter {
@@ -308,6 +325,29 @@ func stringFilter(fltr *pb.StringFilter) (result storage.StringFilter) {
 	result.Eq = fltr.GetEq()
 	if arr := fltr.GetIn(); arr != nil {
 		result.In = arr.GetArr()
+	}
+
+	return
+}
+
+func idFilter(ctx context.Context, address storage.IAddress, fltr *pb.BytesFilter) (result storage.IdFilter, err error) {
+	if fltr == nil {
+		return
+	}
+
+	switch {
+	case len(fltr.GetEq()) > 0:
+		a, err := address.GetByHash(ctx, fltr.GetEq())
+		if err != nil {
+			return result, err
+		}
+		result.Eq = a.ID
+	case fltr.GetIn() != nil && len(fltr.GetIn().Arr) > 0:
+		ids, err := address.GetIdsByHash(ctx, fltr.GetIn().Arr)
+		if err != nil {
+			return result, err
+		}
+		result.In = ids
 	}
 
 	return

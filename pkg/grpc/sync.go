@@ -161,7 +161,10 @@ func (a tables) Finished() bool {
 }
 
 func (module *Server) sync(ctx context.Context, subscriptionID uint64, req *pb.SubscribeRequest, stream pb.IndexerService_SubscribeServer) error {
-	sf := newSubscriptionFilters(req)
+	sf, err := newSubscriptionFilters(ctx, req, module.db)
+	if err != nil {
+		return err
+	}
 
 	syncTables := make(tables, 0)
 	if sf.invoke != nil {

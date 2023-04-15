@@ -19,8 +19,8 @@ type EventFilter struct {
 	ID         IntegerFilter
 	Height     IntegerFilter
 	Time       TimeFilter
-	Contract   BytesFilter
-	From       BytesFilter
+	Contract   IdFilter
+	From       IdFilter
 	Name       StringFilter
 	ParsedData map[string]string
 }
