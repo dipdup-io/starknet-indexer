@@ -107,7 +107,7 @@ func (d *Deploy) InsertByCopy(txs []storage.Deploy) (io.Reader, string, error) {
 // Filter -
 func (d *Deploy) Filter(ctx context.Context, fltr storage.DeployFilter, opts ...storage.FilterOption) ([]storage.Deploy, error) {
 	q := d.DB().ModelContext(ctx, (*storage.Deploy)(nil))
-	q = integerFilter(q, "id", fltr.ID)
+	q = integerFilter(q, "deploy.id", fltr.ID)
 	q = integerFilter(q, "height", fltr.Height)
 	q = timeFilter(q, "time", fltr.Time)
 	q = enumFilter(q, "status", fltr.Status)

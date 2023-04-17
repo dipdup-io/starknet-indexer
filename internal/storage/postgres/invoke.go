@@ -125,7 +125,7 @@ func (invoke *Invoke) InsertByCopy(txs []storage.Invoke) (io.Reader, string, err
 // Filter -
 func (invoke *Invoke) Filter(ctx context.Context, fltr storage.InvokeFilter, opts ...storage.FilterOption) ([]storage.Invoke, error) {
 	q := invoke.DB().ModelContext(ctx, (*storage.Invoke)(nil))
-	q = integerFilter(q, "id", fltr.ID)
+	q = integerFilter(q, "invoke.id", fltr.ID)
 	q = integerFilter(q, "height", fltr.Height)
 	q = timeFilter(q, "time", fltr.Time)
 	q = enumFilter(q, "status", fltr.Status)

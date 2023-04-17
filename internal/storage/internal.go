@@ -38,8 +38,6 @@ type Internal struct {
 	ID     uint64    `pg:"id,type:bigint,pk,notnull"`
 	Height uint64    `pg:",use_zero"`
 	Time   time.Time `pg:",pk"`
-	Status Status    `pg:",use_zero"`
-	Hash   []byte
 
 	DeclareID       *uint64
 	DeployID        *uint64
@@ -47,12 +45,15 @@ type Internal struct {
 	InvokeID        *uint64
 	L1HandlerID     *uint64
 	InternalID      *uint64
+	ClassID         uint64
+	CallerID        uint64
+	ContractID      uint64
 
-	ClassID        uint64
-	CallerID       uint64
-	ContractID     uint64
-	CallType       CallType
-	EntrypointType EntrypointType
+	Status         Status         `pg:"type:SMALLINT,use_zero"`
+	EntrypointType EntrypointType `pg:"type:SMALLINT"`
+	CallType       CallType       `pg:"type:SMALLINT"`
+
+	Hash           []byte
 	Selector       []byte
 	Entrypoint     string
 	Result         []string `pg:",array"`

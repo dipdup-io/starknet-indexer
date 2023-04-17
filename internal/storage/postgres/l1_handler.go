@@ -119,7 +119,7 @@ func (l1 *L1Handler) InsertByCopy(txs []storage.L1Handler) (io.Reader, string, e
 // Filter -
 func (l1 *L1Handler) Filter(ctx context.Context, fltr storage.L1HandlerFilter, opts ...storage.FilterOption) ([]storage.L1Handler, error) {
 	q := l1.DB().ModelContext(ctx, (*storage.L1Handler)(nil))
-	q = integerFilter(q, "id", fltr.ID)
+	q = integerFilter(q, "l1_handler.id", fltr.ID)
 	q = integerFilter(q, "height", fltr.Height)
 	q = timeFilter(q, "time", fltr.Time)
 	q = enumFilter(q, "status", fltr.Status)

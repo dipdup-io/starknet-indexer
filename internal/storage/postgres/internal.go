@@ -50,18 +50,6 @@ func (db Internal) InsertByCopy(txs []storage.Internal) (io.Reader, string, erro
 		if err := builder.WriteByte(','); err != nil {
 			return nil, "", err
 		}
-		if err := writeUint64(builder, uint64(txs[i].Status)); err != nil {
-			return nil, "", err
-		}
-		if err := builder.WriteByte(','); err != nil {
-			return nil, "", err
-		}
-		if err := writeBytes(builder, txs[i].Hash); err != nil {
-			return nil, "", err
-		}
-		if err := builder.WriteByte(','); err != nil {
-			return nil, "", err
-		}
 		if err := writeUint64Pointer(builder, txs[i].DeclareID); err != nil {
 			return nil, "", err
 		}
@@ -116,6 +104,12 @@ func (db Internal) InsertByCopy(txs []storage.Internal) (io.Reader, string, erro
 		if err := builder.WriteByte(','); err != nil {
 			return nil, "", err
 		}
+		if err := writeUint64(builder, uint64(txs[i].Status)); err != nil {
+			return nil, "", err
+		}
+		if err := builder.WriteByte(','); err != nil {
+			return nil, "", err
+		}
 		if err := writeUint64(builder, uint64(txs[i].CallType)); err != nil {
 			return nil, "", err
 		}
@@ -123,6 +117,12 @@ func (db Internal) InsertByCopy(txs []storage.Internal) (io.Reader, string, erro
 			return nil, "", err
 		}
 		if err := writeUint64(builder, uint64(txs[i].EntrypointType)); err != nil {
+			return nil, "", err
+		}
+		if err := builder.WriteByte(','); err != nil {
+			return nil, "", err
+		}
+		if err := writeBytes(builder, txs[i].Hash); err != nil {
 			return nil, "", err
 		}
 		if err := builder.WriteByte(','); err != nil {
@@ -174,7 +174,7 @@ func (db Internal) InsertByCopy(txs []storage.Internal) (io.Reader, string, erro
 // Filter -
 func (d *Internal) Filter(ctx context.Context, fltr storage.InternalFilter, opts ...storage.FilterOption) ([]storage.Internal, error) {
 	q := d.DB().ModelContext(ctx, (*storage.Internal)(nil))
-	q = integerFilter(q, "id", fltr.ID)
+	q = integerFilter(q, "internal_tx.id", fltr.ID)
 	q = integerFilter(q, "height", fltr.Height)
 	q = timeFilter(q, "time", fltr.Time)
 	q = enumFilter(q, "status", fltr.Status)

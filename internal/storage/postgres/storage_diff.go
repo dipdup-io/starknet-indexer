@@ -82,7 +82,7 @@ func (sd *StorageDiff) InsertByCopy(diffs []storage.StorageDiff) (io.Reader, str
 // Filter -
 func (sd *StorageDiff) Filter(ctx context.Context, fltr storage.StorageDiffFilter, opts ...storage.FilterOption) ([]storage.StorageDiff, error) {
 	q := sd.DB().ModelContext(ctx, (*storage.StorageDiff)(nil))
-	q = integerFilter(q, "id", fltr.ID)
+	q = integerFilter(q, "storage_diff.id", fltr.ID)
 	q = integerFilter(q, "height", fltr.Height)
 	q = addressFilter(q, "hash", fltr.Contract, "Contract")
 	q = equalityFilter(q, "key", fltr.Key)

@@ -49,12 +49,6 @@ func (fee *Fee) InsertByCopy(txs []storage.Fee) (io.Reader, string, error) {
 		if err := builder.WriteByte(','); err != nil {
 			return nil, "", err
 		}
-		if err := writeUint64(builder, uint64(txs[i].Status)); err != nil {
-			return nil, "", err
-		}
-		if err := builder.WriteByte(','); err != nil {
-			return nil, "", err
-		}
 		if err := writeUint64(builder, txs[i].ContractID); err != nil {
 			return nil, "", err
 		}
@@ -68,48 +62,6 @@ func (fee *Fee) InsertByCopy(txs []storage.Fee) (io.Reader, string, error) {
 			return nil, "", err
 		}
 		if err := writeUint64(builder, txs[i].ClassID); err != nil {
-			return nil, "", err
-		}
-		if err := builder.WriteByte(','); err != nil {
-			return nil, "", err
-		}
-		if err := writeBytes(builder, txs[i].Selector); err != nil {
-			return nil, "", err
-		}
-		if err := builder.WriteByte(','); err != nil {
-			return nil, "", err
-		}
-		if err := writeUint64(builder, uint64(txs[i].EntrypointType)); err != nil {
-			return nil, "", err
-		}
-		if err := builder.WriteByte(','); err != nil {
-			return nil, "", err
-		}
-		if err := writeUint64(builder, uint64(txs[i].CallType)); err != nil {
-			return nil, "", err
-		}
-		if err := builder.WriteByte(','); err != nil {
-			return nil, "", err
-		}
-		if err := writeStringArray(builder, txs[i].Calldata...); err != nil {
-			return nil, "", err
-		}
-		if err := builder.WriteByte(','); err != nil {
-			return nil, "", err
-		}
-		if err := writeStringArray(builder, txs[i].Result...); err != nil {
-			return nil, "", err
-		}
-		if err := builder.WriteByte(','); err != nil {
-			return nil, "", err
-		}
-		if err := writeString(builder, txs[i].Entrypoint); err != nil {
-			return nil, "", err
-		}
-		if err := builder.WriteByte(','); err != nil {
-			return nil, "", err
-		}
-		if err := writeMap(builder, txs[i].ParsedCalldata); err != nil {
 			return nil, "", err
 		}
 		if err := builder.WriteByte(','); err != nil {
@@ -142,6 +94,54 @@ func (fee *Fee) InsertByCopy(txs []storage.Fee) (io.Reader, string, error) {
 		if err := writeUint64Pointer(builder, txs[i].L1HandlerID); err != nil {
 			return nil, "", err
 		}
+		if err := builder.WriteByte(','); err != nil {
+			return nil, "", err
+		}
+		if err := writeUint64(builder, uint64(txs[i].EntrypointType)); err != nil {
+			return nil, "", err
+		}
+		if err := builder.WriteByte(','); err != nil {
+			return nil, "", err
+		}
+		if err := writeUint64(builder, uint64(txs[i].CallType)); err != nil {
+			return nil, "", err
+		}
+		if err := builder.WriteByte(','); err != nil {
+			return nil, "", err
+		}
+		if err := writeUint64(builder, uint64(txs[i].Status)); err != nil {
+			return nil, "", err
+		}
+		if err := builder.WriteByte(','); err != nil {
+			return nil, "", err
+		}
+		if err := writeBytes(builder, txs[i].Selector); err != nil {
+			return nil, "", err
+		}
+		if err := builder.WriteByte(','); err != nil {
+			return nil, "", err
+		}
+		if err := writeString(builder, txs[i].Entrypoint); err != nil {
+			return nil, "", err
+		}
+		if err := builder.WriteByte(','); err != nil {
+			return nil, "", err
+		}
+		if err := writeStringArray(builder, txs[i].Calldata...); err != nil {
+			return nil, "", err
+		}
+		if err := builder.WriteByte(','); err != nil {
+			return nil, "", err
+		}
+		if err := writeStringArray(builder, txs[i].Result...); err != nil {
+			return nil, "", err
+		}
+		if err := builder.WriteByte(','); err != nil {
+			return nil, "", err
+		}
+		if err := writeMap(builder, txs[i].ParsedCalldata); err != nil {
+			return nil, "", err
+		}
 
 		if err := builder.WriteByte('\n'); err != nil {
 			return nil, "", err
@@ -155,7 +155,7 @@ func (fee *Fee) InsertByCopy(txs []storage.Fee) (io.Reader, string, error) {
 // Filter -
 func (fee *Fee) Filter(ctx context.Context, fltr storage.FeeFilter, opts ...storage.FilterOption) ([]storage.Fee, error) {
 	q := fee.DB().ModelContext(ctx, (*storage.Fee)(nil))
-	q = integerFilter(q, "id", fltr.ID)
+	q = integerFilter(q, "fee.id", fltr.ID)
 	q = integerFilter(q, "height", fltr.Height)
 	q = timeFilter(q, "time", fltr.Time)
 	q = enumFilter(q, "status", fltr.Status)

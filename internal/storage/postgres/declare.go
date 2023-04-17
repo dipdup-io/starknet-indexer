@@ -23,7 +23,7 @@ func NewDeclare(db *database.PgGo) *Declare {
 // Filter -
 func (d *Declare) Filter(ctx context.Context, fltr storage.DeclareFilter, opts ...storage.FilterOption) ([]storage.Declare, error) {
 	q := d.DB().ModelContext(ctx, (*storage.Declare)(nil))
-	q = integerFilter(q, "id", fltr.ID)
+	q = integerFilter(q, "declare.id", fltr.ID)
 	q = integerFilter(q, "height", fltr.Height)
 	q = timeFilter(q, "time", fltr.Time)
 	q = enumFilter(q, "status", fltr.Status)

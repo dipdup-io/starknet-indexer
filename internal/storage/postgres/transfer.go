@@ -127,7 +127,7 @@ func (t *Transfer) InsertByCopy(transfers []storage.Transfer) (io.Reader, string
 // Filter -
 func (t *Transfer) Filter(ctx context.Context, fltr storage.TransferFilter, opts ...storage.FilterOption) ([]storage.Transfer, error) {
 	q := t.DB().ModelContext(ctx, (*storage.Transfer)(nil))
-	q = integerFilter(q, "id", fltr.ID)
+	q = integerFilter(q, "transfer.id", fltr.ID)
 	q = integerFilter(q, "height", fltr.Height)
 	q = timeFilter(q, "time", fltr.Time)
 	q = addressFilter(q, "hash", fltr.Contract, "Contract")

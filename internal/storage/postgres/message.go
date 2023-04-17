@@ -23,7 +23,7 @@ func NewMessage(db *database.PgGo) *Message {
 // Filter -
 func (msg *Message) Filter(ctx context.Context, fltr storage.MessageFilter, opts ...storage.FilterOption) ([]storage.Message, error) {
 	q := msg.DB().ModelContext(ctx, (*storage.Message)(nil))
-	q = integerFilter(q, "id", fltr.ID)
+	q = integerFilter(q, "message.id", fltr.ID)
 	q = integerFilter(q, "height", fltr.Height)
 	q = timeFilter(q, "time", fltr.Time)
 	q = addressFilter(q, "hash", fltr.Contract, "Contract")

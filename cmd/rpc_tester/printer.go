@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"sync"
 	"sync/atomic"
 
@@ -68,6 +69,7 @@ func (p *Printer) listen(ctx context.Context) {
 						Uint64("time", typ.Event.Time).
 						Uint64("id", typ.Event.Id).
 						Uint64("subscription", typ.Response.Id).
+						Str("contract", fmt.Sprintf("0x%x", typ.Event.Contract)).
 						Msg("event")
 				case typ.Block != nil:
 					log.Info().

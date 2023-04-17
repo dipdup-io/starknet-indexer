@@ -23,7 +23,7 @@ func NewDeployAccount(db *database.PgGo) *DeployAccount {
 // Filter -
 func (d *DeployAccount) Filter(ctx context.Context, fltr storage.DeployAccountFilter, opts ...storage.FilterOption) ([]storage.DeployAccount, error) {
 	q := d.DB().ModelContext(ctx, (*storage.DeployAccount)(nil))
-	q = integerFilter(q, "id", fltr.ID)
+	q = integerFilter(q, "deploy_account.id", fltr.ID)
 	q = integerFilter(q, "height", fltr.Height)
 	q = timeFilter(q, "time", fltr.Time)
 	q = enumFilter(q, "status", fltr.Status)

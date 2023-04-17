@@ -116,42 +116,42 @@ func createIndices(ctx context.Context, conn *database.PgGo) error {
 		}
 
 		// Invoke
-		if _, err := tx.ExecContext(ctx, `CREATE INDEX IF NOT EXISTS invoke_height_idx ON invoke (height)`); err != nil {
+		if _, err := tx.ExecContext(ctx, `CREATE INDEX IF NOT EXISTS invoke_height_idx ON invoke USING BRIN (height)`); err != nil {
 			return err
 		}
 
 		// Declare
-		if _, err := tx.ExecContext(ctx, `CREATE INDEX IF NOT EXISTS declare_height_idx ON declare (height)`); err != nil {
+		if _, err := tx.ExecContext(ctx, `CREATE INDEX IF NOT EXISTS declare_height_idx ON declare USING BRIN (height)`); err != nil {
 			return err
 		}
 
 		// Deploy
-		if _, err := tx.ExecContext(ctx, `CREATE INDEX IF NOT EXISTS deploy_height_idx ON deploy (height)`); err != nil {
+		if _, err := tx.ExecContext(ctx, `CREATE INDEX IF NOT EXISTS deploy_height_idx ON deploy USING BRIN (height)`); err != nil {
 			return err
 		}
 
 		// DeployAccount
-		if _, err := tx.ExecContext(ctx, `CREATE INDEX IF NOT EXISTS deploy_account_height_idx ON deploy_account (height)`); err != nil {
+		if _, err := tx.ExecContext(ctx, `CREATE INDEX IF NOT EXISTS deploy_account_height_idx ON deploy_account USING BRIN (height)`); err != nil {
 			return err
 		}
 
 		// L1 handler
-		if _, err := tx.ExecContext(ctx, `CREATE INDEX IF NOT EXISTS l1_handler_height_idx ON l1_handler (height)`); err != nil {
+		if _, err := tx.ExecContext(ctx, `CREATE INDEX IF NOT EXISTS l1_handler_height_idx ON l1_handler USING BRIN (height)`); err != nil {
 			return err
 		}
 
 		// Fee
-		if _, err := tx.ExecContext(ctx, `CREATE INDEX IF NOT EXISTS fee_height_idx ON fee (height)`); err != nil {
+		if _, err := tx.ExecContext(ctx, `CREATE INDEX IF NOT EXISTS fee_height_idx ON fee USING BRIN (height)`); err != nil {
 			return err
 		}
 
 		// Internal
-		if _, err := tx.ExecContext(ctx, `CREATE INDEX IF NOT EXISTS internal_tx_height_idx ON internal_tx (height)`); err != nil {
+		if _, err := tx.ExecContext(ctx, `CREATE INDEX IF NOT EXISTS internal_tx_height_idx ON internal_tx USING BRIN (height)`); err != nil {
 			return err
 		}
 
 		// Event
-		if _, err := tx.ExecContext(ctx, `CREATE INDEX IF NOT EXISTS event_height_idx ON event (height)`); err != nil {
+		if _, err := tx.ExecContext(ctx, `CREATE INDEX IF NOT EXISTS event_height_idx ON event USING BRIN (height)`); err != nil {
 			return err
 		}
 		if _, err := tx.ExecContext(ctx, `CREATE INDEX IF NOT EXISTS event_contract_id_idx ON event (contract_id, id)`); err != nil {
@@ -165,7 +165,7 @@ func createIndices(ctx context.Context, conn *database.PgGo) error {
 		}
 
 		// Message
-		if _, err := tx.ExecContext(ctx, `CREATE INDEX IF NOT EXISTS message_height_idx ON message (height)`); err != nil {
+		if _, err := tx.ExecContext(ctx, `CREATE INDEX IF NOT EXISTS message_height_idx ON message USING BRIN (height)`); err != nil {
 			return err
 		}
 
