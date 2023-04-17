@@ -11,11 +11,19 @@ import (
 // ITokenBalance -
 type ITokenBalance interface {
 	storage.Table[*TokenBalance]
+	Filterable[TokenBalance, TokenBalanceFilter]
 
 	NegativeBalances(ctx context.Context) ([]TokenBalance, error)
 	TotalSupply(ctx context.Context, contractId, tokenId uint64) (decimal.Decimal, error)
 	Owner(ctx context.Context, cotractId uint64, tokenId decimal.Decimal) (TokenBalance, error)
 	Balances(ctx context.Context, contractId uint64, tokenId int64, limit, offset int) ([]TokenBalance, error)
+}
+
+// TokenBalanceFilter -
+type TokenBalanceFilter struct {
+	Owner    BytesFilter
+	Contract BytesFilter
+	TokenId  StringFilter
 }
 
 // TokenBalance -

@@ -23,16 +23,6 @@ func NewL1Handler(db *database.PgGo) *L1Handler {
 	}
 }
 
-// ByHeight -
-func (l1 *L1Handler) ByHeight(ctx context.Context, height, limit, offset uint64) (response []storage.L1Handler, err error) {
-	err = l1.DB().ModelContext(ctx, (*storage.L1Handler)(nil)).
-		Where("height = ?", height).
-		Limit(int(limit)).
-		Offset(int(offset)).
-		Select(&response)
-	return
-}
-
 // InsertByCopy -
 func (l1 *L1Handler) InsertByCopy(txs []storage.L1Handler) (io.Reader, string, error) {
 	if len(txs) == 0 {
@@ -107,12 +97,6 @@ func (l1 *L1Handler) InsertByCopy(txs []storage.L1Handler) (io.Reader, string, e
 		if err := builder.WriteByte(','); err != nil {
 			return nil, "", err
 		}
-		if err := writeStringArray(builder, txs[i].Signature...); err != nil {
-			return nil, "", err
-		}
-		if err := builder.WriteByte(','); err != nil {
-			return nil, "", err
-		}
 		if err := writeStringArray(builder, txs[i].CallData...); err != nil {
 			return nil, "", err
 		}
@@ -130,4 +114,22 @@ func (l1 *L1Handler) InsertByCopy(txs []storage.L1Handler) (io.Reader, string, e
 
 	query := fmt.Sprintf(`COPY %s FROM STDIN WITH (FORMAT csv, ESCAPE '\', QUOTE '"', DELIMITER ',')`, storage.L1Handler{}.TableName())
 	return strings.NewReader(builder.String()), query, nil
+}
+
+// Filter -
+func (l1 *L1Handler) Filter(ctx context.Context, fltr storage.L1HandlerFilter, opts ...storage.FilterOption) ([]storage.L1Handler, error) {
+	q := l1.DB().ModelContext(ctx, (*storage.L1Handler)(nil))
+	q = integerFilter(q, "l1_handler.id", fltr.ID)
+	q = integerFilter(q, "height", fltr.Height)
+	q = timeFilter(q, "time", fltr.Time)
+	q = enumFilter(q, "status", fltr.Status)
+	q = addressFilter(q, "hash", fltr.Contract, "Contract")
+	q = equalityFilter(q, "selector", fltr.Selector)
+	q = stringFilter(q, "entrypoint", fltr.Entrypoint)
+	q = jsonFilter(q, "parsed_calldata", fltr.ParsedCalldata)
+	q = optionsFilter(q, opts...)
+
+	var result []storage.L1Handler
+	err := q.Select(&result)
+	return result, err
 }

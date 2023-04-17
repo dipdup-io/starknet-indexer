@@ -20,7 +20,6 @@ func (parser Parser) ParseInvokeV1(ctx context.Context, raw *data.Invoke, block 
 		Time:               block.Time,
 		Status:             block.Status,
 		Hash:               trace.TransactionHash.Bytes(),
-		Signature:          raw.Signature,
 		CallData:           raw.Calldata,
 		MaxFee:             raw.MaxFee.Decimal(),
 		Nonce:              raw.Nonce.Decimal(),
@@ -29,12 +28,21 @@ func (parser Parser) ParseInvokeV1(ctx context.Context, raw *data.Invoke, block 
 		Version:            1,
 	}
 
-	if address, err := parser.Resolver.FindAddressByHash(ctx, raw.ContractAddress); err != nil {
-		return tx, nil, err
-	} else if address != nil {
-		tx.ContractID = address.ID
-		tx.Contract = *address
-		tx.Contract.Height = tx.Height
+	var contract data.Felt
+	switch {
+	case raw.ContractAddress != "":
+		contract = raw.ContractAddress
+	case raw.SenderAddress != "":
+		contract = raw.SenderAddress
+	}
+	if contract != "" {
+		if address, err := parser.Resolver.FindAddressByHash(ctx, contract); err != nil {
+			return tx, nil, err
+		} else if address != nil {
+			tx.ContractID = address.ID
+			tx.Contract = *address
+			tx.Contract.Height = tx.Height
+		}
 	}
 
 	if len(tx.CallData) > 0 {

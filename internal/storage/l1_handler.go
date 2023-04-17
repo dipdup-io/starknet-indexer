@@ -1,7 +1,6 @@
 package storage
 
 import (
-	"context"
 	"time"
 
 	"github.com/dipdup-net/indexer-sdk/pkg/storage"
@@ -12,8 +11,19 @@ import (
 type IL1Handler interface {
 	storage.Table[*L1Handler]
 	Copiable[L1Handler]
+	Filterable[L1Handler, L1HandlerFilter]
+}
 
-	ByHeight(ctx context.Context, height, limit, offset uint64) ([]L1Handler, error)
+// L1HandlerFilter -
+type L1HandlerFilter struct {
+	ID             IntegerFilter
+	Height         IntegerFilter
+	Time           TimeFilter
+	Status         EnumFilter
+	Contract       BytesFilter
+	Selector       EqualityFilter
+	Entrypoint     StringFilter
+	ParsedCalldata map[string]string
 }
 
 // L1Handler -
@@ -32,7 +42,6 @@ type L1Handler struct {
 	Entrypoint     string
 	MaxFee         decimal.Decimal `pg:",type:numeric,use_zero"`
 	Nonce          decimal.Decimal `pg:",type:numeric,use_zero"`
-	Signature      []string        `pg:",array"`
 	CallData       []string        `pg:",array"`
 	ParsedCalldata map[string]any
 
@@ -47,4 +56,9 @@ type L1Handler struct {
 // TableName -
 func (L1Handler) TableName() string {
 	return "l1_handler"
+}
+
+// GetHeight -
+func (l1 L1Handler) GetHeight() uint64 {
+	return l1.Height
 }

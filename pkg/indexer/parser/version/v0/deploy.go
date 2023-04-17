@@ -27,7 +27,7 @@ func (parser Parser) ParseDeploy(ctx context.Context, raw *data.Deploy, block st
 		ConstructorCalldata: raw.ConstructorCalldata,
 	}
 
-	if class, err := parser.Resolver.FindClassByHash(ctx, raw.ClassHash); err != nil {
+	if class, err := parser.Resolver.FindClassByHash(ctx, raw.ClassHash, tx.Height); err != nil {
 		return tx, nil, err
 	} else if class != nil {
 		tx.Class = *class

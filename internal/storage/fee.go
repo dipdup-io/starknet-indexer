@@ -10,6 +10,23 @@ import (
 type IFee interface {
 	storage.Table[*Fee]
 	Copiable[Fee]
+	Filterable[Fee, FeeFilter]
+}
+
+// FeeFilter -
+type FeeFilter struct {
+	ID             IntegerFilter
+	Height         IntegerFilter
+	Time           TimeFilter
+	Status         EnumFilter
+	Contract       BytesFilter
+	Caller         BytesFilter
+	Class          BytesFilter
+	Selector       EqualityFilter
+	Entrypoint     StringFilter
+	EntrypointType EnumFilter
+	CallType       EnumFilter
+	ParsedCalldata map[string]string
 }
 
 // Fee -
@@ -20,25 +37,26 @@ type Fee struct {
 	ID     uint64    `pg:"id,type:bigint,pk,notnull"`
 	Height uint64    `pg:",use_zero"`
 	Time   time.Time `pg:",pk"`
-	Status Status    `pg:",use_zero"`
 
-	ContractID     uint64
-	CallerID       uint64
-	ClassID        uint64
-	Selector       []byte
-	EntrypointType EntrypointType
-	CallType       CallType
-	Calldata       []string `pg:",array"`
-	Result         []string `pg:",array"`
-
-	Entrypoint     string
-	ParsedCalldata map[string]any
+	ContractID uint64
+	CallerID   uint64
+	ClassID    uint64
 
 	InvokeID        *uint64
 	DeclareID       *uint64
 	DeployID        *uint64
 	DeployAccountID *uint64
 	L1HandlerID     *uint64
+
+	EntrypointType EntrypointType `pg:"type:SMALLINT"`
+	CallType       CallType       `pg:"type:SMALLINT"`
+	Status         Status         `pg:"type:SMALLINT,use_zero"`
+
+	Selector       []byte
+	Entrypoint     string
+	Calldata       []string `pg:",array"`
+	Result         []string `pg:",array"`
+	ParsedCalldata map[string]any
 
 	Class     Class      `pg:"rel:has-one"`
 	Caller    Address    `pg:"rel:has-one"`
@@ -52,4 +70,9 @@ type Fee struct {
 // TableName -
 func (Fee) TableName() string {
 	return "fee"
+}
+
+// GetHeight -
+func (f Fee) GetHeight() uint64 {
+	return f.Height
 }

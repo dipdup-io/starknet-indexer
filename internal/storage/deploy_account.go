@@ -1,7 +1,6 @@
 package storage
 
 import (
-	"context"
 	"time"
 
 	"github.com/dipdup-net/indexer-sdk/pkg/storage"
@@ -11,8 +10,17 @@ import (
 // IDeployAccount -
 type IDeployAccount interface {
 	storage.Table[*DeployAccount]
+	Filterable[DeployAccount, DeployAccountFilter]
+}
 
-	ByHeight(ctx context.Context, height, limit, offset uint64) ([]DeployAccount, error)
+// DeployAccountFilter -
+type DeployAccountFilter struct {
+	ID             IntegerFilter
+	Height         IntegerFilter
+	Time           TimeFilter
+	Status         EnumFilter
+	Class          BytesFilter
+	ParsedCalldata map[string]string
 }
 
 // DeployAccount -
@@ -31,7 +39,6 @@ type DeployAccount struct {
 	ContractAddressSalt []byte
 	MaxFee              decimal.Decimal `pg:",type:numeric,use_zero"`
 	Nonce               decimal.Decimal `pg:",type:numeric,use_zero"`
-	Signature           []string        `pg:",array"`
 	ConstructorCalldata []string        `pg:",array"`
 	ParsedCalldata      map[string]any
 
@@ -47,4 +54,9 @@ type DeployAccount struct {
 // TableName -
 func (DeployAccount) TableName() string {
 	return "deploy_account"
+}
+
+// GetHeight -
+func (d DeployAccount) GetHeight() uint64 {
+	return d.Height
 }

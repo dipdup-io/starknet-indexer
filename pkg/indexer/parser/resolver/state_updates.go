@@ -13,7 +13,11 @@ import (
 
 // ResolveStateUpdates -
 func (resolver *Resolver) ResolveStateUpdates(ctx context.Context, block *storage.Block, upd data.StateUpdate) error {
-	if err := resolver.parseDeclaredContracts(ctx, block, upd.StateDiff.DeclaredContracts); err != nil {
+	if err := resolver.parseDeclaredContracts(ctx, block, upd.StateDiff.OldDeclaredContracts); err != nil {
+		return err
+	}
+
+	if err := resolver.parseDeclaredClasses(ctx, block, upd.StateDiff.DeclaredClasses); err != nil {
 		return err
 	}
 
@@ -25,6 +29,15 @@ func (resolver *Resolver) ResolveStateUpdates(ctx context.Context, block *storag
 		return err
 	}
 
+	return nil
+}
+
+func (resolver *Resolver) parseDeclaredClasses(ctx context.Context, block *storage.Block, declared []data.DeclaredClass) error {
+	for i := range declared {
+		if _, err := resolver.parseClassFromFelt(ctx, declared[i].ClassHash, block.Height); err != nil {
+			return err
+		}
+	}
 	return nil
 }
 

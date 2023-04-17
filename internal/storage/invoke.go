@@ -1,7 +1,6 @@
 package storage
 
 import (
-	"context"
 	"time"
 
 	"github.com/dipdup-net/indexer-sdk/pkg/storage"
@@ -12,8 +11,20 @@ import (
 type IInvoke interface {
 	storage.Table[*Invoke]
 	Copiable[Invoke]
+	Filterable[Invoke, InvokeFilter]
+}
 
-	ByHeight(ctx context.Context, height, limit, offset uint64) ([]Invoke, error)
+// InvokeFilter -
+type InvokeFilter struct {
+	ID             IntegerFilter
+	Height         IntegerFilter
+	Time           TimeFilter
+	Status         EnumFilter
+	Version        EnumFilter
+	Contract       BytesFilter
+	Selector       EqualityFilter
+	Entrypoint     StringFilter
+	ParsedCalldata map[string]string
 }
 
 // Invoke -
@@ -33,7 +44,6 @@ type Invoke struct {
 	Entrypoint         string
 	MaxFee             decimal.Decimal `pg:",type:numeric,use_zero"`
 	Nonce              decimal.Decimal `pg:",type:numeric,use_zero"`
-	Signature          []string        `pg:",array"`
 	CallData           []string        `pg:",array"`
 	ParsedCalldata     map[string]any
 
@@ -48,4 +58,9 @@ type Invoke struct {
 // TableName -
 func (Invoke) TableName() string {
 	return "invoke"
+}
+
+// GetHeight -
+func (invoke Invoke) GetHeight() uint64 {
+	return invoke.Height
 }

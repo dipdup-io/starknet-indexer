@@ -12,14 +12,13 @@ import (
 // ParseDeclare -
 func (parser Parser) ParseDeclare(ctx context.Context, version data.Felt, raw *data.Declare, block storage.Block, trace sequencer.Trace, receipts sequencer.Receipt) (storage.Declare, *storage.Fee, error) {
 	tx := storage.Declare{
-		ID:        parser.Resolver.NextTxId(),
-		Height:    block.Height,
-		Time:      block.Time,
-		Status:    block.Status,
-		Hash:      trace.TransactionHash.Bytes(),
-		Signature: raw.Signature,
-		MaxFee:    raw.MaxFee.Decimal(),
-		Nonce:     raw.Nonce.Decimal(),
+		ID:     parser.Resolver.NextTxId(),
+		Height: block.Height,
+		Time:   block.Time,
+		Status: block.Status,
+		Hash:   trace.TransactionHash.Bytes(),
+		MaxFee: raw.MaxFee.Decimal(),
+		Nonce:  raw.Nonce.Decimal(),
 	}
 
 	var err error
@@ -28,7 +27,7 @@ func (parser Parser) ParseDeclare(ctx context.Context, version data.Felt, raw *d
 		return tx, nil, err
 	}
 
-	if class, err := parser.Resolver.FindClassByHash(ctx, raw.ClassHash); err != nil {
+	if class, err := parser.Resolver.FindClassByHash(ctx, raw.ClassHash, tx.Height); err != nil {
 		return tx, nil, err
 	} else if class != nil {
 		tx.Class = *class

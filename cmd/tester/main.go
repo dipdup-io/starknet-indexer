@@ -83,6 +83,7 @@ func main() {
 	}()
 
 	testers := []Tester{
+		NewJsonSchemaTester(postgres),
 		NewTokenBalanceTester(postgres, api),
 	}
 

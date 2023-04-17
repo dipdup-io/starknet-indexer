@@ -12,6 +12,18 @@ type ITransfer interface {
 	storage.Table[*Transfer]
 
 	Copiable[Transfer]
+	Filterable[Transfer, TransferFilter]
+}
+
+// TransferFilter -
+type TransferFilter struct {
+	ID       IntegerFilter
+	Height   IntegerFilter
+	Time     TimeFilter
+	Contract BytesFilter
+	From     BytesFilter
+	To       BytesFilter
+	TokenId  StringFilter
 }
 
 // Transfer -
@@ -71,4 +83,9 @@ func (transfer Transfer) TokenBalanceUpdates() []TokenBalance {
 	}
 
 	return updates
+}
+
+// GetHeight -
+func (transfer Transfer) GetHeight() uint64 {
+	return transfer.Height
 }

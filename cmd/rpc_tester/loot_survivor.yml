@@ -1,0 +1,37 @@
+version: 0.0.1
+
+log_level: ${LOG_LEVEL:-info}
+
+grpc:
+  server_address: ${GRPC_BIND:-127.0.0.1:7779}
+  subscriptions:
+    adventurer:
+      events:
+        contract:
+          eq: 0x035d755a23ec72df90819f584d9a1849bbc21fa77f96d25e03f1736883895248
+        name:
+          in:
+            - MintAdventurer
+            - UpdateAdventurerState
+            - Discovery
+            - UpdatedThiefState
+    beast:
+      events:
+        contract:
+          eq: 0x000f4dbfe5d15792aa91025e42ee1d74c22bdeb1eef0b9bc19a37216377290c1
+        name:
+          in:
+            - CreateBeast
+            - UpdateBeastState
+            - BeastAttacked
+            - AdventurerAttacked
+            - UpdateGoldBalance
+    loot:
+      events:
+        contract:
+          eq: 0x065669e15c8f1a7f17b7062e4eb1b709b922b931b93c59577f1848a85c30ab1f
+        name:
+          in: 
+            - UpdateItemState
+            - ClaimItem
+            - ItemMerchantUpdate

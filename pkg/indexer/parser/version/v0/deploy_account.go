@@ -26,10 +26,9 @@ func (parser Parser) ParseDeployAccount(ctx context.Context, raw *data.DeployAcc
 		ConstructorCalldata: raw.ConstructorCalldata,
 		MaxFee:              raw.MaxFee.Decimal(),
 		Nonce:               raw.Nonce.Decimal(),
-		Signature:           raw.Signature,
 	}
 
-	if class, err := parser.Resolver.FindClassByHash(ctx, raw.ClassHash); err != nil {
+	if class, err := parser.Resolver.FindClassByHash(ctx, raw.ClassHash, tx.Height); err != nil {
 		return tx, nil, err
 	} else if class != nil {
 		tx.Class = *class

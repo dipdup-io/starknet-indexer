@@ -7,9 +7,9 @@ go 1.19
 // replace github.com/dipdup-net/indexer-sdk => /usr/local/go/src/github.com/dipdup-net/indexer-sdk
 
 require (
-	github.com/dipdup-io/starknet-go-api v0.0.0-20230329170036-29fef3b8a992
-	github.com/dipdup-net/go-lib v0.2.29
-	github.com/dipdup-net/indexer-sdk v0.0.0-20230328204533-290eee37f74f
+	github.com/dipdup-io/starknet-go-api v0.0.0-20230414122905-3adea381dd31
+	github.com/dipdup-net/go-lib v0.2.31
+	github.com/dipdup-net/indexer-sdk v0.0.0-20230413120903-791a286443f9
 	github.com/dipdup-net/workerpool v0.0.2
 	github.com/go-pg/pg/v10 v10.11.0
 	github.com/karlseguin/ccache/v2 v2.0.8
@@ -20,7 +20,22 @@ require (
 	github.com/stretchr/testify v1.8.2
 )
 
-require github.com/goccy/go-json v0.10.2
+require (
+	github.com/goccy/go-json v0.10.2
+	github.com/tfkhsr/jsonschema v0.0.0-20180218143334-273afdd5a88c
+	golang.org/x/exp v0.0.0-20230206171751-46f607a40771
+	google.golang.org/grpc v1.50.1
+	google.golang.org/protobuf v1.28.1
+)
+
+require (
+	github.com/golang/protobuf v1.5.2 // indirect
+	github.com/json-iterator/go v1.1.12 // indirect
+	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
+	github.com/modern-go/reflect2 v1.0.2 // indirect
+	golang.org/x/net v0.8.0 // indirect
+	google.golang.org/genproto v0.0.0-20220930163606-c98284e70a91 // indirect
+)
 
 require (
 	github.com/btcsuite/btcd/btcec/v2 v2.3.2 // indirect
@@ -53,7 +68,7 @@ require (
 	golang.org/x/sys v0.6.0 // indirect
 	golang.org/x/text v0.8.0 // indirect
 	golang.org/x/time v0.3.0 // indirect
-	gopkg.in/yaml.v3 v3.0.1 // indirect
+	gopkg.in/yaml.v3 v3.0.1
 	gorm.io/driver/mysql v1.4.7 // indirect
 	gorm.io/driver/postgres v1.5.0 // indirect
 	gorm.io/driver/sqlite v1.4.4 // indirect

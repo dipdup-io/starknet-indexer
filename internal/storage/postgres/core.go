@@ -6,10 +6,10 @@ import (
 	models "github.com/dipdup-io/starknet-indexer/internal/storage"
 	"github.com/dipdup-net/go-lib/config"
 	"github.com/dipdup-net/go-lib/database"
-	"github.com/dipdup-net/indexer-sdk/pkg/storage"
 	"github.com/dipdup-net/indexer-sdk/pkg/storage/postgres"
 	"github.com/go-pg/pg/v10"
 	"github.com/go-pg/pg/v10/orm"
+	"github.com/rs/zerolog/log"
 )
 
 // Storage -
@@ -81,28 +81,7 @@ func Create(ctx context.Context, cfg config.Database) (Storage, error) {
 }
 
 func initDatabase(ctx context.Context, conn *database.PgGo) error {
-	for _, data := range []storage.Model{
-		&models.State{},
-		&models.Address{},
-		&models.Class{},
-		&models.StorageDiff{},
-		&models.Block{},
-		&models.Invoke{},
-		&models.Declare{},
-		&models.Deploy{},
-		&models.DeployAccount{},
-		&models.L1Handler{},
-		&models.Internal{},
-		&models.Event{},
-		&models.Message{},
-		&models.Transfer{},
-		&models.Fee{},
-		&models.ERC20{},
-		&models.ERC721{},
-		&models.ERC1155{},
-		&models.TokenBalance{},
-		&models.Proxy{},
-	} {
+	for _, data := range models.Models {
 		if err := conn.DB().WithContext(ctx).Model(data).CreateTable(&orm.CreateTableOptions{
 			IfNotExists: true,
 		}); err != nil {
@@ -116,6 +95,7 @@ func initDatabase(ctx context.Context, conn *database.PgGo) error {
 }
 
 func createIndices(ctx context.Context, conn *database.PgGo) error {
+	log.Info().Msg("creating indexes...")
 	return conn.DB().RunInTransaction(ctx, func(tx *pg.Tx) error {
 		// Address
 		if _, err := tx.ExecContext(ctx, `CREATE INDEX IF NOT EXISTS address_hash_idx ON address (hash)`); err != nil {
@@ -134,6 +114,61 @@ func createIndices(ctx context.Context, conn *database.PgGo) error {
 		if _, err := tx.ExecContext(ctx, `CREATE INDEX IF NOT EXISTS storage_diff_contract_id_idx ON storage_diff (contract_id)`); err != nil {
 			return err
 		}
+
+		// Invoke
+		if _, err := tx.ExecContext(ctx, `CREATE INDEX IF NOT EXISTS invoke_height_idx ON invoke USING BRIN (height)`); err != nil {
+			return err
+		}
+
+		// Declare
+		if _, err := tx.ExecContext(ctx, `CREATE INDEX IF NOT EXISTS declare_height_idx ON declare USING BRIN (height)`); err != nil {
+			return err
+		}
+
+		// Deploy
+		if _, err := tx.ExecContext(ctx, `CREATE INDEX IF NOT EXISTS deploy_height_idx ON deploy USING BRIN (height)`); err != nil {
+			return err
+		}
+
+		// DeployAccount
+		if _, err := tx.ExecContext(ctx, `CREATE INDEX IF NOT EXISTS deploy_account_height_idx ON deploy_account USING BRIN (height)`); err != nil {
+			return err
+		}
+
+		// L1 handler
+		if _, err := tx.ExecContext(ctx, `CREATE INDEX IF NOT EXISTS l1_handler_height_idx ON l1_handler USING BRIN (height)`); err != nil {
+			return err
+		}
+
+		// Fee
+		if _, err := tx.ExecContext(ctx, `CREATE INDEX IF NOT EXISTS fee_height_idx ON fee USING BRIN (height)`); err != nil {
+			return err
+		}
+
+		// Internal
+		if _, err := tx.ExecContext(ctx, `CREATE INDEX IF NOT EXISTS internal_tx_height_idx ON internal_tx USING BRIN (height)`); err != nil {
+			return err
+		}
+
+		// Event
+		if _, err := tx.ExecContext(ctx, `CREATE INDEX IF NOT EXISTS event_height_idx ON event USING BRIN (height)`); err != nil {
+			return err
+		}
+		if _, err := tx.ExecContext(ctx, `CREATE INDEX IF NOT EXISTS event_contract_id_idx ON event (contract_id, id)`); err != nil {
+			return err
+		}
+		if _, err := tx.ExecContext(ctx, `CREATE INDEX IF NOT EXISTS event_name_idx ON event (name, id)`); err != nil {
+			return err
+		}
+		if _, err := tx.ExecContext(ctx, `CREATE INDEX IF NOT EXISTS event_contract_name_idx ON event (contract_id, name, id)`); err != nil {
+			return err
+		}
+
+		// Message
+		if _, err := tx.ExecContext(ctx, `CREATE INDEX IF NOT EXISTS message_height_idx ON message USING BRIN (height)`); err != nil {
+			return err
+		}
+
 		return nil
 	})
 }

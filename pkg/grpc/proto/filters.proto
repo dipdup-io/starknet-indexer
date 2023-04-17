@@ -1,0 +1,74 @@
+syntax = "proto3";
+
+package proto;
+
+option go_package = "github.com/dipdup-io/starknet-indexer/pkg/grpc/pb";
+
+message BetweenInteger {
+    uint64 from = 1;
+    uint64 to = 2;
+}
+
+message IntegerFilter {
+    oneof filter {
+        uint64 gt = 1;
+        uint64 gte = 2;
+        uint64 lt = 3;
+        uint64 lte = 4;
+        uint64 eq = 5;
+        uint64 neq = 6; 
+        BetweenInteger between = 7;
+    }
+}
+
+message TimeFilter {
+    oneof filter {
+        uint64 gt = 1;
+        uint64 gte = 2;
+        uint64 lt = 3;
+        uint64 lte = 4;
+        BetweenInteger between = 5;
+    }
+}
+
+message EnumFilter {
+    oneof filter {
+        uint64 eq = 1;
+        uint64 neq = 2;
+        IntegerArray in = 3;
+        IntegerArray notin = 4;
+    }
+}
+
+message StringFilter {
+    oneof filter {
+        string eq = 1;
+        StringArray in = 2;
+    }
+}
+
+message EqualityFilter {
+    oneof filter {
+        string eq = 1;
+        string neq = 2;
+    }
+}
+
+message BytesFilter {
+    oneof filter {
+        bytes eq = 1;
+        BytesArray in = 2;
+    }
+}
+
+message StringArray {
+    repeated string arr = 1;
+}
+
+message IntegerArray {
+    repeated uint64 arr = 1;
+}
+
+message BytesArray {
+    repeated bytes arr = 1;
+}

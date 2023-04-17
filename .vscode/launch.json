@@ -26,6 +26,28 @@
                 "${workspaceFolder}/build/dipdup.yml"
             ],
             "envFile": "${workspaceFolder}/.env"
+        }, {
+            "name": "Launch Starknet Id",
+            "type": "go",
+            "request": "launch",
+            "mode": "debug",
+            "program": "${workspaceFolder}/cmd/rpc_tester",
+            "args": [
+                "-c",
+                "${workspaceFolder}/cmd/rpc_tester/starknet_id.yml"
+            ],
+            "envFile": "${workspaceFolder}/.env"
+        }, {
+            "name": "Launch Loot Survivor",
+            "type": "go",
+            "request": "launch",
+            "mode": "debug",
+            "program": "${workspaceFolder}/cmd/rpc_tester",
+            "args": [
+                "-c",
+                "${workspaceFolder}/cmd/rpc_tester/loot_survivor.yml"
+            ],
+            "envFile": "${workspaceFolder}/.env"
         }
     ]
 }

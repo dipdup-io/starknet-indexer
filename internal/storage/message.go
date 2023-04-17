@@ -10,6 +10,19 @@ import (
 // IMessage -
 type IMessage interface {
 	storage.Table[*Message]
+
+	Filterable[Message, MessageFilter]
+}
+
+// MessageFilter -
+type MessageFilter struct {
+	ID       IntegerFilter
+	Height   IntegerFilter
+	Time     TimeFilter
+	Contract BytesFilter
+	From     BytesFilter
+	To       BytesFilter
+	Selector EqualityFilter
 }
 
 // Message -
@@ -37,11 +50,17 @@ type Message struct {
 	Nonce      decimal.Decimal `pg:",type:numeric,use_zero"`
 	Payload    []string        `pg:",array"`
 
-	From Address `pg:"rel:has-one"`
-	To   Address `pg:"rel:has-one"`
+	From     Address `pg:"rel:has-one"`
+	To       Address `pg:"rel:has-one"`
+	Contract Address `pg:"rel:has-one"`
 }
 
 // TableName -
 func (Message) TableName() string {
 	return "message"
+}
+
+// GetHeight -
+func (msg Message) GetHeight() uint64 {
+	return msg.Height
 }

@@ -20,12 +20,18 @@ func NewDeployAccount(db *database.PgGo) *DeployAccount {
 	}
 }
 
-// ByHeight -
-func (d *DeployAccount) ByHeight(ctx context.Context, height, limit, offset uint64) (response []storage.DeployAccount, err error) {
-	err = d.DB().ModelContext(ctx, (*storage.DeployAccount)(nil)).
-		Where("height = ?", height).
-		Limit(int(limit)).
-		Offset(int(offset)).
-		Select(&response)
-	return
+// Filter -
+func (d *DeployAccount) Filter(ctx context.Context, fltr storage.DeployAccountFilter, opts ...storage.FilterOption) ([]storage.DeployAccount, error) {
+	q := d.DB().ModelContext(ctx, (*storage.DeployAccount)(nil))
+	q = integerFilter(q, "deploy_account.id", fltr.ID)
+	q = integerFilter(q, "height", fltr.Height)
+	q = timeFilter(q, "time", fltr.Time)
+	q = enumFilter(q, "status", fltr.Status)
+	q = addressFilter(q, "hash", fltr.Class, "Class")
+	q = jsonFilter(q, "parsed_calldata", fltr.ParsedCalldata)
+	q = optionsFilter(q, opts...)
+
+	var result []storage.DeployAccount
+	err := q.Select(&result)
+	return result, err
 }

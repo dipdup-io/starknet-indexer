@@ -61,8 +61,10 @@ func New(
 	storage postgres.Storage,
 ) *Indexer {
 	indexer := &Indexer{
-		cfg:             cfg,
-		outputs:         make(map[string]*modules.Output),
+		cfg: cfg,
+		outputs: map[string]*modules.Output{
+			OutputBlocks: modules.NewOutput(OutputBlocks),
+		},
 		queue:           make(map[uint64]receiver.Result),
 		stateRepo:       storage.State,
 		address:         storage.Address,
@@ -115,6 +117,7 @@ func New(
 
 // Start -
 func (indexer *Indexer) Start(ctx context.Context) {
+	log.Info().Msg("starting indexer...")
 	if err := indexer.init(ctx); err != nil {
 		log.Err(err).Msg("state initializing error")
 		return
@@ -342,7 +345,7 @@ func (indexer *Indexer) handleBlock(ctx context.Context, result receiver.Result)
 	}
 	l.Msg("indexed")
 
-	// indexer.notifyAllAboutBlock(storageData.Blocks)
+	indexer.notifyAllAboutBlock(parseResult.Block)
 	return nil
 }
 

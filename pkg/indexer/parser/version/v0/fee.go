@@ -127,7 +127,7 @@ func (parser FeeParser) ParseInvocation(ctx context.Context, txCtx data.TxContex
 		Internals: make([]storage.Internal, 0),
 	}
 
-	if class, err := parser.resolver.FindClassByHash(ctx, feeInvocation.ClassHash); err != nil {
+	if class, err := parser.resolver.FindClassByHash(ctx, feeInvocation.ClassHash, tx.Height); err != nil {
 		return nil, err
 	} else if class != nil {
 		tx.Class = *class

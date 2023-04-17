@@ -1,0 +1,31 @@
+syntax = "proto3";
+
+package proto;
+
+option go_package = "github.com/dipdup-io/starknet-indexer/pkg/grpc/pb";
+
+enum Status {
+    STATUS_RESERVED = 0;
+    STATUS_UNKNOWN = 1;
+    STATUS_NOT_RECEIVED = 2;
+    STATUS_RECEIVED = 3;
+    STATUS_PENDING = 4;
+    STATUS_REJECTED = 5;
+    STATUS_ACCEPTED_ON_L2 = 6;
+    STATUS_ACCEPTED_ON_L1 = 7;
+}
+
+enum CallType {
+    CALL_TYPE_RESERVED = 0;
+    CALL_TYPE_UNKNOWN = 1;
+    CALL_TYPE_CALL = 2;
+    CALL_TYPE_DELEGATE = 3;
+}
+
+enum EntrypointType {
+    ENTRYPOINT_TYPE_RESERVED = 0;
+    ENTRYPOINT_TYPE_UNKNOWN = 1;
+    ENTRYPOINT_TYPE_EXTERNAL = 2;
+    ENTRYPOINT_TYPE_CONSTRUCTOR = 3;
+    ENTRYPOINT_TYPE_L1_HANDLER = 4;
+}

@@ -1,7 +1,6 @@
 package storage
 
 import (
-	"context"
 	"time"
 
 	"github.com/dipdup-net/indexer-sdk/pkg/storage"
@@ -11,8 +10,16 @@ import (
 // IDeclare -
 type IDeclare interface {
 	storage.Table[*Declare]
+	Filterable[Declare, DeclareFilter]
+}
 
-	ByHeight(ctx context.Context, height, limit, offset uint64) ([]Declare, error)
+// DeclareFilter -
+type DeclareFilter struct {
+	ID      IntegerFilter
+	Height  IntegerFilter
+	Time    TimeFilter
+	Status  EnumFilter
+	Version EnumFilter
 }
 
 // Declare -
@@ -33,8 +40,6 @@ type Declare struct {
 	MaxFee     decimal.Decimal `pg:",type:numeric,use_zero"`
 	Nonce      decimal.Decimal `pg:",type:numeric,use_zero"`
 
-	Signature []string `pg:",array"`
-
 	Class     Class      `pg:"rel:has-one"`
 	Sender    Address    `pg:"rel:has-one"`
 	Contract  Address    `pg:"rel:has-one"`
@@ -48,4 +53,9 @@ type Declare struct {
 // TableName -
 func (Declare) TableName() string {
 	return "declare"
+}
+
+// GetHeight -
+func (d Declare) GetHeight() uint64 {
+	return d.Height
 }

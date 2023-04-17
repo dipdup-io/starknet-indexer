@@ -12,11 +12,10 @@ indexer:
   requests_per_second: ${STARKNET_RPS:-2}
   class_interfaces_dir: ${INDEXER_CLASS_INTERFACES_DIR:-./interfaces/}
   bridged_tokens_file: ${INDEXER_BRIDGED_TOKENS_FILE:-mainnet.json}
-  cache_dir: ${INDEXER_CACHE_DIR}
+  cache_dir: ${INDEXER_CACHE_DIR:-/etc/starknet}
 
 grpc:
-  server:
-    bind: ${GRPC_BIND:-127.0.0.1:7779}
+  bind: ${GRPC_BIND:-127.0.0.1:7779}
 
 database:
   kind: postgres
@@ -25,3 +24,15 @@ database:
   user: ${POSTGRES_USER:-dipdup}
   password: ${POSTGRES_PASSWORD:-changeme}
   database: ${POSTGRES_DB:-starknet}
+
+hasura:
+  url: http://${HASURA_HOST:-hasura}:${HASURA_PORT:-8080}
+  admin_secret: ${ADMIN_SECRET:-changeme}
+  select_limit: 100
+  allow_aggregation: false
+  source:
+    name: default
+    database_host: ${HASURA_POSTGRES_HOST}
+    use_prepared_statements: true
+    isolation_level: read-committed
+  rest: true

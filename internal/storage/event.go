@@ -11,6 +11,18 @@ type IEvent interface {
 	storage.Table[*Event]
 
 	Copiable[Event]
+	Filterable[Event, EventFilter]
+}
+
+// EventFilter -
+type EventFilter struct {
+	ID         IntegerFilter
+	Height     IntegerFilter
+	Time       TimeFilter
+	Contract   IdFilter
+	From       IdFilter
+	Name       StringFilter
+	ParsedData map[string]string
 }
 
 // Event -
@@ -38,10 +50,16 @@ type Event struct {
 	Name       string
 	ParsedData map[string]any
 
-	From Address `pg:"rel:has-one"`
+	From     Address `pg:"rel:has-one"`
+	Contract Address `pg:"rel:has-one"`
 }
 
 // TableName -
 func (Event) TableName() string {
 	return "event"
+}
+
+// GetHeight -
+func (e Event) GetHeight() uint64 {
+	return e.Height
 }

@@ -20,12 +20,17 @@ func NewDeclare(db *database.PgGo) *Declare {
 	}
 }
 
-// ByHeight -
-func (d *Declare) ByHeight(ctx context.Context, height, limit, offset uint64) (response []storage.Declare, err error) {
-	err = d.DB().ModelContext(ctx, (*storage.Declare)(nil)).
-		Where("height = ?", height).
-		Limit(int(limit)).
-		Offset(int(offset)).
-		Select(&response)
-	return
+// Filter -
+func (d *Declare) Filter(ctx context.Context, fltr storage.DeclareFilter, opts ...storage.FilterOption) ([]storage.Declare, error) {
+	q := d.DB().ModelContext(ctx, (*storage.Declare)(nil))
+	q = integerFilter(q, "declare.id", fltr.ID)
+	q = integerFilter(q, "height", fltr.Height)
+	q = timeFilter(q, "time", fltr.Time)
+	q = enumFilter(q, "status", fltr.Status)
+	q = enumFilter(q, "version", fltr.Version)
+	q = optionsFilter(q, opts...)
+
+	var declares []storage.Declare
+	err := q.Select(&declares)
+	return declares, err
 }

@@ -1,0 +1,69 @@
+syntax = "proto3";
+
+package proto;
+
+option go_package = "github.com/dipdup-io/starknet-indexer/pkg/grpc/pb";
+
+import "github.com/dipdup-net/indexer-sdk/pkg/modules/grpc/proto/general.proto";
+import "github.com/dipdup-io/starknet-indexer/pkg/grpc/proto/entity_filters.proto";
+import "github.com/dipdup-io/starknet-indexer/pkg/grpc/proto/response.proto";
+
+
+service IndexerService {
+    rpc Subscribe(SubscribeRequest) returns(stream Subscription);
+    rpc Unsubscribe(UnsubscribeRequest) returns (UnsubscribeResponse);
+
+    rpc JSONSchemaForClass(Bytes) returns(Bytes);
+    rpc JSONSchemaForContract(Bytes) returns(Bytes);
+}
+
+message SubscribeRequest {
+    bool head = 1;    
+    InvokeFilters invokes = 2;
+    DeclareFilters declares = 3;
+    DeployFilters deploys = 4;
+    DeployAccountFilters deploy_accounts = 5;
+    L1HandlerFilter l1_handlers = 6;
+    InternalFilter internals = 7;
+    FeeFilter fees = 8;
+    EventFilter events = 9;
+    MessageFilter msgs = 10;
+    TransferFilter transfers = 11;
+    StorageDiffFilter storage_diffs = 12;
+    TokenBalanceFilter token_balances = 13;
+}
+
+message Subscription {
+    SubscribeResponse response = 1;
+    Block block = 2;
+    Declare declare = 3;
+    Deploy deploy = 4;
+    DeployAccount deploy_account = 5;
+    Event event = 6;
+    Fee fee = 7;
+    Internal internal = 8;
+    Invoke invoke = 9;
+    L1Handler l1_handler = 10;
+    StarknetMessage message = 11;
+    StorageDiff storage_diff = 12;
+    TokenBalance token_balance = 13;
+    Transfer transfer = 14;
+    bool end_of_block = 15;
+}
+
+message Bytes {
+    bytes data = 1;
+}
+
+message JsonSchema {
+    repeated JsonSchemaItem functions = 1;
+    repeated JsonSchemaItem l1_handlers = 2;
+    repeated JsonSchemaItem constructors = 3;
+    repeated JsonSchemaItem events = 4;
+    repeated JsonSchemaItem structs = 5;
+}
+
+message JsonSchemaItem {
+    string name = 1;
+    bytes schema = 2;
+}

@@ -11,6 +11,8 @@ type IAddress interface {
 	storage.Table[*Address]
 
 	GetByHash(ctx context.Context, hash []byte) (Address, error)
+	GetAddresses(ctx context.Context, ids ...uint64) ([]Address, error)
+	GetIdsByHash(ctx context.Context, hash [][]byte) (ids []uint64, err error)
 }
 
 // Address -

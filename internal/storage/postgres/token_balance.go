@@ -86,3 +86,16 @@ func (tb *TokenBalance) Balances(ctx context.Context, contractId uint64, tokenId
 		Select(&balances)
 	return
 }
+
+// Filter -
+func (tb *TokenBalance) Filter(ctx context.Context, fltr storage.TokenBalanceFilter, opts ...storage.FilterOption) ([]storage.TokenBalance, error) {
+	q := tb.DB().ModelContext(ctx, (*storage.TokenBalance)(nil))
+	q = addressFilter(q, "hash", fltr.Contract, "Contract")
+	q = addressFilter(q, "hash", fltr.Owner, "Owner")
+	q = stringFilter(q, "token_id", fltr.TokenId)
+	q = optionsFilter(q, opts...)
+
+	var result []storage.TokenBalance
+	err := q.Select(&result)
+	return result, err
+}
