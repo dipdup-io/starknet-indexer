@@ -29,15 +29,15 @@ type TokenBalanceFilter struct {
 // TokenBalance -
 type TokenBalance struct {
 	// nolint
-	tableName struct{} `pg:"token_balance"`
+	tableName struct{} `pg:"token_balance,comment:Table with token balances"`
 
-	OwnerID    uint64          `pg:",pk"`
-	ContractID uint64          `pg:",pk"`
-	TokenID    decimal.Decimal `pg:",pk,type:numeric,use_zero"`
-	Balance    decimal.Decimal `pg:",type:numeric,use_zero"`
+	OwnerID    uint64          `pg:",pk,comment:Identity of owner address"`
+	ContractID uint64          `pg:",pk,comment:Identity of contract address"`
+	TokenID    decimal.Decimal `pg:",pk,type:numeric,use_zero,comment:Token id"`
+	Balance    decimal.Decimal `pg:",type:numeric,use_zero,comment:Token balance"`
 
-	Contract Address `pg:"rel:has-one"`
-	Owner    Address `pg:"rel:has-one"`
+	Contract Address `pg:"rel:has-one" hasura:"table:address,field:contract_id,remote_field:id,type:oto,name:contract"`
+	Owner    Address `pg:"rel:has-one" hasura:"table:address,field:owner_id,remote_field:id,type:oto,name:owner"`
 }
 
 // TableName -

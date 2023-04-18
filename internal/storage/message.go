@@ -28,31 +28,31 @@ type MessageFilter struct {
 // Message -
 type Message struct {
 	// nolint
-	tableName struct{} `pg:"message,partition_by:RANGE(time)"`
+	tableName struct{} `pg:"message,partition_by:RANGE(time),comment:Table with messages"`
 
-	ID     uint64    `pg:",pk"`
-	Height uint64    `pg:",use_zero"`
-	Time   time.Time `pg:",pk"`
+	ID     uint64    `pg:",pk,comment:Unique internal identity"`
+	Height uint64    `pg:",use_zero,comment:Block height"`
+	Time   time.Time `pg:",pk,comment:Time of block"`
 
-	DeclareID       *uint64
-	DeployID        *uint64
-	DeployAccountID *uint64
-	InvokeID        *uint64
-	L1HandlerID     *uint64
-	FeeID           *uint64
-	InternalID      *uint64
+	InvokeID        *uint64 `pg:",comment:Parent invoke id"`
+	DeclareID       *uint64 `pg:",comment:Parent declare id"`
+	DeployID        *uint64 `pg:",comment:Parent deploy id"`
+	DeployAccountID *uint64 `pg:",comment:Parent deploy account id"`
+	L1HandlerID     *uint64 `pg:",comment:Parent l1 handler id"`
+	FeeID           *uint64 `pg:",comment:Parent fee invocation id"`
+	InternalID      *uint64 `pg:",comment:Parent internal transaction id"`
 
-	ContractID uint64
-	Order      uint64
-	FromID     uint64
-	ToID       uint64
-	Selector   string
-	Nonce      decimal.Decimal `pg:",type:numeric,use_zero"`
-	Payload    []string        `pg:",array"`
+	ContractID uint64          `pg:",comment:Contract address id"`
+	Order      uint64          `pg:",comment:Order in block"`
+	FromID     uint64          `pg:",comment:From address id"`
+	ToID       uint64          `pg:",comment:To address id"`
+	Selector   string          `pg:",comment:Called selector"`
+	Nonce      decimal.Decimal `pg:",type:numeric,use_zero,comment:The transaction nonce"`
+	Payload    []string        `pg:",array,comment:Message payload"`
 
-	From     Address `pg:"rel:has-one"`
-	To       Address `pg:"rel:has-one"`
-	Contract Address `pg:"rel:has-one"`
+	From     Address `pg:"rel:has-one" hasura:"table:address,field:from_id,remote_field:id,type:oto,name:from"`
+	To       Address `pg:"rel:has-one" hasura:"table:address,field:to_id,remote_field:id,type:oto,name:to"`
+	Contract Address `pg:"rel:has-one" hasura:"table:address,field:contract_id,remote_field:id,type:oto,name:contract"`
 }
 
 // TableName -

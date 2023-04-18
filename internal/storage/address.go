@@ -18,14 +18,14 @@ type IAddress interface {
 // Address -
 type Address struct {
 	// nolint
-	tableName struct{} `pg:"address"`
+	tableName struct{} `pg:"address,comment:Table with starknet and ethereum addresses."`
 
-	ID      uint64 `pg:"id,type:bigint,pk,notnull"`
-	ClassID *uint64
-	Height  uint64 `pg:",use_zero"`
-	Hash    []byte `pg:",unique:address_hash"`
+	ID      uint64  `pg:"id,type:bigint,pk,notnull,comment:Unique internal identity"`
+	ClassID *uint64 `pg:",comment:Class identity. It is NULL for ethereum addresses."`
+	Height  uint64  `pg:",use_zero,comment:Block number of the first address occurrence."`
+	Hash    []byte  `pg:",unique:address_hash,comment:Address hash."`
 
-	Class Class `pg:"rel:has-one"`
+	Class Class `pg:"rel:has-one" hasura:"table:class,field:class_id,remote_field:id,type:oto,name:class"`
 }
 
 // TableName -

@@ -16,14 +16,14 @@ type IClass interface {
 // Class -
 type Class struct {
 	// nolint
-	tableName struct{} `pg:"class"`
+	tableName struct{} `pg:"class,comment:Classes table"`
 
-	ID     uint64    `pg:"id,type:bigint,pk,notnull"`
-	Type   ClassType `pg:",use_zero"`
-	Hash   []byte    `pg:",unique:class_hash"`
-	Abi    Bytes     `pg:",type:bytea"`
-	Height uint64    `pg:",use_zero"`
-	Cairo  int       `pg:",default:0,type:SMALLINT"`
+	ID     uint64    `pg:"id,type:bigint,pk,notnull,comment:Unique internal identity"`
+	Type   ClassType `pg:",use_zero,comment:Class type. It’s a binary mask."`
+	Hash   []byte    `pg:",unique:class_hash,comment:Class hash"`
+	Abi    Bytes     `pg:",type:bytea,comment:Class abi in a raw"`
+	Height uint64    `pg:",use_zero,comment:Block height of the first class occurance"`
+	Cairo  int       `pg:",default:0,type:SMALLINT,comment:Cairo version of class"`
 }
 
 // TableName -
