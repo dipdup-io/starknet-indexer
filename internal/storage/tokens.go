@@ -16,15 +16,15 @@ type ERC20 struct {
 	// nolint
 	tableName struct{} `pg:"erc20"`
 
-	ID           uint64
-	DeployHeight uint64 `pg:",use_zero"`
-	DeployTime   time.Time
-	ContractID   uint64
-	Name         string
-	Symbol       string
-	Decimals     uint64
+	ID           uint64    `pg:",comment:Unique internal identity"`
+	DeployHeight uint64    `pg:",use_zero,comment:Block height when token was deployed"`
+	DeployTime   time.Time `pg:",comment:Time of block when token was deployed"`
+	ContractID   uint64    `pg:",comment:Token contract id"`
+	Name         string    `pg:",comment:Token name"`
+	Symbol       string    `pg:",comment:Token symbol"`
+	Decimals     uint64    `pg:",comment:Token decimals"`
 
-	Contract Address `pg:"rel:has-one"`
+	Contract Address `pg:"rel:has-one" hasura:"table:address,field:contract_id,remote_field:id,type:oto,name:contract"`
 }
 
 // TableName -
@@ -42,16 +42,16 @@ type ERC721 struct {
 	// nolint
 	tableName struct{} `pg:"erc721"`
 
-	ID           uint64
-	DeployHeight uint64 `pg:",use_zero"`
-	DeployTime   time.Time
-	ContractID   uint64
-	Name         string
-	Symbol       string
-	OwnerID      uint64
+	ID           uint64    `pg:",comment:Unique internal identity"`
+	DeployHeight uint64    `pg:",use_zero,comment:Block height when token was deployed"`
+	DeployTime   time.Time `pg:",comment:Time of block when token was deployed"`
+	ContractID   uint64    `pg:",comment:Token contract id"`
+	Name         string    `pg:",comment:Token name"`
+	Symbol       string    `pg:",comment:Token symbol"`
+	OwnerID      uint64    `pg:",comment:Token owner id"`
 
-	Contract Address `pg:"rel:has-one"`
-	Owner    Address `pg:"rel:has-one"`
+	Contract Address `pg:"rel:has-one" hasura:"table:address,field:contract_id,remote_field:id,type:oto,name:contract"`
+	Owner    Address `pg:"rel:has-one" hasura:"table:address,field:owner_id,remote_field:id,type:oto,name:owner"`
 }
 
 // TableName -
@@ -69,15 +69,15 @@ type ERC1155 struct {
 	// nolint
 	tableName struct{} `pg:"erc1155"`
 
-	ID           uint64
-	DeployHeight uint64 `pg:",use_zero"`
-	DeployTime   time.Time
-	ContractID   uint64
-	TokenUri     string
-	OwnerID      uint64
+	ID           uint64    `pg:",comment:Unique internal identity"`
+	DeployHeight uint64    `pg:",use_zero,comment:Block height when token was deployed"`
+	DeployTime   time.Time `pg:",comment:Time of block when token was deployed"`
+	ContractID   uint64    `pg:",comment:Token contract id"`
+	TokenUri     string    `pg:",comment:Token uri"`
+	OwnerID      uint64    `pg:",comment:Token owner id"`
 
-	Contract Address `pg:"rel:has-one"`
-	Owner    Address `pg:"rel:has-one"`
+	Contract Address `pg:"rel:has-one" hasura:"table:address,field:contract_id,remote_field:id,type:oto,name:contract"`
+	Owner    Address `pg:"rel:has-one" hasura:"table:address,field:owner_id,remote_field:id,type:oto,name:owner"`
 }
 
 // TableName -

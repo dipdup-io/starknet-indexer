@@ -30,24 +30,24 @@ type InvokeFilter struct {
 // Invoke -
 type Invoke struct {
 	// nolint
-	tableName struct{} `pg:"invoke,partition_by:RANGE(time)"`
+	tableName struct{} `pg:"invoke,partition_by:RANGE(time),comment:Table with invokes"`
 
-	ID                 uint64    `pg:"id,type:bigint,pk,notnull"`
-	Height             uint64    `pg:",use_zero"`
-	Time               time.Time `pg:",pk"`
-	Status             Status    `pg:",use_zero"`
-	Hash               []byte
-	Version            uint64 `pg:",use_zero"`
-	Position           int    `pg:",use_zero"`
-	ContractID         uint64
-	EntrypointSelector []byte
-	Entrypoint         string
-	MaxFee             decimal.Decimal `pg:",type:numeric,use_zero"`
-	Nonce              decimal.Decimal `pg:",type:numeric,use_zero"`
-	CallData           []string        `pg:",array"`
-	ParsedCalldata     map[string]any
+	ID                 uint64          `pg:"id,type:bigint,pk,notnull,comment:Unique internal identity"`
+	Height             uint64          `pg:",use_zero,comment:Block height"`
+	Time               time.Time       `pg:",pk,comment:Time of block"`
+	Status             Status          `pg:",use_zero,comment:Status in blockchain (unknown - 1 | not received - 2  | received - 3 | pending - 4 | rejected - 5 | accepted on l2 - 6 | accepted on l1 - 7 )"`
+	Hash               []byte          `pg:",comment:Transaction hash"`
+	Version            uint64          `pg:",use_zero,comment:Version of invoke transaction"`
+	Position           int             `pg:",use_zero,comment:Order in block"`
+	ContractID         uint64          `pg:",comment:Contract address id"`
+	EntrypointSelector []byte          `pg:",comment:Called selector"`
+	Entrypoint         string          `pg:",comment:Entrypoint name"`
+	MaxFee             decimal.Decimal `pg:",type:numeric,use_zero,comment:The maximum fee that the sender is willing to pay for the transaction"`
+	Nonce              decimal.Decimal `pg:",type:numeric,use_zero,comment:The transaction nonce"`
+	CallData           []string        `pg:",array,comment:Raw calldata"`
+	ParsedCalldata     map[string]any  `pg:",comment:Calldata parsed according to contract ABI"`
 
-	Contract  Address    `pg:"rel:has-one"`
+	Contract  Address    `pg:"rel:has-one" hasura:"table:address,field:contract_id,remote_field:id,type:oto,name:contract"`
 	Internals []Internal `pg:"rel:has-many"`
 	Messages  []Message  `pg:"rel:has-many"`
 	Events    []Event    `pg:"rel:has-many"`

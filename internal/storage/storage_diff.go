@@ -28,13 +28,13 @@ type StorageDiff struct {
 	// nolint
 	tableName struct{} `pg:"storage_diff"`
 
-	ID         uint64
-	Height     uint64 `pg:",use_zero"`
-	ContractID uint64
-	Key        []byte
-	Value      []byte
+	ID         uint64 `pg:",comment:Unique internal identity"`
+	Height     uint64 `pg:",use_zero,comment:Block height"`
+	ContractID uint64 `pg:",comment:Contract id which storage was changed"`
+	Key        []byte `pg:",comment:Storage key"`
+	Value      []byte `pg:",comment:Data"`
 
-	Contract Address `pg:"rel:has-one"`
+	Contract Address `pg:"rel:has-one" hasura:"table:address,field:contract_id,remote_field:id,type:oto,name:contract"`
 }
 
 // TableName -

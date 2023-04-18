@@ -28,30 +28,30 @@ type EventFilter struct {
 // Event -
 type Event struct {
 	// nolint
-	tableName struct{} `pg:"event,partition_by:RANGE(time)"`
+	tableName struct{} `pg:"event,partition_by:RANGE(time),comment:Table with events"`
 
-	ID     uint64    `pg:"id,type:bigint,pk,notnull"`
-	Height uint64    `pg:",use_zero"`
-	Time   time.Time `pg:",pk"`
+	ID     uint64    `pg:"id,type:bigint,pk,notnull,comment:Unique internal identity"`
+	Height uint64    `pg:",use_zero,comment:Block height"`
+	Time   time.Time `pg:",pk,comment:Time of block"`
 
-	DeclareID       *uint64
-	DeployID        *uint64
-	DeployAccountID *uint64
-	InvokeID        *uint64
-	L1HandlerID     *uint64
-	FeeID           *uint64
-	InternalID      *uint64
+	InvokeID        *uint64 `pg:",comment:Parent invoke id"`
+	DeclareID       *uint64 `pg:",comment:Parent declare id"`
+	DeployID        *uint64 `pg:",comment:Parent deploy id"`
+	DeployAccountID *uint64 `pg:",comment:Parent deploy account id"`
+	L1HandlerID     *uint64 `pg:",comment:Parent l1 handler id"`
+	FeeID           *uint64 `pg:",comment:Parent fee invocation id"`
+	InternalID      *uint64 `pg:",comment:Parent internal transaction id"`
 
-	Order      uint64
-	ContractID uint64
-	FromID     uint64
-	Keys       []string `pg:",array"`
-	Data       []string `pg:",array"`
-	Name       string
-	ParsedData map[string]any
+	Order      uint64         `pg:",comment:Order in block"`
+	ContractID uint64         `pg:",comment:Contract address id"`
+	FromID     uint64         `pg:",comment:From address id"`
+	Keys       []string       `pg:",array,comment:Raw event keys"`
+	Data       []string       `pg:",array,comment:Raw event data"`
+	Name       string         `pg:",comment:Event name"`
+	ParsedData map[string]any `pg:",comment:Event data parsed according to contract ABI"`
 
-	From     Address `pg:"rel:has-one"`
-	Contract Address `pg:"rel:has-one"`
+	From     Address `pg:"rel:has-one" hasura:"table:address,field:from_id,remote_field:id,type:oto,name:from"`
+	Contract Address `pg:"rel:has-one" hasura:"table:address,field:contract_id,remote_field:id,type:oto,name:contract"`
 }
 
 // TableName -

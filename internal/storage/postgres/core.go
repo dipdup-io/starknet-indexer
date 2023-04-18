@@ -91,6 +91,11 @@ func initDatabase(ctx context.Context, conn *database.PgGo) error {
 			return err
 		}
 	}
+
+	if err := makeComments(ctx, conn); err != nil {
+		return err
+	}
+
 	return createIndices(ctx, conn)
 }
 
