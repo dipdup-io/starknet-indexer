@@ -23,9 +23,13 @@ const _ = grpc.SupportPackageIsVersion7
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type IndexerServiceClient interface {
+	// Subscribe to live notification from indexer
 	Subscribe(ctx context.Context, in *SubscribeRequest, opts ...grpc.CallOption) (IndexerService_SubscribeClient, error)
+	// Unsubscribe from live notification from indexer
 	Unsubscribe(ctx context.Context, in *pb.UnsubscribeRequest, opts ...grpc.CallOption) (*pb.UnsubscribeResponse, error)
+	// Receives JSON schema of class ABI by class hash
 	JSONSchemaForClass(ctx context.Context, in *Bytes, opts ...grpc.CallOption) (*Bytes, error)
+	// Receives JSON schema of class ABI by contract hash
 	JSONSchemaForContract(ctx context.Context, in *Bytes, opts ...grpc.CallOption) (*Bytes, error)
 }
 
@@ -100,9 +104,13 @@ func (c *indexerServiceClient) JSONSchemaForContract(ctx context.Context, in *By
 // All implementations must embed UnimplementedIndexerServiceServer
 // for forward compatibility
 type IndexerServiceServer interface {
+	// Subscribe to live notification from indexer
 	Subscribe(*SubscribeRequest, IndexerService_SubscribeServer) error
+	// Unsubscribe from live notification from indexer
 	Unsubscribe(context.Context, *pb.UnsubscribeRequest) (*pb.UnsubscribeResponse, error)
+	// Receives JSON schema of class ABI by class hash
 	JSONSchemaForClass(context.Context, *Bytes) (*Bytes, error)
+	// Receives JSON schema of class ABI by contract hash
 	JSONSchemaForContract(context.Context, *Bytes) (*Bytes, error)
 	mustEmbedUnimplementedIndexerServiceServer()
 }

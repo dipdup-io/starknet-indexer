@@ -8,15 +8,24 @@ import "github.com/dipdup-net/indexer-sdk/pkg/modules/grpc/proto/general.proto";
 import "github.com/dipdup-io/starknet-indexer/pkg/grpc/proto/entity_filters.proto";
 import "github.com/dipdup-io/starknet-indexer/pkg/grpc/proto/response.proto";
 
-
+/**
+* Desription of server interface 
+**/
 service IndexerService {
+    // Subscribe to live notification from indexer
     rpc Subscribe(SubscribeRequest) returns(stream Subscription);
+    // Unsubscribe from live notification from indexer
     rpc Unsubscribe(UnsubscribeRequest) returns (UnsubscribeResponse);
 
+    // Receives JSON schema of class ABI by class hash
     rpc JSONSchemaForClass(Bytes) returns(Bytes);
+    // Receives JSON schema of class ABI by contract hash
     rpc JSONSchemaForContract(Bytes) returns(Bytes);
 }
 
+/**
+* List of requested subscriptions
+**/
 message SubscribeRequest {
     bool head = 1;    
     InvokeFilters invokes = 2;
@@ -33,8 +42,11 @@ message SubscribeRequest {
     TokenBalanceFilter token_balances = 13;
 }
 
+/**
+* Subscription entity. It contains subscription id and subscription's live notifications. It's response on `Subscribe` request.
+**/
 message Subscription {
-    SubscribeResponse response = 1;
+    SubscribeResponse response = 1; // message containing subscription id
     Block block = 2;
     Declare declare = 3;
     Deploy deploy = 4;
@@ -48,22 +60,31 @@ message Subscription {
     StorageDiff storage_diff = 12;
     TokenBalance token_balance = 13;
     Transfer transfer = 14;
-    bool end_of_block = 15;
+    bool end_of_block = 15; // message which signals about block data ends
 }
 
+/**
+* Bytes array
+**/
 message Bytes {
-    bytes data = 1;
+    bytes data = 1; // array
 }
 
+/**
+* Json schema entity
+**/
 message JsonSchema {
-    repeated JsonSchemaItem functions = 1;
-    repeated JsonSchemaItem l1_handlers = 2;
-    repeated JsonSchemaItem constructors = 3;
-    repeated JsonSchemaItem events = 4;
-    repeated JsonSchemaItem structs = 5;
+    repeated JsonSchemaItem functions = 1; // list of functions json schema
+    repeated JsonSchemaItem l1_handlers = 2; // list of l1 handlers json schema
+    repeated JsonSchemaItem constructors = 3; // // list of contructors json schema
+    repeated JsonSchemaItem events = 4; // list of events json schema
+    repeated JsonSchemaItem structs = 5; // list of declared structures json schema
 }
 
+/**
+* Json schema item
+**/
 message JsonSchemaItem {
-    string name = 1;
-    bytes schema = 2;
+    string name = 1; // name of json schema item
+    bytes schema = 2; // json schema
 }

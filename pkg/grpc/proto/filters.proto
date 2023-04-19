@@ -4,71 +4,101 @@ package proto;
 
 option go_package = "github.com/dipdup-io/starknet-indexer/pkg/grpc/pb";
 
+/**
+* Between unsigned interger filter. Equals to SQL expression: `x BETWEEN from AND to`.
+**/
 message BetweenInteger {
-    uint64 from = 1;
-    uint64 to = 2;
+    uint64 from = 1; // from value
+    uint64 to = 2; // to value
 }
 
+/**
+* Set of integer filters
+**/
 message IntegerFilter {
     oneof filter {
-        uint64 gt = 1;
-        uint64 gte = 2;
-        uint64 lt = 3;
-        uint64 lte = 4;
-        uint64 eq = 5;
-        uint64 neq = 6; 
-        BetweenInteger between = 7;
+        uint64 gt = 1; // greater than
+        uint64 gte = 2; // greater than or equals
+        uint64 lt = 3; // less than
+        uint64 lte = 4; // less than or equals
+        uint64 eq = 5; // equals
+        uint64 neq = 6;  // not equals
+        BetweenInteger between = 7; // between
     }
 }
 
+/**
+* Set of time filters
+**/
 message TimeFilter {
     oneof filter {
-        uint64 gt = 1;
-        uint64 gte = 2;
-        uint64 lt = 3;
-        uint64 lte = 4;
-        BetweenInteger between = 5;
+        uint64 gt = 1; // greater than
+        uint64 gte = 2; // greater than or equals
+        uint64 lt = 3; // less than
+        uint64 lte = 4;  // less than or equals
+        BetweenInteger between = 5; // between
     }
 }
 
+/**
+* Set of filters for enumerations
+**/
 message EnumFilter {
     oneof filter {
-        uint64 eq = 1;
-        uint64 neq = 2;
-        IntegerArray in = 3;
-        IntegerArray notin = 4;
+        uint64 eq = 1; // equals
+        uint64 neq = 2; // not equals
+        IntegerArray in = 3; // check the value is in array `x IN (1,2,3,4)`
+        IntegerArray notin = 4; // check the value is not in array `x NOT IN (1,2,3,4)`
     }
 }
 
+/**
+* Set of string filters 
+**/
 message StringFilter {
     oneof filter {
-        string eq = 1;
-        StringArray in = 2;
+        string eq = 1; // equals
+        StringArray in = 2; // check the value is in array `x IN (a, abc)`
     }
 }
 
+/**
+* Equality filters 
+**/
 message EqualityFilter {
     oneof filter {
-        string eq = 1;
-        string neq = 2;
+        string eq = 1; // equals
+        string neq = 2; // not equals
     }
 }
 
+/**
+* Set of bytes filters 
+**/
 message BytesFilter {
     oneof filter {
-        bytes eq = 1;
-        BytesArray in = 2;
+        bytes eq = 1; // equals
+        BytesArray in = 2; // check the value is in array `x IN (\x00, \x0010)`
     }
 }
 
+/**
+* Wrapper over string array for using `repeated` option 
+**/
 message StringArray {
-    repeated string arr = 1;
+    repeated string arr = 1; // array
 }
 
+/**
+* Wrapper over integer array for using `repeated` option 
+**/
 message IntegerArray {
-    repeated uint64 arr = 1;
+    repeated uint64 arr = 1; // array
 }
 
+/**
+* Wrapper over bytes array for using `repeated` option 
+**/
 message BytesArray {
-    repeated bytes arr = 1;
+    repeated bytes arr = 1; // array
 }
