@@ -16,6 +16,8 @@ loot_survivor:
 build-proto:
 	protoc \
 		-I=${GOPATH}/src \
+		--doc_out=${GOPATH}/src/github.com/dipdup-io/starknet-indexer/pkg/grpc \
+		--doc_opt=markdown,README.md \
 		--go-grpc_out=${GOPATH}/src \
 		--go_out=${GOPATH}/src \
 		${GOPATH}/src/github.com/dipdup-io/starknet-indexer/pkg/grpc/proto/*.proto

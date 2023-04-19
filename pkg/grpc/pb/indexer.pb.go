@@ -21,6 +21,8 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
+// *
+// List of requested subscriptions
 type SubscribeRequest struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -164,12 +166,14 @@ func (x *SubscribeRequest) GetTokenBalances() *TokenBalanceFilter {
 	return nil
 }
 
+// *
+// Subscription entity. It contains subscription id and subscription's live notifications. It's response on `Subscribe` request.
 type Subscription struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Response      *pb.SubscribeResponse `protobuf:"bytes,1,opt,name=response,proto3" json:"response,omitempty"`
+	Response      *pb.SubscribeResponse `protobuf:"bytes,1,opt,name=response,proto3" json:"response,omitempty"` // message containing subscription id
 	Block         *Block                `protobuf:"bytes,2,opt,name=block,proto3" json:"block,omitempty"`
 	Declare       *Declare              `protobuf:"bytes,3,opt,name=declare,proto3" json:"declare,omitempty"`
 	Deploy        *Deploy               `protobuf:"bytes,4,opt,name=deploy,proto3" json:"deploy,omitempty"`
@@ -183,7 +187,7 @@ type Subscription struct {
 	StorageDiff   *StorageDiff          `protobuf:"bytes,12,opt,name=storage_diff,json=storageDiff,proto3" json:"storage_diff,omitempty"`
 	TokenBalance  *TokenBalance         `protobuf:"bytes,13,opt,name=token_balance,json=tokenBalance,proto3" json:"token_balance,omitempty"`
 	Transfer      *Transfer             `protobuf:"bytes,14,opt,name=transfer,proto3" json:"transfer,omitempty"`
-	EndOfBlock    bool                  `protobuf:"varint,15,opt,name=end_of_block,json=endOfBlock,proto3" json:"end_of_block,omitempty"`
+	EndOfBlock    bool                  `protobuf:"varint,15,opt,name=end_of_block,json=endOfBlock,proto3" json:"end_of_block,omitempty"` // message which signals about block data ends
 }
 
 func (x *Subscription) Reset() {
@@ -323,12 +327,14 @@ func (x *Subscription) GetEndOfBlock() bool {
 	return false
 }
 
+// *
+// Bytes array
 type Bytes struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Data []byte `protobuf:"bytes,1,opt,name=data,proto3" json:"data,omitempty"`
+	Data []byte `protobuf:"bytes,1,opt,name=data,proto3" json:"data,omitempty"` // array
 }
 
 func (x *Bytes) Reset() {
@@ -370,16 +376,18 @@ func (x *Bytes) GetData() []byte {
 	return nil
 }
 
+// *
+// Json schema entity
 type JsonSchema struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Functions    []*JsonSchemaItem `protobuf:"bytes,1,rep,name=functions,proto3" json:"functions,omitempty"`
-	L1Handlers   []*JsonSchemaItem `protobuf:"bytes,2,rep,name=l1_handlers,json=l1Handlers,proto3" json:"l1_handlers,omitempty"`
-	Constructors []*JsonSchemaItem `protobuf:"bytes,3,rep,name=constructors,proto3" json:"constructors,omitempty"`
-	Events       []*JsonSchemaItem `protobuf:"bytes,4,rep,name=events,proto3" json:"events,omitempty"`
-	Structs      []*JsonSchemaItem `protobuf:"bytes,5,rep,name=structs,proto3" json:"structs,omitempty"`
+	Functions    []*JsonSchemaItem `protobuf:"bytes,1,rep,name=functions,proto3" json:"functions,omitempty"`                     // list of functions json schema
+	L1Handlers   []*JsonSchemaItem `protobuf:"bytes,2,rep,name=l1_handlers,json=l1Handlers,proto3" json:"l1_handlers,omitempty"` // list of l1 handlers json schema
+	Constructors []*JsonSchemaItem `protobuf:"bytes,3,rep,name=constructors,proto3" json:"constructors,omitempty"`               // // list of contructors json schema
+	Events       []*JsonSchemaItem `protobuf:"bytes,4,rep,name=events,proto3" json:"events,omitempty"`                           // list of events json schema
+	Structs      []*JsonSchemaItem `protobuf:"bytes,5,rep,name=structs,proto3" json:"structs,omitempty"`                         // list of declared structures json schema
 }
 
 func (x *JsonSchema) Reset() {
@@ -449,13 +457,15 @@ func (x *JsonSchema) GetStructs() []*JsonSchemaItem {
 	return nil
 }
 
+// *
+// Json schema item
 type JsonSchemaItem struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Name   string `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
-	Schema []byte `protobuf:"bytes,2,opt,name=schema,proto3" json:"schema,omitempty"`
+	Name   string `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`     // name of json schema item
+	Schema []byte `protobuf:"bytes,2,opt,name=schema,proto3" json:"schema,omitempty"` // json schema
 }
 
 func (x *JsonSchemaItem) Reset() {

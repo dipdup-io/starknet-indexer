@@ -4,28 +4,37 @@ package proto;
 
 option go_package = "github.com/dipdup-io/starknet-indexer/pkg/grpc/pb";
 
+/**
+* Block status
+**/
 enum Status {
-    STATUS_RESERVED = 0;
-    STATUS_UNKNOWN = 1;
-    STATUS_NOT_RECEIVED = 2;
-    STATUS_RECEIVED = 3;
-    STATUS_PENDING = 4;
-    STATUS_REJECTED = 5;
-    STATUS_ACCEPTED_ON_L2 = 6;
-    STATUS_ACCEPTED_ON_L1 = 7;
+    STATUS_RESERVED = 0; // unused
+    STATUS_UNKNOWN = 1; // used only if entity has unknown status for the system
+    STATUS_NOT_RECEIVED = 2; // not received
+    STATUS_RECEIVED = 3; // received
+    STATUS_PENDING = 4; // pending
+    STATUS_REJECTED = 5; // rejected
+    STATUS_ACCEPTED_ON_L2 = 6; // accepted on L2
+    STATUS_ACCEPTED_ON_L1 = 7; // accepted on L1
 }
 
+/**
+* Call type of transactions
+**/
 enum CallType {
-    CALL_TYPE_RESERVED = 0;
-    CALL_TYPE_UNKNOWN = 1;
-    CALL_TYPE_CALL = 2;
-    CALL_TYPE_DELEGATE = 3;
+    CALL_TYPE_RESERVED = 0; // unused
+    CALL_TYPE_UNKNOWN = 1; // used only if entity has unknown call type for the system
+    CALL_TYPE_CALL = 2; // call
+    CALL_TYPE_DELEGATE = 3; // delegate call
 }
 
+/**
+* Entrypoint type of transactions
+**/
 enum EntrypointType {
-    ENTRYPOINT_TYPE_RESERVED = 0;
-    ENTRYPOINT_TYPE_UNKNOWN = 1;
-    ENTRYPOINT_TYPE_EXTERNAL = 2;
-    ENTRYPOINT_TYPE_CONSTRUCTOR = 3;
-    ENTRYPOINT_TYPE_L1_HANDLER = 4;
+    ENTRYPOINT_TYPE_RESERVED = 0; // unused
+    ENTRYPOINT_TYPE_UNKNOWN = 1;  // used only if entity has unknown entrypoint type for the system
+    ENTRYPOINT_TYPE_EXTERNAL = 2; // external entrypoint type
+    ENTRYPOINT_TYPE_CONSTRUCTOR = 3; // constructor entrypoint type
+    ENTRYPOINT_TYPE_L1_HANDLER = 4; // l1 handler entrypoint type
 }

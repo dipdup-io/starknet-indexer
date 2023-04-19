@@ -20,13 +20,15 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
+// *
+// Between unsigned interger filter. Equals to SQL expression: `x BETWEEN from AND to`.
 type BetweenInteger struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	From uint64 `protobuf:"varint,1,opt,name=from,proto3" json:"from,omitempty"`
-	To   uint64 `protobuf:"varint,2,opt,name=to,proto3" json:"to,omitempty"`
+	From uint64 `protobuf:"varint,1,opt,name=from,proto3" json:"from,omitempty"` // from value
+	To   uint64 `protobuf:"varint,2,opt,name=to,proto3" json:"to,omitempty"`     // to value
 }
 
 func (x *BetweenInteger) Reset() {
@@ -75,6 +77,8 @@ func (x *BetweenInteger) GetTo() uint64 {
 	return 0
 }
 
+// *
+// Set of integer filters
 type IntegerFilter struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -185,31 +189,31 @@ type isIntegerFilter_Filter interface {
 }
 
 type IntegerFilter_Gt struct {
-	Gt uint64 `protobuf:"varint,1,opt,name=gt,proto3,oneof"`
+	Gt uint64 `protobuf:"varint,1,opt,name=gt,proto3,oneof"` // greater than
 }
 
 type IntegerFilter_Gte struct {
-	Gte uint64 `protobuf:"varint,2,opt,name=gte,proto3,oneof"`
+	Gte uint64 `protobuf:"varint,2,opt,name=gte,proto3,oneof"` // greater than or equals
 }
 
 type IntegerFilter_Lt struct {
-	Lt uint64 `protobuf:"varint,3,opt,name=lt,proto3,oneof"`
+	Lt uint64 `protobuf:"varint,3,opt,name=lt,proto3,oneof"` // less than
 }
 
 type IntegerFilter_Lte struct {
-	Lte uint64 `protobuf:"varint,4,opt,name=lte,proto3,oneof"`
+	Lte uint64 `protobuf:"varint,4,opt,name=lte,proto3,oneof"` // less than or equals
 }
 
 type IntegerFilter_Eq struct {
-	Eq uint64 `protobuf:"varint,5,opt,name=eq,proto3,oneof"`
+	Eq uint64 `protobuf:"varint,5,opt,name=eq,proto3,oneof"` // equals
 }
 
 type IntegerFilter_Neq struct {
-	Neq uint64 `protobuf:"varint,6,opt,name=neq,proto3,oneof"`
+	Neq uint64 `protobuf:"varint,6,opt,name=neq,proto3,oneof"` // not equals
 }
 
 type IntegerFilter_Between struct {
-	Between *BetweenInteger `protobuf:"bytes,7,opt,name=between,proto3,oneof"`
+	Between *BetweenInteger `protobuf:"bytes,7,opt,name=between,proto3,oneof"` // between
 }
 
 func (*IntegerFilter_Gt) isIntegerFilter_Filter() {}
@@ -226,6 +230,8 @@ func (*IntegerFilter_Neq) isIntegerFilter_Filter() {}
 
 func (*IntegerFilter_Between) isIntegerFilter_Filter() {}
 
+// *
+// Set of time filters
 type TimeFilter struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -320,23 +326,23 @@ type isTimeFilter_Filter interface {
 }
 
 type TimeFilter_Gt struct {
-	Gt uint64 `protobuf:"varint,1,opt,name=gt,proto3,oneof"`
+	Gt uint64 `protobuf:"varint,1,opt,name=gt,proto3,oneof"` // greater than
 }
 
 type TimeFilter_Gte struct {
-	Gte uint64 `protobuf:"varint,2,opt,name=gte,proto3,oneof"`
+	Gte uint64 `protobuf:"varint,2,opt,name=gte,proto3,oneof"` // greater than or equals
 }
 
 type TimeFilter_Lt struct {
-	Lt uint64 `protobuf:"varint,3,opt,name=lt,proto3,oneof"`
+	Lt uint64 `protobuf:"varint,3,opt,name=lt,proto3,oneof"` // less than
 }
 
 type TimeFilter_Lte struct {
-	Lte uint64 `protobuf:"varint,4,opt,name=lte,proto3,oneof"`
+	Lte uint64 `protobuf:"varint,4,opt,name=lte,proto3,oneof"` // less than or equals
 }
 
 type TimeFilter_Between struct {
-	Between *BetweenInteger `protobuf:"bytes,5,opt,name=between,proto3,oneof"`
+	Between *BetweenInteger `protobuf:"bytes,5,opt,name=between,proto3,oneof"` // between
 }
 
 func (*TimeFilter_Gt) isTimeFilter_Filter() {}
@@ -349,6 +355,8 @@ func (*TimeFilter_Lte) isTimeFilter_Filter() {}
 
 func (*TimeFilter_Between) isTimeFilter_Filter() {}
 
+// *
+// Set of filters for enumerations
 type EnumFilter struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -435,19 +443,19 @@ type isEnumFilter_Filter interface {
 }
 
 type EnumFilter_Eq struct {
-	Eq uint64 `protobuf:"varint,1,opt,name=eq,proto3,oneof"`
+	Eq uint64 `protobuf:"varint,1,opt,name=eq,proto3,oneof"` // equals
 }
 
 type EnumFilter_Neq struct {
-	Neq uint64 `protobuf:"varint,2,opt,name=neq,proto3,oneof"`
+	Neq uint64 `protobuf:"varint,2,opt,name=neq,proto3,oneof"` // not equals
 }
 
 type EnumFilter_In struct {
-	In *IntegerArray `protobuf:"bytes,3,opt,name=in,proto3,oneof"`
+	In *IntegerArray `protobuf:"bytes,3,opt,name=in,proto3,oneof"` // check the value is in array `x IN (1,2,3,4)`
 }
 
 type EnumFilter_Notin struct {
-	Notin *IntegerArray `protobuf:"bytes,4,opt,name=notin,proto3,oneof"`
+	Notin *IntegerArray `protobuf:"bytes,4,opt,name=notin,proto3,oneof"` // check the value is not in array `x NOT IN (1,2,3,4)`
 }
 
 func (*EnumFilter_Eq) isEnumFilter_Filter() {}
@@ -458,6 +466,8 @@ func (*EnumFilter_In) isEnumFilter_Filter() {}
 
 func (*EnumFilter_Notin) isEnumFilter_Filter() {}
 
+// *
+// Set of string filters
 type StringFilter struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -528,17 +538,19 @@ type isStringFilter_Filter interface {
 }
 
 type StringFilter_Eq struct {
-	Eq string `protobuf:"bytes,1,opt,name=eq,proto3,oneof"`
+	Eq string `protobuf:"bytes,1,opt,name=eq,proto3,oneof"` // equals
 }
 
 type StringFilter_In struct {
-	In *StringArray `protobuf:"bytes,2,opt,name=in,proto3,oneof"`
+	In *StringArray `protobuf:"bytes,2,opt,name=in,proto3,oneof"` // check the value is in array `x IN (a, abc)`
 }
 
 func (*StringFilter_Eq) isStringFilter_Filter() {}
 
 func (*StringFilter_In) isStringFilter_Filter() {}
 
+// *
+// Equality filters
 type EqualityFilter struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -609,17 +621,19 @@ type isEqualityFilter_Filter interface {
 }
 
 type EqualityFilter_Eq struct {
-	Eq string `protobuf:"bytes,1,opt,name=eq,proto3,oneof"`
+	Eq string `protobuf:"bytes,1,opt,name=eq,proto3,oneof"` // equals
 }
 
 type EqualityFilter_Neq struct {
-	Neq string `protobuf:"bytes,2,opt,name=neq,proto3,oneof"`
+	Neq string `protobuf:"bytes,2,opt,name=neq,proto3,oneof"` // not equals
 }
 
 func (*EqualityFilter_Eq) isEqualityFilter_Filter() {}
 
 func (*EqualityFilter_Neq) isEqualityFilter_Filter() {}
 
+// *
+// Set of bytes filters
 type BytesFilter struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -690,23 +704,25 @@ type isBytesFilter_Filter interface {
 }
 
 type BytesFilter_Eq struct {
-	Eq []byte `protobuf:"bytes,1,opt,name=eq,proto3,oneof"`
+	Eq []byte `protobuf:"bytes,1,opt,name=eq,proto3,oneof"` // equals
 }
 
 type BytesFilter_In struct {
-	In *BytesArray `protobuf:"bytes,2,opt,name=in,proto3,oneof"`
+	In *BytesArray `protobuf:"bytes,2,opt,name=in,proto3,oneof"` // check the value is in array `x IN (\x00, \x0010)`
 }
 
 func (*BytesFilter_Eq) isBytesFilter_Filter() {}
 
 func (*BytesFilter_In) isBytesFilter_Filter() {}
 
+// *
+// Wrapper over string array for using `repeated` option
 type StringArray struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Arr []string `protobuf:"bytes,1,rep,name=arr,proto3" json:"arr,omitempty"`
+	Arr []string `protobuf:"bytes,1,rep,name=arr,proto3" json:"arr,omitempty"` // array
 }
 
 func (x *StringArray) Reset() {
@@ -748,12 +764,14 @@ func (x *StringArray) GetArr() []string {
 	return nil
 }
 
+// *
+// Wrapper over integer array for using `repeated` option
 type IntegerArray struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Arr []uint64 `protobuf:"varint,1,rep,packed,name=arr,proto3" json:"arr,omitempty"`
+	Arr []uint64 `protobuf:"varint,1,rep,packed,name=arr,proto3" json:"arr,omitempty"` // array
 }
 
 func (x *IntegerArray) Reset() {
@@ -795,12 +813,14 @@ func (x *IntegerArray) GetArr() []uint64 {
 	return nil
 }
 
+// *
+// Wrapper over bytes array for using `repeated` option
 type BytesArray struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Arr [][]byte `protobuf:"bytes,1,rep,name=arr,proto3" json:"arr,omitempty"`
+	Arr [][]byte `protobuf:"bytes,1,rep,name=arr,proto3" json:"arr,omitempty"` // array
 }
 
 func (x *BytesArray) Reset() {

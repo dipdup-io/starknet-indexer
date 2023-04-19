@@ -20,17 +20,19 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
+// *
+// Block status
 type Status int32
 
 const (
-	Status_STATUS_RESERVED       Status = 0
-	Status_STATUS_UNKNOWN        Status = 1
-	Status_STATUS_NOT_RECEIVED   Status = 2
-	Status_STATUS_RECEIVED       Status = 3
-	Status_STATUS_PENDING        Status = 4
-	Status_STATUS_REJECTED       Status = 5
-	Status_STATUS_ACCEPTED_ON_L2 Status = 6
-	Status_STATUS_ACCEPTED_ON_L1 Status = 7
+	Status_STATUS_RESERVED       Status = 0 // unused
+	Status_STATUS_UNKNOWN        Status = 1 // used only if entity has unknown status for the system
+	Status_STATUS_NOT_RECEIVED   Status = 2 // not received
+	Status_STATUS_RECEIVED       Status = 3 // received
+	Status_STATUS_PENDING        Status = 4 // pending
+	Status_STATUS_REJECTED       Status = 5 // rejected
+	Status_STATUS_ACCEPTED_ON_L2 Status = 6 // accepted on L2
+	Status_STATUS_ACCEPTED_ON_L1 Status = 7 // accepted on L1
 )
 
 // Enum value maps for Status.
@@ -84,13 +86,15 @@ func (Status) EnumDescriptor() ([]byte, []int) {
 	return file_github_com_dipdup_io_starknet_indexer_pkg_grpc_proto_enum_proto_rawDescGZIP(), []int{0}
 }
 
+// *
+// Call type of transactions
 type CallType int32
 
 const (
-	CallType_CALL_TYPE_RESERVED CallType = 0
-	CallType_CALL_TYPE_UNKNOWN  CallType = 1
-	CallType_CALL_TYPE_CALL     CallType = 2
-	CallType_CALL_TYPE_DELEGATE CallType = 3
+	CallType_CALL_TYPE_RESERVED CallType = 0 // unused
+	CallType_CALL_TYPE_UNKNOWN  CallType = 1 // used only if entity has unknown call type for the system
+	CallType_CALL_TYPE_CALL     CallType = 2 // call
+	CallType_CALL_TYPE_DELEGATE CallType = 3 // delegate call
 )
 
 // Enum value maps for CallType.
@@ -136,14 +140,16 @@ func (CallType) EnumDescriptor() ([]byte, []int) {
 	return file_github_com_dipdup_io_starknet_indexer_pkg_grpc_proto_enum_proto_rawDescGZIP(), []int{1}
 }
 
+// *
+// Entrypoint type of transactions
 type EntrypointType int32
 
 const (
-	EntrypointType_ENTRYPOINT_TYPE_RESERVED    EntrypointType = 0
-	EntrypointType_ENTRYPOINT_TYPE_UNKNOWN     EntrypointType = 1
-	EntrypointType_ENTRYPOINT_TYPE_EXTERNAL    EntrypointType = 2
-	EntrypointType_ENTRYPOINT_TYPE_CONSTRUCTOR EntrypointType = 3
-	EntrypointType_ENTRYPOINT_TYPE_L1_HANDLER  EntrypointType = 4
+	EntrypointType_ENTRYPOINT_TYPE_RESERVED    EntrypointType = 0 // unused
+	EntrypointType_ENTRYPOINT_TYPE_UNKNOWN     EntrypointType = 1 // used only if entity has unknown entrypoint type for the system
+	EntrypointType_ENTRYPOINT_TYPE_EXTERNAL    EntrypointType = 2 // external entrypoint type
+	EntrypointType_ENTRYPOINT_TYPE_CONSTRUCTOR EntrypointType = 3 // constructor entrypoint type
+	EntrypointType_ENTRYPOINT_TYPE_L1_HANDLER  EntrypointType = 4 // l1 handler entrypoint type
 )
 
 // Enum value maps for EntrypointType.
