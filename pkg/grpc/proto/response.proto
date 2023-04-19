@@ -36,7 +36,6 @@ message Declare {
     bytes hash = 10;
     string max_fee = 11;
     string nonce = 12;
-    repeated string signature = 13;
 }
 
 message DeployAccount {
@@ -51,9 +50,8 @@ message DeployAccount {
     bytes salt = 9;
     string max_fee = 10;
     string nonce = 11;
-    repeated string signature = 12;
-    repeated string calldata = 13;
-    bytes parsed_calldata = 14;
+    repeated string calldata = 12;
+    bytes parsed_calldata = 13;
 }
 
 message Deploy {
@@ -131,9 +129,8 @@ message Invoke {
     string max_fee = 10;
     string nonce = 11;
     repeated string calldata = 12;
-    repeated string signature = 13;
-    string entrypoint = 14;
-    bytes parsed_calldata = 15;
+    string entrypoint = 13;
+    bytes parsed_calldata = 14;
 }
 
 message L1Handler {
@@ -148,9 +145,8 @@ message L1Handler {
     string max_fee = 9;
     string nonce = 10;
     repeated string calldata = 11;
-    repeated string signature = 12;
-    string entrypoint = 13;
-    bytes parsed_calldata = 14;
+    string entrypoint = 12;
+    bytes parsed_calldata = 13;
 }
 
 message StarknetMessage {

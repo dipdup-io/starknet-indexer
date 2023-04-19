@@ -889,7 +889,6 @@ Desription of server interface
 | hash | [bytes](#bytes) |  |  |
 | max_fee | [string](#string) |  |  |
 | nonce | [string](#string) |  |  |
-| signature | [string](#string) | repeated |  |
 
 
 
@@ -940,7 +939,6 @@ Desription of server interface
 | salt | [bytes](#bytes) |  |  |
 | max_fee | [string](#string) |  |  |
 | nonce | [string](#string) |  |  |
-| signature | [string](#string) | repeated |  |
 | calldata | [string](#string) | repeated |  |
 | parsed_calldata | [bytes](#bytes) |  |  |
 
@@ -1050,7 +1048,6 @@ Desription of server interface
 | max_fee | [string](#string) |  |  |
 | nonce | [string](#string) |  |  |
 | calldata | [string](#string) | repeated |  |
-| signature | [string](#string) | repeated |  |
 | entrypoint | [string](#string) |  |  |
 | parsed_calldata | [bytes](#bytes) |  |  |
 
@@ -1078,7 +1075,6 @@ Desription of server interface
 | max_fee | [string](#string) |  |  |
 | nonce | [string](#string) |  |  |
 | calldata | [string](#string) | repeated |  |
-| signature | [string](#string) | repeated |  |
 | entrypoint | [string](#string) |  |  |
 | parsed_calldata | [bytes](#bytes) |  |  |
 
