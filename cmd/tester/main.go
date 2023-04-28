@@ -62,10 +62,10 @@ func main() {
 	}
 
 	opts := make([]sequencer.ApiOption, 0)
-	if cfg.Indexer.RequestsPerSecond > 0 {
-		opts = append(opts, sequencer.WithRateLimit(cfg.Indexer.RequestsPerSecond))
+	if cfg.Indexer.Sequencer.Rps > 0 {
+		opts = append(opts, sequencer.WithRateLimit(cfg.Indexer.Sequencer.Rps))
 	}
-	api := sequencer.NewAPI(cfg.Indexer.Gateway, cfg.Indexer.FeederGateway, opts...)
+	api := sequencer.NewAPI(cfg.Indexer.Sequencer.Gateway, cfg.Indexer.Sequencer.FeederGateway, opts...)
 
 	signals := make(chan os.Signal, 1)
 	signal.Notify(signals, os.Interrupt, syscall.SIGTERM, syscall.SIGINT)

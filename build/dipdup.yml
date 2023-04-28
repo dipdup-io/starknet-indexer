@@ -4,8 +4,16 @@ log_level: ${LOG_LEVEL:-info}
 
 indexer:
   name: ${INDEXER_NAME:-dipdup_starknet_indexer}
-  feeder_gateway: ${STARKNET_FEEDER_GATEWAY:-https://alpha-mainnet.starknet.io/feeder_gateway}
-  gateway: ${STARKNET_GATEWAY:-https://alpha-mainnet.starknet.io/gateway}
+  
+  sequencer:
+    feeder_gateway: ${STARKNET_SEQUENCER_FEEDER_GATEWAY:-https://alpha-mainnet.starknet.io/feeder_gateway}
+    gateway: ${STARKNET_SEQUENCER_GATEWAY:-https://alpha-mainnet.starknet.io/gateway}
+    requests_per_second: ${STARKNET_SEQUENCER_RPS:-2}
+
+  node:
+    url: ${STARKNET_NODE_URL}
+    requests_per_second: ${STARKNET_NODE_RPS:-5}
+
   threads_count: ${INDEXER_THREADS_COUNT:-10}
   start_level: ${INDEXER_START_LEVEL:-0}
   timeout: ${INDEXER_REQUEST_TIMEOUT:-10}

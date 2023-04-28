@@ -7,7 +7,7 @@ import (
 	"time"
 
 	starknetData "github.com/dipdup-io/starknet-go-api/pkg/data"
-	"github.com/dipdup-io/starknet-go-api/pkg/sequencer"
+	starknetRpc "github.com/dipdup-io/starknet-go-api/pkg/rpc"
 	starknet "github.com/dipdup-io/starknet-go-api/pkg/sequencer"
 	"github.com/dipdup-io/starknet-indexer/internal/storage"
 	"github.com/dipdup-io/starknet-indexer/pkg/indexer/config"
@@ -25,33 +25,39 @@ type Result struct {
 // Receiver -
 type Receiver struct {
 	api     starknet.API
+	rpc     *starknetRpc.API
 	result  chan Result
 	pool    *workerpool.Pool[uint64]
-	timeout uint64
+	timeout time.Duration
 	wg      *sync.WaitGroup
 }
 
 // NewReceiver -
 func NewReceiver(cfg config.Config) *Receiver {
 	opts := make([]starknet.ApiOption, 0)
-	if cfg.RequestsPerSecond > 0 {
-		opts = append(opts, starknet.WithRateLimit(cfg.RequestsPerSecond))
+	if cfg.Sequencer.Rps > 0 {
+		opts = append(opts, starknet.WithRateLimit(cfg.Sequencer.Rps))
 	}
 	if cfg.CacheDir != "" {
 		opts = append(opts, starknet.WithCacheInFS(cfg.CacheDir))
 	}
 
-	api := starknet.NewAPI(cfg.Gateway, cfg.FeederGateway, opts...)
+	api := starknet.NewAPI(cfg.Sequencer.Gateway, cfg.Sequencer.FeederGateway, opts...)
 
 	receiver := &Receiver{
 		api:     api,
 		result:  make(chan Result, cfg.ThreadsCount*2),
-		timeout: cfg.Timeout,
+		timeout: time.Duration(cfg.Timeout) * time.Second,
 		wg:      new(sync.WaitGroup),
 	}
 
+	if cfg.Node != nil {
+		rpc := starknetRpc.NewAPI(cfg.Node.Url, starknetRpc.WithRateLimit(cfg.Node.Rps))
+		receiver.rpc = &rpc
+	}
+
 	if receiver.timeout == 0 {
-		receiver.timeout = 10
+		receiver.timeout = 10 * time.Second
 	}
 
 	receiver.pool = workerpool.NewPool(receiver.worker, cfg.ThreadsCount)
@@ -78,6 +84,9 @@ func (r *Receiver) Start(ctx context.Context) {
 }
 
 func (r *Receiver) worker(ctx context.Context, height uint64) {
+	blockId := starknetData.BlockID{
+		Number: &height,
+	}
 	var result Result
 	for {
 		select {
@@ -86,9 +95,7 @@ func (r *Receiver) worker(ctx context.Context, height uint64) {
 		default:
 		}
 
-		response, err := r.api.GetBlock(ctx, starknetData.BlockID{
-			Number: &height,
-		})
+		response, err := r.api.GetBlock(ctx, blockId)
 		if err != nil {
 			if errors.Is(err, context.Canceled) {
 				return
@@ -108,9 +115,7 @@ func (r *Receiver) worker(ctx context.Context, height uint64) {
 		default:
 		}
 
-		response, err := r.api.TraceBlock(ctx, starknetData.BlockID{
-			Number: &height,
-		})
+		response, err := r.api.TraceBlock(ctx, blockId)
 		if err != nil {
 			if errors.Is(err, context.Canceled) {
 				return
@@ -130,12 +135,7 @@ func (r *Receiver) worker(ctx context.Context, height uint64) {
 		default:
 		}
 
-		requestCtx, cancel := context.WithTimeout(ctx, time.Second*30)
-		defer cancel()
-
-		response, err := r.api.GetStateUpdate(requestCtx, starknetData.BlockID{
-			Number: &height,
-		})
+		response, err := r.getStateUpdate(ctx, blockId)
 		if err != nil {
 			if errors.Is(err, context.Canceled) {
 				return
@@ -158,8 +158,16 @@ func (r *Receiver) AddTask(height uint64) {
 
 // Head -
 func (r *Receiver) Head(ctx context.Context) (uint64, error) {
-	requestCtx, cancel := context.WithTimeout(ctx, time.Duration(r.timeout)*time.Second)
+	requestCtx, cancel := context.WithTimeout(ctx, r.timeout)
 	defer cancel()
+
+	if r.rpc != nil {
+		response, err := r.rpc.BlockNumber(requestCtx)
+		if err != nil {
+			return 0, err
+		}
+		return response.Result, nil
+	}
 
 	response, err := r.api.GetBlock(requestCtx, starknetData.BlockID{
 		String: starknetData.Latest,
@@ -172,12 +180,22 @@ func (r *Receiver) Head(ctx context.Context) (uint64, error) {
 
 // GetClass -
 func (r *Receiver) GetClass(ctx context.Context, hash string) (starknetData.Class, error) {
-	requestCtx, cancel := context.WithTimeout(ctx, time.Duration(r.timeout)*time.Second)
+	requestCtx, cancel := context.WithTimeout(ctx, r.timeout)
 	defer cancel()
 
-	response, err := r.api.GetClassByHash(requestCtx, starknetData.BlockID{
+	blockId := starknetData.BlockID{
 		String: starknetData.Latest,
-	}, hash)
+	}
+
+	if r.rpc != nil {
+		response, err := r.rpc.GetClass(requestCtx, blockId, hash)
+		if err != nil {
+			return starknetData.Class{}, err
+		}
+		return response.Result, nil
+	}
+
+	response, err := r.api.GetClassByHash(requestCtx, blockId, hash)
 	if err != nil {
 		return starknetData.Class{}, err
 	}
@@ -186,7 +204,7 @@ func (r *Receiver) GetClass(ctx context.Context, hash string) (starknetData.Clas
 
 // TransactionStatus -
 func (r *Receiver) TransactionStatus(ctx context.Context, hash string) (storage.Status, error) {
-	requestCtx, cancel := context.WithTimeout(ctx, time.Duration(r.timeout)*time.Second)
+	requestCtx, cancel := context.WithTimeout(ctx, r.timeout)
 	defer cancel()
 
 	response, err := r.api.GetTransactionStatus(requestCtx, hash)
@@ -197,14 +215,28 @@ func (r *Receiver) TransactionStatus(ctx context.Context, hash string) (storage.
 	return storage.NewStatus(response.Status), nil
 }
 
-// GetBlock -
-func (r *Receiver) GetBlock(ctx context.Context, height uint64) (sequencer.Block, error) {
-	requestCtx, cancel := context.WithTimeout(ctx, time.Duration(r.timeout)*time.Second)
+// GetBlockStatus -
+func (r *Receiver) GetBlockStatus(ctx context.Context, height uint64) (storage.Status, error) {
+	requestCtx, cancel := context.WithTimeout(ctx, r.timeout)
 	defer cancel()
 
-	return r.api.GetBlock(requestCtx, starknetData.BlockID{
+	blockId := starknetData.BlockID{
 		Number: &height,
-	})
+	}
+
+	if r.rpc != nil {
+		response, err := r.rpc.GetBlockWithTxHashes(requestCtx, blockId)
+		if err != nil {
+			return storage.StatusUnknown, err
+		}
+		return storage.NewStatus(response.Result.Status), nil
+	}
+
+	response, err := r.api.GetBlock(requestCtx, blockId)
+	if err != nil {
+		return storage.StatusUnknown, err
+	}
+	return storage.NewStatus(response.Status), nil
 }
 
 // Results -
@@ -215,4 +247,19 @@ func (r *Receiver) Results() <-chan Result {
 // QueueSize -
 func (r *Receiver) QueueSize() int {
 	return r.pool.QueueSize()
+}
+
+func (r *Receiver) getStateUpdate(ctx context.Context, blockId starknetData.BlockID) (starknetData.StateUpdate, error) {
+	requestCtx, cancel := context.WithTimeout(ctx, r.timeout)
+	defer cancel()
+
+	if r.rpc != nil {
+		response, err := r.rpc.GetStateUpdate(requestCtx, blockId)
+		if err != nil {
+			return starknetData.StateUpdate{}, err
+		}
+		return response.Result.ToStateUpdate(), nil
+	}
+
+	return r.api.GetStateUpdate(requestCtx, blockId)
 }

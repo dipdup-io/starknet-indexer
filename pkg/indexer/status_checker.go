@@ -297,13 +297,7 @@ func (checker *statusChecker) getStatus(ctx context.Context, item acceptedOnL2) 
 		return checker.receiver.TransactionStatus(ctx, encoding.EncodeHex(item.TransactionHash))
 	}
 
-	block, err := checker.receiver.GetBlock(ctx, item.Height)
-	if err != nil {
-		return storage.StatusUnknown, err
-	}
-
-	status := storage.NewStatus(block.Status)
-	return status, nil
+	return checker.receiver.GetBlockStatus(ctx, item.Height)
 }
 
 func (checker *statusChecker) update(ctx context.Context, height uint64, status storage.Status) error {
