@@ -35,5 +35,6 @@ COPY --from=builder /go/bin/indexer /go/bin/indexer
 COPY ./build/dipdup.yml ./
 COPY ./build/interfaces ./interfaces
 COPY ./build/bridged_tokens ./
+COPY ./cmd/indexer/graphql ./graphql
 
 ENTRYPOINT ["/go/bin/indexer", "-c", "dipdup.yml"]
