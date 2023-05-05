@@ -187,19 +187,7 @@ func (r *Receiver) GetClass(ctx context.Context, hash string) (starknetData.Clas
 		String: starknetData.Latest,
 	}
 
-	if r.rpc != nil {
-		response, err := r.rpc.GetClass(requestCtx, blockId, hash)
-		if err != nil {
-			return starknetData.Class{}, err
-		}
-		return response.Result, nil
-	}
-
-	response, err := r.api.GetClassByHash(requestCtx, blockId, hash)
-	if err != nil {
-		return starknetData.Class{}, err
-	}
-	return response, nil
+	return r.api.GetClassByHash(requestCtx, blockId, hash)
 }
 
 // TransactionStatus -
