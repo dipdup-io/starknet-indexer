@@ -37,7 +37,7 @@ jobs:
         id: meta-indexer
         uses: docker/metadata-action@v3
         with:
-          images: ${{ env.DOCKER_REGISTRY }}/${{ env.DOCKER_IMAGE_BASE }}-indexer
+          images: ${{ env.DOCKER_REGISTRY }}/${{ env.DOCKER_IMAGE_BASE }}
 
       - name: Indexer image build & push
         uses: docker/build-push-action@v2
