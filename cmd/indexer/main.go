@@ -72,6 +72,12 @@ func main() {
 		return
 	}
 
+	views, err := createViews(ctx, postgres)
+	if err != nil {
+		log.Panic().Err(err).Msg("create views")
+		return
+	}
+
 	if cfg.Hasura != nil {
 		models := make([]any, len(storage.Models))
 		for i := range storage.Models {
@@ -81,6 +87,7 @@ func main() {
 			Config:         cfg.Hasura,
 			DatabaseConfig: cfg.Database,
 			Models:         models,
+			Views:          views,
 		}); err != nil {
 			log.Panic().Err(err).Msg("hasura initialization")
 			return

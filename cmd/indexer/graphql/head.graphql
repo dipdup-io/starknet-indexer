@@ -1,6 +1,7 @@
 query Head($name: String!) {
-  state(where: {name: {_eq: $name}}) {
-    id
+  dipdup_head_status(where: {name: {_eq: $name}}) {
+    name
+    status
     last_time
     last_height
   }
