@@ -1,0 +1,7 @@
+query Head($name: String!) {
+  state(where: {name: {_eq: $name}}) {
+    id
+    last_time
+    last_height
+  }
+}
