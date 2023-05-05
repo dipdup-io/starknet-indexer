@@ -2,7 +2,7 @@ version: "3.6"
 
 services:
   indexer:
-    image: dipdup-io/straknet-indexer:latest
+    image: ghcr.io/dipdup-io/starknet-indexer:master
     build:
         dockerfile: build/Dockerfile
         context: .
