@@ -11,6 +11,7 @@ import (
 	sdk "github.com/dipdup-net/indexer-sdk/pkg/storage"
 	"github.com/go-pg/pg/v10"
 	"github.com/pkg/errors"
+	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 )
 
@@ -66,6 +67,7 @@ type statusChecker struct {
 	l1Handlers     storage.IL1Handler
 	transactable   sdk.Transactable
 	receiver       *receiver.Receiver
+	log            zerolog.Logger
 	wg             *sync.WaitGroup
 }
 
@@ -89,6 +91,7 @@ func newStatusChecker(
 		invoke:         invoke,
 		l1Handlers:     l1Handlers,
 		transactable:   transactable,
+		log:            log.With().Str("module", "status_checker").Logger(),
 		wg:             new(sync.WaitGroup),
 	}
 }
@@ -103,12 +106,12 @@ func (checker *statusChecker) start(ctx context.Context) {
 	defer checker.wg.Done()
 
 	if err := checker.init(ctx); err != nil {
-		log.Err(err).Msg("checker init")
+		checker.log.Err(err).Msg("checker init")
 		return
 	}
 
 	if err := checker.check(ctx); err != nil {
-		log.Err(err).Msg("check block status")
+		checker.log.Err(err).Msg("check block status")
 	}
 
 	ticker := time.NewTicker(15 * time.Second)
@@ -120,7 +123,7 @@ func (checker *statusChecker) start(ctx context.Context) {
 			return
 		case <-ticker.C:
 			if err := checker.check(ctx); err != nil {
-				log.Err(err).Msg("check block status")
+				checker.log.Err(err).Msg("check block status")
 			}
 		}
 	}
@@ -284,7 +287,7 @@ func (checker *statusChecker) check(ctx context.Context) error {
 			return err
 		}
 
-		log.Info().Str("status", status.String()).Uint64("height", item.Height).Msg("update block status")
+		checker.log.Info().Str("status", status.String()).Uint64("height", item.Height).Msg("update block status")
 	}
 }
 

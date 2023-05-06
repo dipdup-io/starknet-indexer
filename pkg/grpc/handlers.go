@@ -18,6 +18,7 @@ import (
 // //////////////////////////////////////////////
 // Subscribe -
 func (module *Server) Subscribe(req *pb.SubscribeRequest, stream pb.IndexerService_SubscribeServer) error {
+	module.log.Info().Msg("subscribe request")
 	subscription, err := subscriptions.NewSubscription(stream.Context(), module.db, req)
 	if err != nil {
 		return err
@@ -34,12 +35,19 @@ func (module *Server) Subscribe(req *pb.SubscribeRequest, stream pb.IndexerServi
 
 // Unsubscribe -
 func (module *Server) Unsubscribe(ctx context.Context, req *generalPB.UnsubscribeRequest) (*generalPB.UnsubscribeResponse, error) {
+	module.log.Info().Msg("unsubscribe request")
 	return grpcSDK.DefaultUnsubscribe(ctx, module.subscriptions, req.Id)
 }
 
 // JSONSchemaForClass -
 func (module *Server) JSONSchemaForClass(ctx context.Context, req *pb.Bytes) (*pb.Bytes, error) {
+	if req == nil {
+		return nil, errors.Errorf("empty class hash")
+	}
+
 	hash := req.GetData()
+	module.log.Info().Bytes("hash", hash).Msg("json schema for class request")
+
 	if !starknet.HashValidator(hash) {
 		return nil, errors.Errorf("invalid starknet hash (length must be 32): %x", hash)
 	}
@@ -69,7 +77,13 @@ func (module *Server) JSONSchemaForClass(ctx context.Context, req *pb.Bytes) (*p
 
 // JSONSchemaForContract -
 func (module *Server) JSONSchemaForContract(ctx context.Context, req *pb.Bytes) (*pb.Bytes, error) {
+	if req == nil {
+		return nil, errors.Errorf("empty contract hash")
+	}
+
 	hash := req.GetData()
+	module.log.Info().Bytes("hash", hash).Msg("json schema for contract request")
+
 	if !starknet.HashValidator(hash) {
 		return nil, errors.Errorf("invalid starknet hash (length must be 32): %x", hash)
 	}
