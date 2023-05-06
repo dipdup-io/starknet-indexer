@@ -30,5 +30,9 @@ Also check out the [cmd/rpc_tester](https://github.com/dipdup-io/starknet-indexe
 Public deployments with reasonable rate limits are available for testing and prototyping:
 - [Starknet mainnet](https://play.dipdup.io/?endpoint=https://starknet-mainnet-gql.dipdup.net/v1/graphql)
 
+## Notes
+- Indexer works on top of the API provided by the sequencer node — it contains the most comprehensive data set, in particular classes and ABIs ordinary nodes do not always have; It's possible though to outsource several request types to the node API to reduce the load on the sequencer and speed up the indexing process, there's an option in the config for that.
+- Currently pending blocks are not handled, therefore depending on the L2 block time (which in turn depends on the tx rate) you may have long delays in data updates.
+
 ## About
 Project is supported by Starkware and Starknet Foundation via [OnlyDust platform](https://app.onlydust.xyz/projects/e1b6d080-7f15-4531-9259-10c3dae26848)
