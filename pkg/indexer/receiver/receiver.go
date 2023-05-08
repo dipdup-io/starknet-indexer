@@ -51,7 +51,7 @@ func NewReceiver(cfg config.Config) *Receiver {
 		wg:      new(sync.WaitGroup),
 	}
 
-	if cfg.Node != nil {
+	if cfg.Node != nil && cfg.Node.Url != "" {
 		rpc := starknetRpc.NewAPI(cfg.Node.Url, starknetRpc.WithRateLimit(cfg.Node.Rps))
 		receiver.rpc = &rpc
 	}
