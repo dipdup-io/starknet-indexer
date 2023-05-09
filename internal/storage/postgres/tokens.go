@@ -1,43 +1,47 @@
 package postgres
 
 import (
+	"context"
+
 	"github.com/dipdup-io/starknet-indexer/internal/storage"
 	"github.com/dipdup-net/go-lib/database"
+	sdk "github.com/dipdup-net/indexer-sdk/pkg/storage"
 	"github.com/dipdup-net/indexer-sdk/pkg/storage/postgres"
 )
 
-// ERC20 -
-type ERC20 struct {
-	*postgres.Table[*storage.ERC20]
+// Token -
+type Token struct {
+	*postgres.Table[*storage.Token]
 }
 
-// NewERC20 -
-func NewERC20(db *database.PgGo) *ERC20 {
-	return &ERC20{
-		Table: postgres.NewTable[*storage.ERC20](db),
+// NewToken -
+func NewToken(db *database.PgGo) *Token {
+	return &Token{
+		Table: postgres.NewTable[*storage.Token](db),
 	}
 }
 
-// ERC721 -
-type ERC721 struct {
-	*postgres.Table[*storage.ERC721]
-}
-
-// NewERC721 -
-func NewERC721(db *database.PgGo) *ERC721 {
-	return &ERC721{
-		Table: postgres.NewTable[*storage.ERC721](db),
+// ListByType -
+func (tokens *Token) ListByType(ctx context.Context, typ storage.TokenType, limit uint64, offset uint64, order sdk.SortOrder) ([]storage.Token, error) {
+	query := tokens.DB().ModelContext(ctx, (*storage.Token)(nil)).
+		Where("type = ?", typ).
+		Offset(int(offset))
+	if limit == 0 {
+		query.Limit(10)
+	} else {
+		query.Limit(int(limit))
 	}
-}
 
-// ERC1155 -
-type ERC1155 struct {
-	*postgres.Table[*storage.ERC1155]
-}
-
-// NewERC1155 -
-func NewERC1155(db *database.PgGo) *ERC1155 {
-	return &ERC1155{
-		Table: postgres.NewTable[*storage.ERC1155](db),
+	switch order {
+	case sdk.SortOrderAsc:
+		query.Order("id asc")
+	case sdk.SortOrderDesc:
+		query.Order("id desc")
+	default:
+		query.Order("id asc")
 	}
+
+	var result []storage.Token
+	err := query.Select(&result)
+	return result, err
 }

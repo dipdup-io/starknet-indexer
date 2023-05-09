@@ -203,17 +203,10 @@ func (store *Store) saveInternals(
 			return err
 		}
 
-		var err error
-		switch {
-		case internals[i].ERC20 != nil:
-			err = tx.Add(ctx, internals[i].ERC20)
-		case internals[i].ERC721 != nil:
-			err = tx.Add(ctx, internals[i].ERC721)
-		case internals[i].ERC1155 != nil:
-			err = tx.Add(ctx, internals[i].ERC1155)
-		}
-		if err != nil {
-			return err
+		if internals[i].Token != nil {
+			if err := tx.Add(ctx, internals[i].Token); err != nil {
+				return err
+			}
 		}
 	}
 	return nil

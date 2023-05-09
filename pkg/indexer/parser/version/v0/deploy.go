@@ -109,21 +109,19 @@ func (parser Parser) ParseDeploy(ctx context.Context, raw *data.Deploy, block st
 	}
 
 	if token := createBridgedToken(ctx, block, tx.Contract); token != nil {
-		tx.ERC20 = token
+		tx.Token = token
 	} else if tx.Class.Type.OneOf(storage.ClassTypeERC20, storage.ClassTypeERC721, storage.ClassTypeERC1155) {
 		token, err := parser.TokenParser.Parse(ctx, txCtx, tx.Contract, tx.Class.Type, tx.ParsedCalldata)
 		if err != nil {
 			return tx, nil, err
 		}
-		tx.ERC20 = token.ERC20
-		tx.ERC721 = token.ERC721
-		tx.ERC1155 = token.ERC1155
+		tx.Token = token
 	}
 
 	return tx, nil, nil
 }
 
-func createBridgedToken(ctx context.Context, block storage.Block, contract storage.Address) *storage.ERC20 {
+func createBridgedToken(ctx context.Context, block storage.Block, contract storage.Address) *storage.Token {
 	tokens := starknet.BridgedTokens()
 
 	for i := range tokens {
@@ -131,13 +129,16 @@ func createBridgedToken(ctx context.Context, block storage.Block, contract stora
 			continue
 		}
 
-		return &storage.ERC20{
+		return &storage.Token{
 			DeployHeight: block.Height,
 			DeployTime:   block.Time,
 			ContractID:   contract.ID,
-			Name:         tokens[i].Name,
-			Symbol:       tokens[i].Symbol,
-			Decimals:     tokens[i].Decimals,
+			Type:         storage.TokenTypeERC20,
+			Metadata: map[string]any{
+				"name":     tokens[i].Name,
+				"symbol":   tokens[i].Symbol,
+				"decimals": tokens[i].Decimals,
+			},
 		}
 	}
 

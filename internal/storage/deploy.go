@@ -47,9 +47,7 @@ type Deploy struct {
 	Events    []Event    `pg:"rel:has-many"`
 	Transfers []Transfer `pg:"rel:has-many"`
 	Fee       *Fee       `pg:"rel:has-one"`
-	ERC20     *ERC20     `pg:"-"`
-	ERC721    *ERC721    `pg:"-"`
-	ERC1155   *ERC1155   `pg:"-"`
+	Token     *Token     `pg:"-"`
 }
 
 // TableName -

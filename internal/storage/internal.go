@@ -68,9 +68,7 @@ type Internal struct {
 	Messages  []Message  `pg:"rel:has-many"`
 	Events    []Event    `pg:"rel:has-many"`
 	Transfers []Transfer `pg:"rel:has-many"`
-	ERC20     *ERC20     `pg:"-"`
-	ERC721    *ERC721    `pg:"-"`
-	ERC1155   *ERC1155   `pg:"-"`
+	Token     *Token     `pg:"-"`
 }
 
 // TableName -

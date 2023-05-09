@@ -1,0 +1,786 @@
+[
+    {
+        "name": "Card",
+        "size": 5,
+        "members": [
+            {
+                "name": "model",
+                "type": "CardModel",
+                "offset": 0
+            },
+            {
+                "name": "serial_number",
+                "type": "felt",
+                "offset": 4
+            }
+        ],
+        "type": "struct"
+    },
+    {
+        "type": "function",
+        "name": "MINTER_ROLE",
+        "stateMutability": "view",
+        "inputs": [],
+        "outputs": [
+            {
+                "name": "role",
+                "type": "felt"
+            }
+        ]
+    },
+    {
+        "name": "Metadata",
+        "size": 3,
+        "members": [
+            {
+                "name": "hash",
+                "type": "Uint256",
+                "offset": 0
+            },
+            {
+                "name": "multihash_identifier",
+                "type": "felt",
+                "offset": 2
+            }
+        ],
+        "type": "struct"
+    },
+    {
+        "name": "Uint256",
+        "size": 2,
+        "members": [
+            {
+                "name": "low",
+                "type": "felt",
+                "offset": 0
+            },
+            {
+                "name": "high",
+                "type": "felt",
+                "offset": 1
+            }
+        ],
+        "type": "struct"
+    },
+    {
+        "type": "function",
+        "name": "addMinter",
+        "inputs": [
+            {
+                "name": "account",
+                "type": "felt"
+            }
+        ],
+        "outputs": []
+    },
+    {
+        "type": "function",
+        "name": "approve",
+        "inputs": [
+            {
+                "name": "to",
+                "type": "felt"
+            },
+            {
+                "name": "token_id",
+                "type": "Uint256"
+            },
+            {
+                "name": "amount",
+                "type": "Uint256"
+            }
+        ],
+        "outputs": []
+    },
+    {
+        "type": "function",
+        "name": "balanceOf",
+        "stateMutability": "view",
+        "inputs": [
+            {
+                "name": "account",
+                "type": "felt"
+            },
+            {
+                "name": "token_id",
+                "type": "Uint256"
+            }
+        ],
+        "outputs": [
+            {
+                "name": "balance",
+                "type": "Uint256"
+            }
+        ]
+    },
+    {
+        "type": "function",
+        "name": "baseTokenURI",
+        "stateMutability": "view",
+        "inputs": [],
+        "outputs": [
+            {
+                "name": "base_token_uri_len",
+                "type": "felt"
+            },
+            {
+                "name": "base_token_uri",
+                "type": "felt*"
+            }
+        ]
+    },
+    {
+        "type": "function",
+        "name": "createAndMintCard",
+        "inputs": [
+            {
+                "name": "card",
+                "type": "Card"
+            },
+            {
+                "name": "metadata",
+                "type": "Metadata"
+            },
+            {
+                "name": "to",
+                "type": "felt"
+            }
+        ],
+        "outputs": [
+            {
+                "name": "token_id",
+                "type": "Uint256"
+            }
+        ]
+    },
+    {
+        "type": "function",
+        "name": "getApproved",
+        "stateMutability": "view",
+        "inputs": [
+            {
+                "name": "owner",
+                "type": "felt"
+            },
+            {
+                "name": "token_id",
+                "type": "Uint256"
+            }
+        ],
+        "outputs": [
+            {
+                "name": "operator",
+                "type": "felt"
+            },
+            {
+                "name": "amount",
+                "type": "Uint256"
+            }
+        ]
+    },
+    {
+        "type": "function",
+        "name": "getCard",
+        "stateMutability": "view",
+        "inputs": [
+            {
+                "name": "card_id",
+                "type": "Uint256"
+            }
+        ],
+        "outputs": [
+            {
+                "name": "card",
+                "type": "Card"
+            },
+            {
+                "name": "metadata",
+                "type": "Metadata"
+            }
+        ]
+    },
+    {
+        "type": "function",
+        "name": "getRoleMember",
+        "stateMutability": "view",
+        "inputs": [
+            {
+                "name": "role",
+                "type": "felt"
+            },
+            {
+                "name": "index",
+                "type": "felt"
+            }
+        ],
+        "outputs": [
+            {
+                "name": "account",
+                "type": "felt"
+            }
+        ]
+    },
+    {
+        "type": "function",
+        "name": "getRoleMemberCount",
+        "stateMutability": "view",
+        "inputs": [
+            {
+                "name": "role",
+                "type": "felt"
+            }
+        ],
+        "outputs": [
+            {
+                "name": "count",
+                "type": "felt"
+            }
+        ]
+    },
+    {
+        "type": "function",
+        "name": "hasRole",
+        "stateMutability": "view",
+        "inputs": [
+            {
+                "name": "role",
+                "type": "felt"
+            },
+            {
+                "name": "account",
+                "type": "felt"
+            }
+        ],
+        "outputs": [
+            {
+                "name": "has_role",
+                "type": "felt"
+            }
+        ]
+    },
+    {
+        "type": "function",
+        "name": "initialize",
+        "inputs": [
+            {
+                "name": "name",
+                "type": "felt"
+            },
+            {
+                "name": "symbol",
+                "type": "felt"
+            },
+            {
+                "name": "owner",
+                "type": "felt"
+            },
+            {
+                "name": "_rules_cards_address",
+                "type": "felt"
+            },
+            {
+                "name": "_rules_packs_address",
+                "type": "felt"
+            }
+        ],
+        "outputs": []
+    },
+    {
+        "type": "function",
+        "name": "isApprovedForAll",
+        "stateMutability": "view",
+        "inputs": [
+            {
+                "name": "owner",
+                "type": "felt"
+            },
+            {
+                "name": "operator",
+                "type": "felt"
+            }
+        ],
+        "outputs": [
+            {
+                "name": "is_approved",
+                "type": "felt"
+            }
+        ]
+    },
+    {
+        "type": "function",
+        "name": "mintCard",
+        "inputs": [
+            {
+                "name": "card_id",
+                "type": "Uint256"
+            },
+            {
+                "name": "to",
+                "type": "felt"
+            }
+        ],
+        "outputs": [
+            {
+                "name": "token_id",
+                "type": "Uint256"
+            }
+        ]
+    },
+    {
+        "type": "function",
+        "name": "mintPack",
+        "inputs": [
+            {
+                "name": "pack_id",
+                "type": "Uint256"
+            },
+            {
+                "name": "to",
+                "type": "felt"
+            },
+            {
+                "name": "amount",
+                "type": "felt"
+            },
+            {
+                "name": "operator",
+                "type": "felt"
+            }
+        ],
+        "outputs": [
+            {
+                "name": "token_id",
+                "type": "Uint256"
+            }
+        ]
+    },
+    {
+        "type": "function",
+        "name": "name",
+        "stateMutability": "view",
+        "inputs": [],
+        "outputs": [
+            {
+                "name": "name",
+                "type": "felt"
+            }
+        ]
+    },
+    {
+        "type": "function",
+        "name": "openPackTo",
+        "inputs": [
+            {
+                "name": "to",
+                "type": "felt"
+            },
+            {
+                "name": "pack_id",
+                "type": "Uint256"
+            },
+            {
+                "name": "cards_len",
+                "type": "felt"
+            },
+            {
+                "name": "cards",
+                "type": "Card*"
+            },
+            {
+                "name": "metadata_len",
+                "type": "felt"
+            },
+            {
+                "name": "metadata",
+                "type": "Metadata*"
+            }
+        ],
+        "outputs": []
+    },
+    {
+        "type": "function",
+        "name": "owner",
+        "stateMutability": "view",
+        "inputs": [],
+        "outputs": [
+            {
+                "name": "owner",
+                "type": "felt"
+            }
+        ]
+    },
+    {
+        "type": "function",
+        "name": "renounceOwnership",
+        "inputs": [],
+        "outputs": []
+    },
+    {
+        "type": "function",
+        "name": "revokeMinter",
+        "inputs": [
+            {
+                "name": "account",
+                "type": "felt"
+            }
+        ],
+        "outputs": []
+    },
+    {
+        "type": "function",
+        "name": "rulesCards",
+        "stateMutability": "view",
+        "inputs": [],
+        "outputs": [
+            {
+                "name": "address",
+                "type": "felt"
+            }
+        ]
+    },
+    {
+        "type": "function",
+        "name": "rulesPacks",
+        "stateMutability": "view",
+        "inputs": [],
+        "outputs": [
+            {
+                "name": "address",
+                "type": "felt"
+            }
+        ]
+    },
+    {
+        "type": "function",
+        "name": "safeBatchTransferFrom",
+        "inputs": [
+            {
+                "name": "_from",
+                "type": "felt"
+            },
+            {
+                "name": "to",
+                "type": "felt"
+            },
+            {
+                "name": "ids_len",
+                "type": "felt"
+            },
+            {
+                "name": "ids",
+                "type": "Uint256*"
+            },
+            {
+                "name": "amounts_len",
+                "type": "felt"
+            },
+            {
+                "name": "amounts",
+                "type": "Uint256*"
+            },
+            {
+                "name": "data_len",
+                "type": "felt"
+            },
+            {
+                "name": "data",
+                "type": "felt*"
+            }
+        ],
+        "outputs": []
+    },
+    {
+        "type": "function",
+        "name": "safeTransferFrom",
+        "inputs": [
+            {
+                "name": "_from",
+                "type": "felt"
+            },
+            {
+                "name": "to",
+                "type": "felt"
+            },
+            {
+                "name": "token_id",
+                "type": "Uint256"
+            },
+            {
+                "name": "amount",
+                "type": "Uint256"
+            },
+            {
+                "name": "data_len",
+                "type": "felt"
+            },
+            {
+                "name": "data",
+                "type": "felt*"
+            }
+        ],
+        "outputs": []
+    },
+    {
+        "type": "function",
+        "name": "setApprovalForAll",
+        "inputs": [
+            {
+                "name": "operator",
+                "type": "felt"
+            },
+            {
+                "name": "approved",
+                "type": "felt"
+            }
+        ],
+        "outputs": []
+    },
+    {
+        "type": "function",
+        "name": "setBaseTokenURI",
+        "inputs": [
+            {
+                "name": "base_token_uri_len",
+                "type": "felt"
+            },
+            {
+                "name": "base_token_uri",
+                "type": "felt*"
+            }
+        ],
+        "outputs": []
+    },
+    {
+        "type": "function",
+        "name": "symbol",
+        "stateMutability": "view",
+        "inputs": [],
+        "outputs": [
+            {
+                "name": "symbol",
+                "type": "felt"
+            }
+        ]
+    },
+    {
+        "type": "function",
+        "name": "tokenURI",
+        "stateMutability": "view",
+        "inputs": [
+            {
+                "name": "token_id",
+                "type": "Uint256"
+            }
+        ],
+        "outputs": [
+            {
+                "name": "token_uri_len",
+                "type": "felt"
+            },
+            {
+                "name": "token_uri",
+                "type": "felt*"
+            }
+        ]
+    },
+    {
+        "type": "function",
+        "name": "totalSupply",
+        "stateMutability": "view",
+        "inputs": [
+            {
+                "name": "token_id",
+                "type": "Uint256"
+            }
+        ],
+        "outputs": [
+            {
+                "name": "supply",
+                "type": "Uint256"
+            }
+        ]
+    },
+    {
+        "type": "function",
+        "name": "transferOwnership",
+        "inputs": [
+            {
+                "name": "new_owner",
+                "type": "felt"
+            }
+        ],
+        "outputs": [
+            {
+                "name": "new_owner",
+                "type": "felt"
+            }
+        ]
+    },
+    {
+        "type": "function",
+        "name": "upgrade",
+        "inputs": [
+            {
+                "name": "implementation",
+                "type": "felt"
+            }
+        ],
+        "outputs": []
+    },
+    {
+        "name": "RoleGranted",
+        "type": "event",
+        "keys": [],
+        "data": [
+            {
+                "name": "role",
+                "type": "felt"
+            },
+            {
+                "name": "account",
+                "type": "felt"
+            }
+        ]
+    },
+    {
+        "name": "RoleRevoked",
+        "type": "event",
+        "keys": [],
+        "data": [
+            {
+                "name": "role",
+                "type": "felt"
+            },
+            {
+                "name": "account",
+                "type": "felt"
+            }
+        ]
+    },
+    {
+        "name": "CardModel",
+        "size": 4,
+        "members": [
+            {
+                "name": "artist_name",
+                "type": "Uint256",
+                "offset": 0
+            },
+            {
+                "name": "season",
+                "type": "felt",
+                "offset": 2
+            },
+            {
+                "name": "scarcity",
+                "type": "felt",
+                "offset": 3
+            }
+        ],
+        "type": "struct"
+    },
+    {
+        "name": "Approval",
+        "type": "event",
+        "keys": [],
+        "data": [
+            {
+                "name": "owner",
+                "type": "felt"
+            },
+            {
+                "name": "operator",
+                "type": "felt"
+            },
+            {
+                "name": "token_id",
+                "type": "Uint256"
+            },
+            {
+                "name": "amount",
+                "type": "Uint256"
+            }
+        ]
+    },
+    {
+        "name": "ApprovalForAll",
+        "type": "event",
+        "keys": [],
+        "data": [
+            {
+                "name": "owner",
+                "type": "felt"
+            },
+            {
+                "name": "operator",
+                "type": "felt"
+            },
+            {
+                "name": "approved",
+                "type": "felt"
+            }
+        ]
+    },
+    {
+        "name": "TransferBatch",
+        "type": "event",
+        "keys": [],
+        "data": [
+            {
+                "name": "operator",
+                "type": "felt"
+            },
+            {
+                "name": "_from",
+                "type": "felt"
+            },
+            {
+                "name": "to",
+                "type": "felt"
+            },
+            {
+                "name": "ids_len",
+                "type": "felt"
+            },
+            {
+                "name": "ids",
+                "type": "Uint256*"
+            },
+            {
+                "name": "amounts_len",
+                "type": "felt"
+            },
+            {
+                "name": "amounts",
+                "type": "Uint256*"
+            }
+        ]
+    },
+    {
+        "name": "TransferSingle",
+        "type": "event",
+        "keys": [],
+        "data": [
+            {
+                "name": "operator",
+                "type": "felt"
+            },
+            {
+                "name": "_from",
+                "type": "felt"
+            },
+            {
+                "name": "to",
+                "type": "felt"
+            },
+            {
+                "name": "token_id",
+                "type": "Uint256"
+            },
+            {
+                "name": "amount",
+                "type": "Uint256"
+            }
+        ]
+    }
+]

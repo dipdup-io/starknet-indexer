@@ -38,6 +38,7 @@ type TokenBalance struct {
 
 	Contract Address `pg:"rel:has-one" hasura:"table:address,field:contract_id,remote_field:id,type:oto,name:contract"`
 	Owner    Address `pg:"rel:has-one" hasura:"table:address,field:owner_id,remote_field:id,type:oto,name:owner"`
+	Token    Token   `pg:"rel:has-one,fk:contract_id" hasura:"table:token,field:contract_id,remote_field:contract_id,type:oto,name:token"`
 }
 
 // TableName -

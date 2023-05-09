@@ -232,14 +232,15 @@ func (parser InternalTxParser) Parse(ctx context.Context, txCtx parserData.TxCon
 		}
 	}
 
-	if tx.EntrypointType == storage.EntrypointTypeConstructor && tx.Class.Type.OneOf(storage.ClassTypeERC20, storage.ClassTypeERC721, storage.ClassTypeERC1155) {
+	isParentDeploy := tx.DeployID != nil
+	isConstructor := tx.EntrypointType == storage.EntrypointTypeConstructor
+	isToken := tx.Class.Type.OneOf(storage.ClassTypeERC20, storage.ClassTypeERC721, storage.ClassTypeERC1155)
+	if (isParentDeploy || isConstructor) && isToken {
 		token, err := parser.TokenParser.Parse(ctx, txCtx, tx.Contract, tx.Class.Type, tx.ParsedCalldata)
 		if err != nil {
 			return tx, err
 		}
-		tx.ERC20 = token.ERC20
-		tx.ERC721 = token.ERC721
-		tx.ERC1155 = token.ERC1155
+		tx.Token = token
 	}
 
 	return tx, nil
