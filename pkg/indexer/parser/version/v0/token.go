@@ -31,57 +31,50 @@ func NewTokenParser(cache *cache.Cache, resolver resolver.Resolver) TokenParser 
 }
 
 // Parse -
-func (parser TokenParser) Parse(ctx context.Context, txCtx data.TxContext, contract storage.Address, classType storage.ClassType, constructorData map[string]any) (data.Token, error) {
-	var token data.Token
-
+func (parser TokenParser) Parse(ctx context.Context, txCtx data.TxContext, contract storage.Address, classType storage.ClassType, constructorData map[string]any) (*storage.Token, error) {
 	switch classType {
 	case storage.ClassTypeERC20:
-		erc20, err := parser.getErc20(ctx, txCtx, contract.ID, constructorData)
-		if err != nil {
-			return token, err
-		}
-		token.ERC20 = erc20
+		return parser.getErc20(ctx, txCtx, contract.ID, constructorData)
 	case storage.ClassTypeERC721:
-		erc721, err := parser.getErc721(ctx, txCtx, contract.ID, constructorData)
-		if err != nil {
-			return token, err
-		}
-		token.ERC721 = erc721
+		return parser.getErc721(ctx, txCtx, contract.ID, constructorData)
 	case storage.ClassTypeERC1155:
-		erc1155, err := parser.getErc1155(ctx, txCtx, contract.ID, constructorData)
-		if err != nil {
-			return token, err
-		}
-		token.ERC1155 = erc1155
+		return parser.getErc1155(ctx, txCtx, contract.ID, constructorData)
 	}
 
-	return token, nil
+	return nil, nil
 }
 
-func (parser TokenParser) getErc20(ctx context.Context, txCtx data.TxContext, contractId uint64, constructorData map[string]any) (*storage.ERC20, error) {
-	token := storage.ERC20{
+func (parser TokenParser) getErc20(ctx context.Context, txCtx data.TxContext, contractId uint64, constructorData map[string]any) (*storage.Token, error) {
+	token := storage.Token{
 		DeployHeight: txCtx.Height,
 		DeployTime:   txCtx.Time,
 		ContractID:   contractId,
+		Type:         storage.TokenTypeERC20,
+		Metadata:     map[string]any{},
 	}
-	var err error
 
-	token.Name = getStringFromParsedData(constructorData, "name")
-	token.Symbol = getStringFromParsedData(constructorData, "symbol")
-	token.Decimals, err = getUint64FromParsedData(constructorData, "decimals")
-	return &token, err
+	token.Metadata["name"] = getStringFromParsedData(constructorData, "name")
+	token.Metadata["symbol"] = getStringFromParsedData(constructorData, "symbol")
+	decimals, err := getUint64FromParsedData(constructorData, "decimals")
+	if err != nil {
+		return nil, err
+	}
+	token.Metadata["decimals"] = decimals
+	return &token, nil
 }
 
-func (parser TokenParser) getErc721(ctx context.Context, txCtx data.TxContext, contractId uint64, constructorData map[string]any) (*storage.ERC721, error) {
-	token := storage.ERC721{
+func (parser TokenParser) getErc721(ctx context.Context, txCtx data.TxContext, contractId uint64, constructorData map[string]any) (*storage.Token, error) {
+	token := storage.Token{
 		DeployHeight: txCtx.Height,
 		DeployTime:   txCtx.Time,
 		ContractID:   contractId,
+		Type:         storage.TokenTypeERC721,
+		Metadata:     map[string]any{},
 	}
 	var err error
 
-	token.Name = getStringFromParsedData(constructorData, "name")
-	token.Symbol = getStringFromParsedData(constructorData, "symbol")
+	token.Metadata["name"] = getStringFromParsedData(constructorData, "name")
+	token.Metadata["symbol"] = getStringFromParsedData(constructorData, "symbol")
 
 	token.OwnerID, err = getTokenAddress(ctx, parser.resolver, constructorData, token.DeployHeight, "owner")
 	if errors.Is(err, errInvalidTokenAddress) {
@@ -90,15 +83,17 @@ func (parser TokenParser) getErc721(ctx context.Context, txCtx data.TxContext, c
 	return &token, err
 }
 
-func (parser TokenParser) getErc1155(ctx context.Context, txCtx data.TxContext, contractId uint64, constructorData map[string]any) (*storage.ERC1155, error) {
-	token := storage.ERC1155{
+func (parser TokenParser) getErc1155(ctx context.Context, txCtx data.TxContext, contractId uint64, constructorData map[string]any) (*storage.Token, error) {
+	token := storage.Token{
 		DeployHeight: txCtx.Height,
 		DeployTime:   txCtx.Time,
 		ContractID:   contractId,
+		Type:         storage.TokenTypeERC1155,
+		Metadata:     map[string]any{},
 	}
 	var err error
 
-	token.TokenUri = getStringFromParsedData(constructorData, "uri")
+	token.Metadata["uri"] = getStringFromParsedData(constructorData, "uri")
 	token.OwnerID, err = getTokenAddress(ctx, parser.resolver, constructorData, token.DeployHeight, "owner")
 	if errors.Is(err, errInvalidTokenAddress) {
 		return &token, nil

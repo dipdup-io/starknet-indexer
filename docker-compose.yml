@@ -28,7 +28,7 @@ services:
     restart: always
     volumes:
       - db:/var/lib/postgres/data
-      - /etc/postgresql/postgresql.conf:/var/lib/postgresql/data/postgresql.conf
+      - /etc/postgresql/postgresql.conf:/etc/postgresql/postgresql.conf
     ports:
       - 127.0.0.1:5432:5432
     environment:
@@ -45,7 +45,7 @@ services:
     command:
       - "postgres"
       - "-c"
-      - "config_file=${POSTGRES_CONFIG:-/var/lib/postgresql/data/postgresql.conf}"
+      - "config_file=${POSTGRES_CONFIG:-/etc/postgresql/postgresql.conf}"
 
   hasura:
     image: hasura/graphql-engine:v2.22.0

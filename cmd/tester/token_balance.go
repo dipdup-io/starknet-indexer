@@ -7,6 +7,7 @@ import (
 	"github.com/dipdup-io/starknet-go-api/pkg/encoding"
 	"github.com/dipdup-io/starknet-go-api/pkg/presets"
 	"github.com/dipdup-io/starknet-go-api/pkg/sequencer"
+	models "github.com/dipdup-io/starknet-indexer/internal/storage"
 	"github.com/dipdup-io/starknet-indexer/internal/storage/postgres"
 	"github.com/dipdup-net/indexer-sdk/pkg/storage"
 	"github.com/rs/zerolog/log"
@@ -108,13 +109,35 @@ func (tbt TokenBalanceTester) testTotalSupplyForERC20(ctx context.Context) error
 	}
 
 	for !end {
-		tokens, err := tbt.postgres.ERC20.List(ctx, limit, offset, storage.SortOrderAsc)
+		tokens, err := tbt.postgres.Token.ListByType(ctx, models.TokenTypeERC20, limit, offset, storage.SortOrderAsc)
 		if err != nil {
 			return err
 		}
 
 		for i := range tokens {
-			log.Info().Str("name", tokens[i].Name).Str("symbol", tokens[i].Symbol).Msg("test supply of ERC20")
+			var (
+				name     string
+				symbol   string
+				decimals uint64
+			)
+			if tokens[i].Metadata != nil {
+				if val, ok := tokens[i].Metadata["name"]; ok {
+					if s, ok := val.(string); ok {
+						name = s
+					}
+				}
+				if val, ok := tokens[i].Metadata["symbol"]; ok {
+					if s, ok := val.(string); ok {
+						symbol = s
+					}
+				}
+				if val, ok := tokens[i].Metadata["decimals"]; ok {
+					if i, ok := val.(uint64); ok {
+						decimals = i
+					}
+				}
+			}
+			log.Info().Str("name", name).Str("symbol", symbol).Msg("test supply of ERC20")
 
 			dbTotalSupply, err := tbt.postgres.TokenBalance.TotalSupply(ctx, tokens[i].ContractID, 0)
 			if err != nil {
@@ -136,11 +159,11 @@ func (tbt TokenBalanceTester) testTotalSupplyForERC20(ctx context.Context) error
 			}
 
 			if !dbTotalSupply.Equal(apiTotalSupply) {
-				multiplier := decimal.NewFromInt(10).Pow(decimal.NewFromInt(int64(tokens[i].Decimals)))
+				multiplier := decimal.NewFromInt(10).Pow(decimal.NewFromInt(int64(decimals)))
 				diff := dbTotalSupply.Sub(apiTotalSupply).Div(multiplier)
 				log.Warn().
-					Str("name", tokens[i].Name).
-					Str("symbol", tokens[i].Symbol).
+					Str("name", name).
+					Str("symbol", symbol).
 					Str("db_total_supply", dbTotalSupply.Div(multiplier).String()).
 					Str("api_total_supply", apiTotalSupply.Div(multiplier).String()).
 					Str("diff", diff.String()).
@@ -170,13 +193,29 @@ func (tbt TokenBalanceTester) testOwnerForERC271(ctx context.Context) error {
 	}
 
 	for !end {
-		tokens, err := tbt.postgres.ERC721.List(ctx, limit, offset, storage.SortOrderDesc)
+		tokens, err := tbt.postgres.Token.ListByType(ctx, models.TokenTypeERC721, limit, offset, storage.SortOrderDesc)
 		if err != nil {
 			return err
 		}
 
 		for i := range tokens {
-			log.Info().Str("name", tokens[i].Name).Str("symbol", tokens[i].Symbol).Msg("test owner of ERC721")
+			var (
+				name   string
+				symbol string
+			)
+			if tokens[i].Metadata != nil {
+				if val, ok := tokens[i].Metadata["name"]; ok {
+					if s, ok := val.(string); ok {
+						name = s
+					}
+				}
+				if val, ok := tokens[i].Metadata["symbol"]; ok {
+					if s, ok := val.(string); ok {
+						symbol = s
+					}
+				}
+			}
+			log.Info().Str("name", name).Str("symbol", symbol).Msg("test owner of ERC721")
 
 			nfts, err := tbt.postgres.TokenBalance.Balances(ctx, tokens[i].ContractID, -1, 5, 0)
 			if err != nil {
@@ -215,8 +254,8 @@ func (tbt TokenBalanceTester) testOwnerForERC271(ctx context.Context) error {
 
 				if dbOwner != apiOwnerString {
 					log.Warn().
-						Str("name", tokens[i].Name).
-						Str("symbol", tokens[i].Symbol).
+						Str("name", name).
+						Str("symbol", symbol).
 						Str("db_owner", dbOwner).
 						Str("api_owner", apiOwner.String()).
 						Msg("nft owners are differ")

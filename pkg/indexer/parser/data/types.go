@@ -15,10 +15,3 @@ type Result struct {
 const (
 	UpgradeEntrypoint = "upgrade"
 )
-
-// Token -
-type Token struct {
-	ERC20   *storage.ERC20
-	ERC721  *storage.ERC721
-	ERC1155 *storage.ERC1155
-}
