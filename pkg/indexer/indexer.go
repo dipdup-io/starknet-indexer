@@ -210,6 +210,9 @@ func (indexer *Indexer) getNewBlocks(ctx context.Context) error {
 		startLevel := indexer.cfg.StartLevel
 		if startLevel < indexer.state.Height() {
 			startLevel = indexer.state.Height()
+			if indexer.state.Height() > 0 {
+				startLevel += 1
+			}
 		}
 
 		for height := startLevel; height <= head; height++ {
