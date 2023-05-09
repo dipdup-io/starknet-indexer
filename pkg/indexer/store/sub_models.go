@@ -83,11 +83,7 @@ func (sm *subModels) addMessages(msgs []models.Message) {
 func (sm *subModels) addTransfers(transfers []models.Transfer) {
 	sm.Transfers = append(sm.Transfers, transfers...)
 	for i := range transfers {
-		balances := transfers[i].TokenBalanceUpdates()
-		// for j := range balances {
-
-		// }
-		sm.TokenBalances = append(sm.TokenBalances, balances...)
+		sm.TokenBalances = append(sm.TokenBalances, transfers[i].TokenBalanceUpdates()...)
 	}
 }
 
