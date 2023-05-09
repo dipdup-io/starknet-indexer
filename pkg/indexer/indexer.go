@@ -149,7 +149,7 @@ func (indexer *Indexer) Name() string {
 // Close -
 func (indexer *Indexer) Close() error {
 	indexer.wg.Wait()
-	indexer.log.Info().Msgf("closing indexer...")
+	indexer.log.Info().Msgf("closing...")
 
 	if err := indexer.statusChecker.Close(); err != nil {
 		return err
