@@ -119,7 +119,13 @@ func (module *Server) blockHandler(block *storage.Block) {
 		module.notifyAboutInternals(block.Deploy[i].Internals)
 		module.notifyAboutEvents(block.Deploy[i].Events)
 		module.notifyAboutMessages(block.Deploy[i].Messages)
+
+		if block.Deploy[i].Token != nil {
+			module.notifyAboutToken(block.Deploy[i].Token)
+		}
+
 		module.notifyAboutTransfers(block.Deploy[i].Transfers)
+
 	}
 	for i := range block.DeployAccount {
 		module.subscriptions.NotifyAll(
@@ -177,6 +183,10 @@ func (module *Server) notifyAboutInternals(txs []storage.Internal) {
 			subscriptions.NewInternalMessage(&txs[j]),
 			SubscriptionInternal,
 		)
+
+		if txs[j].Token != nil {
+			module.notifyAboutToken(txs[j].Token)
+		}
 	}
 }
 
@@ -230,6 +240,17 @@ func (module *Server) notifyAboutFee(fee *storage.Fee) {
 	module.notifyAboutEvents(fee.Events)
 	module.notifyAboutMessages(fee.Messages)
 	module.notifyAboutTransfers(fee.Transfers)
+}
+
+func (module *Server) notifyAboutToken(token *storage.Token) {
+	if token == nil {
+		return
+	}
+
+	module.subscriptions.NotifyAll(
+		subscriptions.NewTokenMessage(token),
+		SubscriptionToken,
+	)
 }
 
 // Close -

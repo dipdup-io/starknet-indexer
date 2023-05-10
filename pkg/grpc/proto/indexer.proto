@@ -40,6 +40,7 @@ message SubscribeRequest {
     TransferFilter transfers = 11;
     StorageDiffFilter storage_diffs = 12;
     TokenBalanceFilter token_balances = 13;
+    TokenFilter tokens = 14;
 }
 
 /**
@@ -60,7 +61,8 @@ message Subscription {
     StorageDiff storage_diff = 12;
     TokenBalance token_balance = 13;
     Transfer transfer = 14;
-    bool end_of_block = 15; // message which signals about block data ends
+    Token token = 15;
+    bool end_of_block = 16; // message which signals about block data ends
 }
 
 /**

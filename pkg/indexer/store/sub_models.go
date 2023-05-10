@@ -139,7 +139,6 @@ func bulkSaveWithCopy[M storage.Model](ctx context.Context, tx storage.Transacti
 		if err != nil {
 			return err
 		}
-		// return tx.CopyFrom(io.TeeReader(reader, os.Stdout), query)
 		return tx.CopyFrom(reader, query)
 	}
 }
