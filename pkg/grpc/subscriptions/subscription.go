@@ -25,6 +25,7 @@ type Subscription struct {
 	storageDiffs   filters.StorageDiff
 	tokenBalances  filters.TokenBalance
 	transfers      filters.Transfer
+	tokens         filters.Token
 }
 
 // NewSubscription -
@@ -117,6 +118,13 @@ func NewSubscription(ctx context.Context, db postgres.Storage, req *pb.Subscribe
 		}
 		all.transfers = fltr
 	}
+	if req.Tokens != nil {
+		fltr, err := filters.NewToken(ctx, db.Address, req.Tokens)
+		if err != nil {
+			return nil, err
+		}
+		all.tokens = fltr
+	}
 
 	return all, nil
 }
@@ -166,6 +174,9 @@ func (s *Subscription) Filter(msg *Message) bool {
 		return true
 	}
 	if msg.Transfer != nil && s.transfers.Filter(*msg.Transfer) {
+		return true
+	}
+	if msg.Token != nil && s.tokens.Filter(*msg.Token) {
 		return true
 	}
 

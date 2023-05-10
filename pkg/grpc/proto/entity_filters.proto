@@ -128,3 +128,9 @@ message TokenBalanceFilter {
     BytesFilter contract = 2;
     StringFilter token_id = 3;
 }
+
+message TokenFilter {
+    BytesFilter contract = 1;
+    BytesFilter owner = 2;
+    EnumFilter type = 3;
+}

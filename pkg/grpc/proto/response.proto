@@ -186,3 +186,13 @@ message Transfer {
     string amount = 7;
     string token_id = 8;
 }
+
+message Token {
+    uint64 id = 1;
+    uint64 deploy_height = 2;
+    uint64 deploy_time = 3;
+    bytes contract = 4;
+    bytes owner = 5;
+    int32 type = 6;
+    bytes metadata = 7;
+}
