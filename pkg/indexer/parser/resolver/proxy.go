@@ -135,10 +135,10 @@ func (resolver *Resolver) findProxyEntity(ctx context.Context, hash []byte, heig
 
 	address, err := resolver.cache.GetAddress(ctx, hash)
 	switch {
-	case err == nil:
+	case err == nil && address.ClassID != nil:
 		return address.ID, storage.EntityTypeContract, nil
 
-	case resolver.blocks.IsNoRows(err):
+	case (err == nil && address.ClassID == nil) || resolver.blocks.IsNoRows(err):
 		class, err := resolver.cache.GetClassByHash(ctx, hash)
 		if err != nil {
 			if resolver.blocks.IsNoRows(err) {
