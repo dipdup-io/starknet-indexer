@@ -233,7 +233,7 @@ func (indexer *Indexer) getNewBlocks(ctx context.Context) error {
 				return nil
 			default:
 				log.Err(err).Msg("receive head error")
-				time.Sleep(time.Second * 5)
+				time.Sleep(time.Second * 30)
 			}
 		}
 	}
@@ -249,7 +249,7 @@ func (indexer *Indexer) sync(ctx context.Context) {
 		indexer.log.Err(err).Msg("getNewBlocks")
 	}
 
-	ticker := time.NewTicker(time.Second * 15)
+	ticker := time.NewTicker(time.Second * 30)
 	defer ticker.Stop()
 
 	for {
