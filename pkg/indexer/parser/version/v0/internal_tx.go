@@ -14,6 +14,7 @@ import (
 	parserData "github.com/dipdup-io/starknet-indexer/pkg/indexer/parser/data"
 	"github.com/dipdup-io/starknet-indexer/pkg/indexer/parser/interfaces"
 	"github.com/dipdup-io/starknet-indexer/pkg/indexer/parser/resolver"
+	"github.com/rs/zerolog/log"
 )
 
 // InternalTxParser -
@@ -136,6 +137,8 @@ func (parser InternalTxParser) Parse(ctx context.Context, txCtx parserData.TxCon
 	isChangeModules := bytes.Equal(tx.Selector, encoding.ChangeModuleEntrypointSelector)
 	_, hasChangeModules := contractAbi.Functions[encoding.ChangeModulesEntrypoint]
 
+	isUnknownProxyErr := false
+
 	if len(tx.Selector) > 0 {
 		if !(isExecute || isChangeModules) {
 			if _, has := contractAbi.GetByTypeAndSelector(internal.EntrypointType, encoding.EncodeHex(tx.Selector)); !has {
@@ -148,7 +151,11 @@ func (parser InternalTxParser) Parse(ctx context.Context, txCtx parserData.TxCon
 				}
 				contractAbi, err = parser.Resolver.Proxy(ctx, txCtx, tx.Class, tx.Contract, tx.Selector)
 				if err != nil {
-					return tx, err
+					if !errors.Is(err, resolver.ErrUnknownProxy) {
+						return tx, err
+					}
+					isUnknownProxyErr = true
+					log.Err(err).Msg("find proxy error")
 				}
 				if tx.Class.Type.Is(storage.ClassTypeProxy) {
 					proxyId = tx.ContractID
@@ -164,7 +171,7 @@ func (parser InternalTxParser) Parse(ctx context.Context, txCtx parserData.TxCon
 			case isChangeModules && !hasChangeModules:
 				tx.Entrypoint = encoding.ChangeModulesEntrypoint
 				tx.ParsedCalldata, err = abi.DecodeChangeModulesCallData(internal.Calldata)
-			default:
+			case !isUnknownProxyErr:
 				tx.ParsedCalldata, tx.Entrypoint, err = decode.InternalCalldata(contractAbi, tx.Selector, internal.Calldata, tx.EntrypointType)
 			}
 
@@ -180,7 +187,7 @@ func (parser InternalTxParser) Parse(ctx context.Context, txCtx parserData.TxCon
 			case isExecute && !hasExecute:
 			case isChangeModules && !hasChangeModules:
 				tx.ParsedResult, err = abi.DecodeChangeModulesResult(internal.Result)
-			default:
+			case !isUnknownProxyErr:
 				tx.ParsedResult, err = decode.Result(contractAbi, internal.Result, tx.Selector, tx.EntrypointType)
 			}
 			if err != nil {
