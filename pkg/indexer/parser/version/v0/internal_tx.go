@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"errors"
+	"log"
 
 	"github.com/dipdup-io/starknet-go-api/pkg/abi"
 	"github.com/dipdup-io/starknet-go-api/pkg/encoding"
@@ -14,7 +15,6 @@ import (
 	parserData "github.com/dipdup-io/starknet-indexer/pkg/indexer/parser/data"
 	"github.com/dipdup-io/starknet-indexer/pkg/indexer/parser/interfaces"
 	"github.com/dipdup-io/starknet-indexer/pkg/indexer/parser/resolver"
-	"github.com/rs/zerolog/log"
 )
 
 // InternalTxParser -
@@ -137,7 +137,8 @@ func (parser InternalTxParser) Parse(ctx context.Context, txCtx parserData.TxCon
 	isChangeModules := bytes.Equal(tx.Selector, encoding.ChangeModuleEntrypointSelector)
 	_, hasChangeModules := contractAbi.Functions[encoding.ChangeModulesEntrypoint]
 
-	isUnknownProxyErr := false
+	s := encoding.EncodeHex(tx.Hash)
+	log.Print(s)
 
 	if len(tx.Selector) > 0 {
 		if !(isExecute || isChangeModules) {
@@ -151,11 +152,7 @@ func (parser InternalTxParser) Parse(ctx context.Context, txCtx parserData.TxCon
 				}
 				contractAbi, err = parser.Resolver.Proxy(ctx, txCtx, tx.Class, tx.Contract, tx.Selector)
 				if err != nil {
-					if !errors.Is(err, resolver.ErrUnknownProxy) {
-						return tx, err
-					}
-					isUnknownProxyErr = true
-					log.Err(err).Msg("find proxy error")
+					return tx, err
 				}
 				if tx.Class.Type.Is(storage.ClassTypeProxy) {
 					proxyId = tx.ContractID
@@ -171,7 +168,7 @@ func (parser InternalTxParser) Parse(ctx context.Context, txCtx parserData.TxCon
 			case isChangeModules && !hasChangeModules:
 				tx.Entrypoint = encoding.ChangeModulesEntrypoint
 				tx.ParsedCalldata, err = abi.DecodeChangeModulesCallData(internal.Calldata)
-			case !isUnknownProxyErr:
+			default:
 				tx.ParsedCalldata, tx.Entrypoint, err = decode.InternalCalldata(contractAbi, tx.Selector, internal.Calldata, tx.EntrypointType)
 			}
 
@@ -187,7 +184,7 @@ func (parser InternalTxParser) Parse(ctx context.Context, txCtx parserData.TxCon
 			case isExecute && !hasExecute:
 			case isChangeModules && !hasChangeModules:
 				tx.ParsedResult, err = abi.DecodeChangeModulesResult(internal.Result)
-			case !isUnknownProxyErr:
+			default:
 				tx.ParsedResult, err = decode.Result(contractAbi, internal.Result, tx.Selector, tx.EntrypointType)
 			}
 			if err != nil {

@@ -63,7 +63,7 @@ func (parser ProxyUpgrader) parseEvents(ctx context.Context, txCtx data.TxContex
 			return false, err
 		}
 		for i := range upgrades {
-			key := data.NewProxyKey(upgrades[i].Address, upgrades[i].Selector)
+			key := data.NewProxyKey(contract.Hash, upgrades[i].Selector)
 			txCtx.ProxyUpgrades.Add(key, struct{}{})
 		}
 		return true, nil
@@ -98,7 +98,7 @@ func (parser ProxyUpgrader) parseParams(ctx context.Context, txCtx data.TxContex
 		return err
 	}
 	for i := range upgrades {
-		key := data.NewProxyKey(upgrades[i].Address, upgrades[i].Selector)
+		key := data.NewProxyKey(contract.Hash, upgrades[i].Selector)
 		txCtx.ProxyUpgrades.Add(key, struct{}{})
 	}
 	return err
