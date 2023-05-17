@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"errors"
-	"log"
 
 	"github.com/dipdup-io/starknet-go-api/pkg/abi"
 	"github.com/dipdup-io/starknet-go-api/pkg/encoding"
@@ -136,9 +135,6 @@ func (parser InternalTxParser) Parse(ctx context.Context, txCtx parserData.TxCon
 
 	isChangeModules := bytes.Equal(tx.Selector, encoding.ChangeModuleEntrypointSelector)
 	_, hasChangeModules := contractAbi.Functions[encoding.ChangeModulesEntrypoint]
-
-	s := encoding.EncodeHex(tx.Hash)
-	log.Print(s)
 
 	if len(tx.Selector) > 0 {
 		if !(isExecute || isChangeModules) {
