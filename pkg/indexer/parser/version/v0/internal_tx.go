@@ -169,7 +169,7 @@ func (parser InternalTxParser) Parse(ctx context.Context, txCtx parserData.TxCon
 			}
 
 			if err != nil {
-				if !errors.Is(err, abi.ErrNoLenField) {
+				if !errors.Is(err, abi.ErrNoLenField) && !errors.Is(err, abi.ErrTooShortCallData) {
 					return tx, err
 				}
 			}
@@ -184,7 +184,7 @@ func (parser InternalTxParser) Parse(ctx context.Context, txCtx parserData.TxCon
 				tx.ParsedResult, err = decode.Result(contractAbi, internal.Result, tx.Selector, tx.EntrypointType)
 			}
 			if err != nil {
-				if !errors.Is(err, abi.ErrNoLenField) {
+				if !errors.Is(err, abi.ErrNoLenField) && !errors.Is(err, abi.ErrTooShortCallData) {
 					return tx, err
 				}
 			}
