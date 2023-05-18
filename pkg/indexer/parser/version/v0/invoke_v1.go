@@ -48,7 +48,7 @@ func (parser Parser) ParseInvokeV1(ctx context.Context, raw *data.Invoke, block 
 	if len(tx.CallData) > 0 {
 		parsed, err := abi.DecodeExecuteCallData(tx.CallData)
 		if err != nil {
-			if !errors.Is(err, abi.ErrNoLenField) {
+			if !errors.Is(err, abi.ErrNoLenField) && !errors.Is(err, abi.ErrTooShortCallData) {
 				return tx, nil, err
 			}
 		}

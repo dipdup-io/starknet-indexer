@@ -107,7 +107,7 @@ func (parser Parser) ParseInvokeV0(ctx context.Context, raw *data.Invoke, block 
 			tx.ParsedCalldata, tx.Entrypoint, err = decode.CalldataBySelector(contractAbi, tx.EntrypointSelector, tx.CallData)
 		}
 		if err != nil {
-			if !errors.Is(err, abi.ErrNoLenField) {
+			if !errors.Is(err, abi.ErrNoLenField) && !errors.Is(err, abi.ErrTooShortCallData) {
 				return tx, nil, err
 			}
 		}
