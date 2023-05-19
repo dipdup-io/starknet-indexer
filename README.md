@@ -1,55 +1,189 @@
-# StarkNet generic indexer
+# Starknet indexer
+This is an indexing layer for Starknet written in Golang that operates on top of the (Feeder) Gateway API and stores data in a Postgres database.  
 
-This is a basic layer of the indexing stack called "DipDup Vertical" being created for the StarkNet ecosystem.  
-With this open-source indexing solution we aim to enable developers with flexible APIs for accessing blockchain data, as well as with a powerful framework for creating custom APIs for particular dapps.
+It can be used in multiple ways and for various purposes:
+- As a base component for the [DipDup Vertical](https://dipdup.io) — GraphQL federation providing a wide range of APIs for accessing both on-chain and off-chain data/metadata
+- As a datasource for the [DipDup Framework](https://dipdup.io) — a Python SDK for building custom API backends for dapps
+- As a standalone service — in a headless mode or with gRPC interface exposed
+- As a library (go module) — most on-chain model definitions and indexing primitives can be reused
 
-## What is DipDup
+What you can build with DipDup:
+- A custom API for your dapp to enable rich user interface & to save on RPC calls
+- Any kind of aggregator: for DEXes, NFT marketplaces, etc
+- Portfolio tracking tool
+- A generic / specialized chain explorer
+- An archive node for your L3 chain
+- ???
 
-DipDup is a modular framework for creating selective indexers and featureful backends for decentralized applications. It eliminates the boilerplate and takes care of most of the indexing-specific things allowing developers to focus on the business logic, reducing time-to-market.
+## Features
+- Blocks, events, and all operation types
+- Internal operations are also indexed
+- ERC20/ERC721/ERC1155 token transfers and balances (legacy tokens supported)
+- Proxy and wallet contracts supported (known implementations from ArgentX, Braavos)
+- Transaction calldata and event logs are pre-decoded (if ABI is provided by the node)
+- Rollbacks are handled
+- Database is partitioned for better performance
+- Optional diagnostic mode for consistency checks
+- gRPC interface and Hasura GQL engine integration
 
-https://dipdup.io
+## Documentation
+Check out the repository wiki to learn more about the indexer internals:
+- [Build and run](https://github.com/dipdup-io/starknet-indexer/wiki/Configuration-and-building#building)
+- [Configuration](https://github.com/dipdup-io/starknet-indexer/wiki/Configuration-and-building)
+- [Database schema](https://github.com/dipdup-io/starknet-indexer/wiki/Database-structure)
+- [gRPC protocol](https://github.com/dipdup-io/starknet-indexer/wiki/gRPC-protocol)
 
-DipDup is used in production for 1.5 years by 15+ teams in the Tezos ecosystem, and we are currently expanding to EVM, planning to support 70 compatible networks by Q2 2023.
+Also check out the [cmd/rpc_tester](https://github.com/dipdup-io/starknet-indexer/tree/master/cmd/rpc_tester) folder with simple events indexers for Starknet.ID and Loot Survivor.
 
-### DipDup Verticals
+## Public instances
+Public deployments with reasonable rate limits are available for testing and prototyping:
+- [Starknet mainnet](https://play.dipdup.io/?endpoint=https://starknet-mainnet-gql.dipdup.net/v1/graphql) `https://starknet-mainnet-gql.dipdup.net/v1/graphql`
+- [Goerli2 testnet](https://play.dipdup.io/?endpoint=https://starknet-goerli2-gql.dipdup.net/v1/graphql) `https://starknet-goerli2-gql.dipdup.net/v1/graphql`
 
-DipDup Vertical is a group of indexing services working on top of each other and wrapped with a common API facade. In the result developers get access to all kinds of APIs, from generic blockchain account and transaction data, to NFT metadata and aggregated DEX quotes, all through a single GraphQL endpoint.
+## Example queries
 
-We currently have a single vertical implemented for Tezos chain, it includes token/contract metadata indexers, mempool indexer, domains indexer, DEX aggregator, analytical backend, search engine, and dapps listing.
+**DISCLAIMER**
+The API is currently in developer preview, request interface/response layout might change.  
+The underlying DB is not yet tuned for best performance, some queries might take a while to execute: we are working on improving that.
 
-## Key features
+### Get token balances
 
-DipDup was developed to tackle the complexity of multi-domain indexing in an environment of rapidly growing data volumes and tight deadlines for providing new features. Its design allows to significantly reduce costs to develop and maintain custom API solutions.
+Querying token balances for a given account.
 
-### Fast feature-to-market
+```graphql
+query GetTokenBalances {
+  token_balance(
+    where: {owner: {hash: {_eq: "\\x06ac597f8116f886fa1c97a23fa4e08299975ecaf6b598873ca6792b9bbfb678"}}}
+  ) {
+    owner_id
+    balance
+    token {
+      metadata
+      id
+      type
+      contract {
+        hash
+      }
+    }
+  }
+}
+```
 
-Forementioned DipDup Verticals are implemented as stateful microservices that form a hierarchy where one sub-indexer uses output of another sub-indexer as input.
+Few things to note:
+- Contract (wallet) addresses are not primary keys (for the sake of performance we use integers) so you need to either use filters or query by `owner_id`
+- Hex strings are prefixed with `\\x` (instead of usual `0x`)
+- Token type is enum (integer is used under the hood to save on storage), all possible values are listed in the docstring (check out the docs panel in the playground) or [wiki](https://github.com/dipdup-io/starknet-indexer/wiki/Database-structure#token) `1 - ERC20 | 2 - ERC721 | 3 - ERC1155`
 
-This design allows us to handle complexity and to be able to ship new features in a short time without sacrificing code quality and reliability of the entire system, because:
-- There's no need to re-sync the entire system, just the service that was updated and optionally its dependent services; or create a new service if feature is large and standalone enough
-- We can use any tech stack and delegate tasks to different teams, as long as the common indexing flow and communication interface are implemented
-- We can re-use existing indexing modules providing already processed data
+### Get L1<>L2 messages
 
-In order to solve the problem of having too many APIs with such approach, we use API federation pattern, namely GraphQL federation which allows to combine multiple API endpoints under a single facade. Additionally it enables cross-schema relations, which makes the resulting API more coupled and functional.
+Querying messages and `l1_handler` operations for the StarkGate contract.
 
-### Deep customization
+```graphql
+query GetStarkGateMessages {
+  message(
+    where: {contract: {hash: {_eq: "\\x073314940630fd6dcda0d772d4c972c4e0a9946bef9dabf4ef84eda8ef542b82"}}}
+    order_by: {id: desc}
+    limit: 5
+  ) {
+    payload
+    time
+    to {
+      hash
+    }
+  }
+  l1_handler(
+    where: {contract: {hash: {_eq: "\\x073314940630fd6dcda0d772d4c972c4e0a9946bef9dabf4ef84eda8ef542b82"}}}
+    order_by: {id: desc}
+    limit: 5
+  ) {
+    parsed_calldata
+    time
+    status
+    entrypoint
+  }
+}
+```
 
-Unlike competing solutions like TheGraph, DipDup does not restrict developers in his choice of database engine, API gateway, or any other third-party integrations.
+Notes on the response:
+- You might noticed zero-prefixed addresses in the `message.to.hash` field – those are Ethereum L1 addresses
+- `l1_handler.parsed_calldata` is the original calldata (also available) decoded according with the ABI provided by the sequencer node API
+- `l1_handler.status` is also an enum, check out the [docstrings/wiki](https://github.com/dipdup-io/starknet-indexer/wiki/Database-structure#l1_handler) for details `unknown - 1 , not received - 2 , received - 3 , pending - 4 , rejected - 5 , accepted on l2 - 6 , accepted on l1 - 7`
 
-By default, it works with PostgreSQL and Hasura GQL engine, but you can also use PostgREST, send data to Kafka, write your own API endpoints, or just leave your backend headless. Similarly, you can choose to use TimescaleDB if you deal with time series, or any other DB that suits your needs.
+### Get event logs
 
-You can also query any datasources, run background jobs, maybe have some user-generated content mixed with blockchain data, enable user authentication, and many more. Basically, you can do whatever you need to build a fully-fledged backend for your dapp.
+Querying Starknet.ID events.
 
-### Enterprise grade
+```graphql
+query GetStarknetIDs {
+  event(
+    where: {contract: {hash: {_eq: "\\x06ac597f8116f886fa1c97a23fa4e08299975ecaf6b598873ca6792b9bbfb678"}}, name: {_eq: "domain_to_addr_update"}}
+    limit: 20
+    order_by: {id: desc}
+  ) {
+    parsed_data
+    time
+  }
+}
 
-DipDup is open-source, written in Python, works with a variety of time-proven DB and API engines, and natively supports common observability and maintenance services like Prometheus and Sentry.
+```
 
-You also have a relatively low vendor lock-in risk with such a setup.
+### Get token transfers
 
-### Low development costs
+```graphql
+query GetSithSwapTransfers {
+  transfer(
+    where: {to: {class: {hash: {_eq: "\\x07eb597ad7d9ba28ea1db162cdb99e265fe22bcb00e9b690e188c2203de9e005"}}}}
+    limit: 50
+    order_by: {id: desc}
+  ) {
+    amount
+    from {
+      hash
+    }
+    to {
+      hash
+    }
+    token_id
+    contract {
+      hash
+    }
+    time
+  }
+}
+```
 
-It is very easy to start building on DipDup, as it's Python-based, accompanied with comprehensive docs and templates. You can also get help in our developer community.
+### Get internal transactions
 
-DipDup is a framework, and it gently guides you towards the right path by restricting file organisation, by providing to-be-implemented stubs and other hints.
+Querying execution trace for a SithSwap swap.
 
-DipDup significantly reduces boilerplate associated with querying and decoding data, handling network and chain issues. What left is just core logic you need to implement.
+```graphql
+query GetExecutionTrace {
+  internal_tx(
+    where: {hash: {_eq: "\\x07563ba09f924376edfdaf94b11941680867993d9caf271ae791ff4e89740177"}}
+    order_by: {id: asc}
+  ) {
+    parsed_calldata
+    parsed_result
+    entrypoint
+    caller {
+      hash
+    }
+    call_type
+    contract {
+      hash
+    }
+  }
+}
+```
+
+## About
+
+DipDup Vertical for Starknet is a federated API including the following services:
+- [x] Generic Starknet indexer
+- [ ] Token metadata resolver
+- [ ] Starknet.ID indexer
+- [ ] Aggregated market data
+- [ ] Chain/dapp/contract analytics
+- [ ] Starknet search engine
+
+Project is supported by Starkware and Starknet Foundation via [OnlyDust platform](https://app.onlydust.xyz/projects/e1b6d080-7f15-4531-9259-10c3dae26848)
