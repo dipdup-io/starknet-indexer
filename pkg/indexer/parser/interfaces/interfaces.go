@@ -43,7 +43,7 @@ type FeeParser interface {
 
 // TokenParser -
 type TokenParser interface {
-	Parse(ctx context.Context, txCtx data.TxContext, contract storage.Address, classType storage.ClassType, constructorData map[string]any) (data.Token, error)
+	Parse(ctx context.Context, txCtx data.TxContext, contract storage.Address, classType storage.ClassType, constructorData map[string]any) (*storage.Token, error)
 }
 
 // TransferParser -

@@ -40,11 +40,13 @@ Public deployments with reasonable rate limits are available for testing and pro
 - [Starknet mainnet](https://play.dipdup.io/?endpoint=https://starknet-mainnet-gql.dipdup.net/v1/graphql) `https://starknet-mainnet-gql.dipdup.net/v1/graphql`
 - [Goerli2 testnet](https://play.dipdup.io/?endpoint=https://starknet-goerli2-gql.dipdup.net/v1/graphql) `https://starknet-goerli2-gql.dipdup.net/v1/graphql`
 
-## Example queries
+## Notes
+- Indexer works on top of the API provided by the sequencer node — it contains the most comprehensive data set, in particular classes and ABIs ordinary nodes do not always have; It's possible though to outsource several request types to the node API to reduce the load on the sequencer and speed up the indexing process, there's an option in the config for that.
+- Currently pending blocks are not handled, therefore depending on the L2 block time (which in turn depends on the tx rate) you may have long delays in data updates.
+- The API is currently in developer preview, request interface/response layout might change.  
+- The underlying DB is not yet tuned for best performance, some queries might take a while to execute: we are working on improving that.
 
-**DISCLAIMER**
-The API is currently in developer preview, request interface/response layout might change.  
-The underlying DB is not yet tuned for best performance, some queries might take a while to execute: we are working on improving that.
+## Example queries
 
 ### Get token balances
 

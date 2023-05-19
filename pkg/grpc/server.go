@@ -12,6 +12,7 @@ import (
 	"github.com/dipdup-net/indexer-sdk/pkg/modules"
 	grpcSDK "github.com/dipdup-net/indexer-sdk/pkg/modules/grpc"
 	"github.com/pkg/errors"
+	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 )
 
@@ -29,6 +30,7 @@ type Server struct {
 
 	input         *modules.Input
 	subscriptions *grpcSDK.Subscriptions[*subscriptions.Message, *pb.Subscription]
+	log           zerolog.Logger
 
 	wg *sync.WaitGroup
 }
@@ -48,23 +50,24 @@ func NewServer(
 		db:            db,
 		input:         modules.NewInput(InputBlocks),
 		subscriptions: grpcSDK.NewSubscriptions[*subscriptions.Message, *pb.Subscription](),
+		log:           log.With().Str("module", "grpc_server").Logger(),
 
 		wg: new(sync.WaitGroup),
 	}, nil
 }
 
 // Start -
-func (server *Server) Start(ctx context.Context) {
-	pb.RegisterIndexerServiceServer(server.Server.Server(), server)
+func (module *Server) Start(ctx context.Context) {
+	pb.RegisterIndexerServiceServer(module.Server.Server(), module)
 
-	server.Server.Start(ctx)
+	module.Server.Start(ctx)
 
-	server.wg.Add(1)
-	go server.listen(ctx)
+	module.wg.Add(1)
+	go module.listen(ctx)
 }
 
-func (server *Server) listen(ctx context.Context) {
-	defer server.wg.Done()
+func (module *Server) listen(ctx context.Context) {
+	defer module.wg.Done()
 
 	ticker := time.NewTicker(time.Second * 15)
 	defer ticker.Stop()
@@ -75,14 +78,14 @@ func (server *Server) listen(ctx context.Context) {
 			return
 		case <-ticker.C:
 
-		case msg, ok := <-server.input.Listen():
+		case msg, ok := <-module.input.Listen():
 			if !ok {
 				return
 			}
 			if block, ok := msg.(*storage.Block); ok {
-				server.blockHandler(block)
+				module.blockHandler(block)
 			} else {
-				log.Warn().Msgf("unknown message type: %T", msg)
+				module.log.Warn().Msgf("unknown message type: %T", msg)
 			}
 		}
 	}
@@ -116,7 +119,13 @@ func (module *Server) blockHandler(block *storage.Block) {
 		module.notifyAboutInternals(block.Deploy[i].Internals)
 		module.notifyAboutEvents(block.Deploy[i].Events)
 		module.notifyAboutMessages(block.Deploy[i].Messages)
+
+		if block.Deploy[i].Token != nil {
+			module.notifyAboutToken(block.Deploy[i].Token)
+		}
+
 		module.notifyAboutTransfers(block.Deploy[i].Transfers)
+
 	}
 	for i := range block.DeployAccount {
 		module.subscriptions.NotifyAll(
@@ -174,6 +183,10 @@ func (module *Server) notifyAboutInternals(txs []storage.Internal) {
 			subscriptions.NewInternalMessage(&txs[j]),
 			SubscriptionInternal,
 		)
+
+		if txs[j].Token != nil {
+			module.notifyAboutToken(txs[j].Token)
+		}
 	}
 }
 
@@ -227,6 +240,17 @@ func (module *Server) notifyAboutFee(fee *storage.Fee) {
 	module.notifyAboutEvents(fee.Events)
 	module.notifyAboutMessages(fee.Messages)
 	module.notifyAboutTransfers(fee.Transfers)
+}
+
+func (module *Server) notifyAboutToken(token *storage.Token) {
+	if token == nil {
+		return
+	}
+
+	module.subscriptions.NotifyAll(
+		subscriptions.NewTokenMessage(token),
+		SubscriptionToken,
+	)
 }
 
 // Close -

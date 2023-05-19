@@ -1176,6 +1176,69 @@ func (x *TokenBalanceFilter) GetTokenId() *StringFilter {
 	return nil
 }
 
+type TokenFilter struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Contract *BytesFilter `protobuf:"bytes,1,opt,name=contract,proto3" json:"contract,omitempty"`
+	Owner    *BytesFilter `protobuf:"bytes,2,opt,name=owner,proto3" json:"owner,omitempty"`
+	Type     *EnumFilter  `protobuf:"bytes,3,opt,name=type,proto3" json:"type,omitempty"`
+}
+
+func (x *TokenFilter) Reset() {
+	*x = TokenFilter{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_github_com_dipdup_io_starknet_indexer_pkg_grpc_proto_entity_filters_proto_msgTypes[12]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *TokenFilter) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*TokenFilter) ProtoMessage() {}
+
+func (x *TokenFilter) ProtoReflect() protoreflect.Message {
+	mi := &file_github_com_dipdup_io_starknet_indexer_pkg_grpc_proto_entity_filters_proto_msgTypes[12]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use TokenFilter.ProtoReflect.Descriptor instead.
+func (*TokenFilter) Descriptor() ([]byte, []int) {
+	return file_github_com_dipdup_io_starknet_indexer_pkg_grpc_proto_entity_filters_proto_rawDescGZIP(), []int{12}
+}
+
+func (x *TokenFilter) GetContract() *BytesFilter {
+	if x != nil {
+		return x.Contract
+	}
+	return nil
+}
+
+func (x *TokenFilter) GetOwner() *BytesFilter {
+	if x != nil {
+		return x.Owner
+	}
+	return nil
+}
+
+func (x *TokenFilter) GetType() *EnumFilter {
+	if x != nil {
+		return x.Type
+	}
+	return nil
+}
+
 var File_github_com_dipdup_io_starknet_indexer_pkg_grpc_proto_entity_filters_proto protoreflect.FileDescriptor
 
 var file_github_com_dipdup_io_starknet_indexer_pkg_grpc_proto_entity_filters_proto_rawDesc = []byte{
@@ -1485,11 +1548,20 @@ var file_github_com_dipdup_io_starknet_indexer_pkg_grpc_proto_entity_filters_pro
 	0x72, 0x52, 0x08, 0x63, 0x6f, 0x6e, 0x74, 0x72, 0x61, 0x63, 0x74, 0x12, 0x2e, 0x0a, 0x08, 0x74,
 	0x6f, 0x6b, 0x65, 0x6e, 0x5f, 0x69, 0x64, 0x18, 0x03, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x13, 0x2e,
 	0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2e, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x46, 0x69, 0x6c, 0x74,
-	0x65, 0x72, 0x52, 0x07, 0x74, 0x6f, 0x6b, 0x65, 0x6e, 0x49, 0x64, 0x42, 0x33, 0x5a, 0x31, 0x67,
-	0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x64, 0x69, 0x70, 0x64, 0x75, 0x70,
-	0x2d, 0x69, 0x6f, 0x2f, 0x73, 0x74, 0x61, 0x72, 0x6b, 0x6e, 0x65, 0x74, 0x2d, 0x69, 0x6e, 0x64,
-	0x65, 0x78, 0x65, 0x72, 0x2f, 0x70, 0x6b, 0x67, 0x2f, 0x67, 0x72, 0x70, 0x63, 0x2f, 0x70, 0x62,
-	0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x65, 0x72, 0x52, 0x07, 0x74, 0x6f, 0x6b, 0x65, 0x6e, 0x49, 0x64, 0x22, 0x8e, 0x01, 0x0a, 0x0b,
+	0x54, 0x6f, 0x6b, 0x65, 0x6e, 0x46, 0x69, 0x6c, 0x74, 0x65, 0x72, 0x12, 0x2e, 0x0a, 0x08, 0x63,
+	0x6f, 0x6e, 0x74, 0x72, 0x61, 0x63, 0x74, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x12, 0x2e,
+	0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2e, 0x42, 0x79, 0x74, 0x65, 0x73, 0x46, 0x69, 0x6c, 0x74, 0x65,
+	0x72, 0x52, 0x08, 0x63, 0x6f, 0x6e, 0x74, 0x72, 0x61, 0x63, 0x74, 0x12, 0x28, 0x0a, 0x05, 0x6f,
+	0x77, 0x6e, 0x65, 0x72, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x12, 0x2e, 0x70, 0x72, 0x6f,
+	0x74, 0x6f, 0x2e, 0x42, 0x79, 0x74, 0x65, 0x73, 0x46, 0x69, 0x6c, 0x74, 0x65, 0x72, 0x52, 0x05,
+	0x6f, 0x77, 0x6e, 0x65, 0x72, 0x12, 0x25, 0x0a, 0x04, 0x74, 0x79, 0x70, 0x65, 0x18, 0x03, 0x20,
+	0x01, 0x28, 0x0b, 0x32, 0x11, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2e, 0x45, 0x6e, 0x75, 0x6d,
+	0x46, 0x69, 0x6c, 0x74, 0x65, 0x72, 0x52, 0x04, 0x74, 0x79, 0x70, 0x65, 0x42, 0x33, 0x5a, 0x31,
+	0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x64, 0x69, 0x70, 0x64, 0x75,
+	0x70, 0x2d, 0x69, 0x6f, 0x2f, 0x73, 0x74, 0x61, 0x72, 0x6b, 0x6e, 0x65, 0x74, 0x2d, 0x69, 0x6e,
+	0x64, 0x65, 0x78, 0x65, 0x72, 0x2f, 0x70, 0x6b, 0x67, 0x2f, 0x67, 0x72, 0x70, 0x63, 0x2f, 0x70,
+	0x62, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -1504,7 +1576,7 @@ func file_github_com_dipdup_io_starknet_indexer_pkg_grpc_proto_entity_filters_pr
 	return file_github_com_dipdup_io_starknet_indexer_pkg_grpc_proto_entity_filters_proto_rawDescData
 }
 
-var file_github_com_dipdup_io_starknet_indexer_pkg_grpc_proto_entity_filters_proto_msgTypes = make([]protoimpl.MessageInfo, 19)
+var file_github_com_dipdup_io_starknet_indexer_pkg_grpc_proto_entity_filters_proto_msgTypes = make([]protoimpl.MessageInfo, 20)
 var file_github_com_dipdup_io_starknet_indexer_pkg_grpc_proto_entity_filters_proto_goTypes = []interface{}{
 	(*InvokeFilters)(nil),        // 0: proto.InvokeFilters
 	(*DeclareFilters)(nil),       // 1: proto.DeclareFilters
@@ -1518,112 +1590,116 @@ var file_github_com_dipdup_io_starknet_indexer_pkg_grpc_proto_entity_filters_pro
 	(*TransferFilter)(nil),       // 9: proto.TransferFilter
 	(*StorageDiffFilter)(nil),    // 10: proto.StorageDiffFilter
 	(*TokenBalanceFilter)(nil),   // 11: proto.TokenBalanceFilter
-	nil,                          // 12: proto.InvokeFilters.ParsedCalldataEntry
-	nil,                          // 13: proto.DeployFilters.ParsedCalldataEntry
-	nil,                          // 14: proto.DeployAccountFilters.ParsedCalldataEntry
-	nil,                          // 15: proto.L1HandlerFilter.ParsedCalldataEntry
-	nil,                          // 16: proto.InternalFilter.ParsedCalldataEntry
-	nil,                          // 17: proto.FeeFilter.ParsedCalldataEntry
-	nil,                          // 18: proto.EventFilter.ParsedDataEntry
-	(*IntegerFilter)(nil),        // 19: proto.IntegerFilter
-	(*TimeFilter)(nil),           // 20: proto.TimeFilter
-	(*EnumFilter)(nil),           // 21: proto.EnumFilter
-	(*BytesFilter)(nil),          // 22: proto.BytesFilter
-	(*EqualityFilter)(nil),       // 23: proto.EqualityFilter
-	(*StringFilter)(nil),         // 24: proto.StringFilter
+	(*TokenFilter)(nil),          // 12: proto.TokenFilter
+	nil,                          // 13: proto.InvokeFilters.ParsedCalldataEntry
+	nil,                          // 14: proto.DeployFilters.ParsedCalldataEntry
+	nil,                          // 15: proto.DeployAccountFilters.ParsedCalldataEntry
+	nil,                          // 16: proto.L1HandlerFilter.ParsedCalldataEntry
+	nil,                          // 17: proto.InternalFilter.ParsedCalldataEntry
+	nil,                          // 18: proto.FeeFilter.ParsedCalldataEntry
+	nil,                          // 19: proto.EventFilter.ParsedDataEntry
+	(*IntegerFilter)(nil),        // 20: proto.IntegerFilter
+	(*TimeFilter)(nil),           // 21: proto.TimeFilter
+	(*EnumFilter)(nil),           // 22: proto.EnumFilter
+	(*BytesFilter)(nil),          // 23: proto.BytesFilter
+	(*EqualityFilter)(nil),       // 24: proto.EqualityFilter
+	(*StringFilter)(nil),         // 25: proto.StringFilter
 }
 var file_github_com_dipdup_io_starknet_indexer_pkg_grpc_proto_entity_filters_proto_depIdxs = []int32{
-	19, // 0: proto.InvokeFilters.height:type_name -> proto.IntegerFilter
-	20, // 1: proto.InvokeFilters.time:type_name -> proto.TimeFilter
-	21, // 2: proto.InvokeFilters.status:type_name -> proto.EnumFilter
-	21, // 3: proto.InvokeFilters.version:type_name -> proto.EnumFilter
-	22, // 4: proto.InvokeFilters.contract:type_name -> proto.BytesFilter
-	23, // 5: proto.InvokeFilters.selector:type_name -> proto.EqualityFilter
-	24, // 6: proto.InvokeFilters.entrypoint:type_name -> proto.StringFilter
-	12, // 7: proto.InvokeFilters.parsed_calldata:type_name -> proto.InvokeFilters.ParsedCalldataEntry
-	19, // 8: proto.InvokeFilters.id:type_name -> proto.IntegerFilter
-	19, // 9: proto.DeclareFilters.height:type_name -> proto.IntegerFilter
-	20, // 10: proto.DeclareFilters.time:type_name -> proto.TimeFilter
-	21, // 11: proto.DeclareFilters.status:type_name -> proto.EnumFilter
-	21, // 12: proto.DeclareFilters.version:type_name -> proto.EnumFilter
-	19, // 13: proto.DeclareFilters.id:type_name -> proto.IntegerFilter
-	19, // 14: proto.DeployFilters.height:type_name -> proto.IntegerFilter
-	20, // 15: proto.DeployFilters.time:type_name -> proto.TimeFilter
-	21, // 16: proto.DeployFilters.status:type_name -> proto.EnumFilter
-	22, // 17: proto.DeployFilters.class:type_name -> proto.BytesFilter
-	13, // 18: proto.DeployFilters.parsed_calldata:type_name -> proto.DeployFilters.ParsedCalldataEntry
-	19, // 19: proto.DeployFilters.id:type_name -> proto.IntegerFilter
-	19, // 20: proto.DeployAccountFilters.height:type_name -> proto.IntegerFilter
-	20, // 21: proto.DeployAccountFilters.time:type_name -> proto.TimeFilter
-	21, // 22: proto.DeployAccountFilters.status:type_name -> proto.EnumFilter
-	22, // 23: proto.DeployAccountFilters.class:type_name -> proto.BytesFilter
-	14, // 24: proto.DeployAccountFilters.parsed_calldata:type_name -> proto.DeployAccountFilters.ParsedCalldataEntry
-	19, // 25: proto.DeployAccountFilters.id:type_name -> proto.IntegerFilter
-	19, // 26: proto.L1HandlerFilter.height:type_name -> proto.IntegerFilter
-	20, // 27: proto.L1HandlerFilter.time:type_name -> proto.TimeFilter
-	21, // 28: proto.L1HandlerFilter.status:type_name -> proto.EnumFilter
-	22, // 29: proto.L1HandlerFilter.contract:type_name -> proto.BytesFilter
-	23, // 30: proto.L1HandlerFilter.selector:type_name -> proto.EqualityFilter
-	24, // 31: proto.L1HandlerFilter.entrypoint:type_name -> proto.StringFilter
-	15, // 32: proto.L1HandlerFilter.parsed_calldata:type_name -> proto.L1HandlerFilter.ParsedCalldataEntry
-	19, // 33: proto.L1HandlerFilter.id:type_name -> proto.IntegerFilter
-	19, // 34: proto.InternalFilter.height:type_name -> proto.IntegerFilter
-	20, // 35: proto.InternalFilter.time:type_name -> proto.TimeFilter
-	21, // 36: proto.InternalFilter.status:type_name -> proto.EnumFilter
-	22, // 37: proto.InternalFilter.contract:type_name -> proto.BytesFilter
-	22, // 38: proto.InternalFilter.caller:type_name -> proto.BytesFilter
-	22, // 39: proto.InternalFilter.class:type_name -> proto.BytesFilter
-	23, // 40: proto.InternalFilter.selector:type_name -> proto.EqualityFilter
-	24, // 41: proto.InternalFilter.entrypoint:type_name -> proto.StringFilter
-	21, // 42: proto.InternalFilter.entrypoint_type:type_name -> proto.EnumFilter
-	21, // 43: proto.InternalFilter.call_type:type_name -> proto.EnumFilter
-	16, // 44: proto.InternalFilter.parsed_calldata:type_name -> proto.InternalFilter.ParsedCalldataEntry
-	19, // 45: proto.InternalFilter.id:type_name -> proto.IntegerFilter
-	19, // 46: proto.FeeFilter.height:type_name -> proto.IntegerFilter
-	20, // 47: proto.FeeFilter.time:type_name -> proto.TimeFilter
-	21, // 48: proto.FeeFilter.status:type_name -> proto.EnumFilter
-	22, // 49: proto.FeeFilter.contract:type_name -> proto.BytesFilter
-	22, // 50: proto.FeeFilter.caller:type_name -> proto.BytesFilter
-	22, // 51: proto.FeeFilter.class:type_name -> proto.BytesFilter
-	23, // 52: proto.FeeFilter.selector:type_name -> proto.EqualityFilter
-	24, // 53: proto.FeeFilter.entrypoint:type_name -> proto.StringFilter
-	21, // 54: proto.FeeFilter.entrypoint_type:type_name -> proto.EnumFilter
-	21, // 55: proto.FeeFilter.call_type:type_name -> proto.EnumFilter
-	17, // 56: proto.FeeFilter.parsed_calldata:type_name -> proto.FeeFilter.ParsedCalldataEntry
-	19, // 57: proto.FeeFilter.id:type_name -> proto.IntegerFilter
-	19, // 58: proto.EventFilter.height:type_name -> proto.IntegerFilter
-	20, // 59: proto.EventFilter.time:type_name -> proto.TimeFilter
-	22, // 60: proto.EventFilter.contract:type_name -> proto.BytesFilter
-	22, // 61: proto.EventFilter.from:type_name -> proto.BytesFilter
-	24, // 62: proto.EventFilter.name:type_name -> proto.StringFilter
-	18, // 63: proto.EventFilter.parsed_data:type_name -> proto.EventFilter.ParsedDataEntry
-	19, // 64: proto.EventFilter.id:type_name -> proto.IntegerFilter
-	19, // 65: proto.MessageFilter.height:type_name -> proto.IntegerFilter
-	20, // 66: proto.MessageFilter.time:type_name -> proto.TimeFilter
-	22, // 67: proto.MessageFilter.contract:type_name -> proto.BytesFilter
-	22, // 68: proto.MessageFilter.from:type_name -> proto.BytesFilter
-	22, // 69: proto.MessageFilter.to:type_name -> proto.BytesFilter
-	23, // 70: proto.MessageFilter.selector:type_name -> proto.EqualityFilter
-	19, // 71: proto.MessageFilter.id:type_name -> proto.IntegerFilter
-	19, // 72: proto.TransferFilter.height:type_name -> proto.IntegerFilter
-	20, // 73: proto.TransferFilter.time:type_name -> proto.TimeFilter
-	22, // 74: proto.TransferFilter.contract:type_name -> proto.BytesFilter
-	22, // 75: proto.TransferFilter.from:type_name -> proto.BytesFilter
-	22, // 76: proto.TransferFilter.to:type_name -> proto.BytesFilter
-	24, // 77: proto.TransferFilter.token_id:type_name -> proto.StringFilter
-	19, // 78: proto.TransferFilter.id:type_name -> proto.IntegerFilter
-	19, // 79: proto.StorageDiffFilter.height:type_name -> proto.IntegerFilter
-	22, // 80: proto.StorageDiffFilter.contract:type_name -> proto.BytesFilter
-	23, // 81: proto.StorageDiffFilter.key:type_name -> proto.EqualityFilter
-	19, // 82: proto.StorageDiffFilter.id:type_name -> proto.IntegerFilter
-	22, // 83: proto.TokenBalanceFilter.owner:type_name -> proto.BytesFilter
-	22, // 84: proto.TokenBalanceFilter.contract:type_name -> proto.BytesFilter
-	24, // 85: proto.TokenBalanceFilter.token_id:type_name -> proto.StringFilter
-	86, // [86:86] is the sub-list for method output_type
-	86, // [86:86] is the sub-list for method input_type
-	86, // [86:86] is the sub-list for extension type_name
-	86, // [86:86] is the sub-list for extension extendee
-	0,  // [0:86] is the sub-list for field type_name
+	20, // 0: proto.InvokeFilters.height:type_name -> proto.IntegerFilter
+	21, // 1: proto.InvokeFilters.time:type_name -> proto.TimeFilter
+	22, // 2: proto.InvokeFilters.status:type_name -> proto.EnumFilter
+	22, // 3: proto.InvokeFilters.version:type_name -> proto.EnumFilter
+	23, // 4: proto.InvokeFilters.contract:type_name -> proto.BytesFilter
+	24, // 5: proto.InvokeFilters.selector:type_name -> proto.EqualityFilter
+	25, // 6: proto.InvokeFilters.entrypoint:type_name -> proto.StringFilter
+	13, // 7: proto.InvokeFilters.parsed_calldata:type_name -> proto.InvokeFilters.ParsedCalldataEntry
+	20, // 8: proto.InvokeFilters.id:type_name -> proto.IntegerFilter
+	20, // 9: proto.DeclareFilters.height:type_name -> proto.IntegerFilter
+	21, // 10: proto.DeclareFilters.time:type_name -> proto.TimeFilter
+	22, // 11: proto.DeclareFilters.status:type_name -> proto.EnumFilter
+	22, // 12: proto.DeclareFilters.version:type_name -> proto.EnumFilter
+	20, // 13: proto.DeclareFilters.id:type_name -> proto.IntegerFilter
+	20, // 14: proto.DeployFilters.height:type_name -> proto.IntegerFilter
+	21, // 15: proto.DeployFilters.time:type_name -> proto.TimeFilter
+	22, // 16: proto.DeployFilters.status:type_name -> proto.EnumFilter
+	23, // 17: proto.DeployFilters.class:type_name -> proto.BytesFilter
+	14, // 18: proto.DeployFilters.parsed_calldata:type_name -> proto.DeployFilters.ParsedCalldataEntry
+	20, // 19: proto.DeployFilters.id:type_name -> proto.IntegerFilter
+	20, // 20: proto.DeployAccountFilters.height:type_name -> proto.IntegerFilter
+	21, // 21: proto.DeployAccountFilters.time:type_name -> proto.TimeFilter
+	22, // 22: proto.DeployAccountFilters.status:type_name -> proto.EnumFilter
+	23, // 23: proto.DeployAccountFilters.class:type_name -> proto.BytesFilter
+	15, // 24: proto.DeployAccountFilters.parsed_calldata:type_name -> proto.DeployAccountFilters.ParsedCalldataEntry
+	20, // 25: proto.DeployAccountFilters.id:type_name -> proto.IntegerFilter
+	20, // 26: proto.L1HandlerFilter.height:type_name -> proto.IntegerFilter
+	21, // 27: proto.L1HandlerFilter.time:type_name -> proto.TimeFilter
+	22, // 28: proto.L1HandlerFilter.status:type_name -> proto.EnumFilter
+	23, // 29: proto.L1HandlerFilter.contract:type_name -> proto.BytesFilter
+	24, // 30: proto.L1HandlerFilter.selector:type_name -> proto.EqualityFilter
+	25, // 31: proto.L1HandlerFilter.entrypoint:type_name -> proto.StringFilter
+	16, // 32: proto.L1HandlerFilter.parsed_calldata:type_name -> proto.L1HandlerFilter.ParsedCalldataEntry
+	20, // 33: proto.L1HandlerFilter.id:type_name -> proto.IntegerFilter
+	20, // 34: proto.InternalFilter.height:type_name -> proto.IntegerFilter
+	21, // 35: proto.InternalFilter.time:type_name -> proto.TimeFilter
+	22, // 36: proto.InternalFilter.status:type_name -> proto.EnumFilter
+	23, // 37: proto.InternalFilter.contract:type_name -> proto.BytesFilter
+	23, // 38: proto.InternalFilter.caller:type_name -> proto.BytesFilter
+	23, // 39: proto.InternalFilter.class:type_name -> proto.BytesFilter
+	24, // 40: proto.InternalFilter.selector:type_name -> proto.EqualityFilter
+	25, // 41: proto.InternalFilter.entrypoint:type_name -> proto.StringFilter
+	22, // 42: proto.InternalFilter.entrypoint_type:type_name -> proto.EnumFilter
+	22, // 43: proto.InternalFilter.call_type:type_name -> proto.EnumFilter
+	17, // 44: proto.InternalFilter.parsed_calldata:type_name -> proto.InternalFilter.ParsedCalldataEntry
+	20, // 45: proto.InternalFilter.id:type_name -> proto.IntegerFilter
+	20, // 46: proto.FeeFilter.height:type_name -> proto.IntegerFilter
+	21, // 47: proto.FeeFilter.time:type_name -> proto.TimeFilter
+	22, // 48: proto.FeeFilter.status:type_name -> proto.EnumFilter
+	23, // 49: proto.FeeFilter.contract:type_name -> proto.BytesFilter
+	23, // 50: proto.FeeFilter.caller:type_name -> proto.BytesFilter
+	23, // 51: proto.FeeFilter.class:type_name -> proto.BytesFilter
+	24, // 52: proto.FeeFilter.selector:type_name -> proto.EqualityFilter
+	25, // 53: proto.FeeFilter.entrypoint:type_name -> proto.StringFilter
+	22, // 54: proto.FeeFilter.entrypoint_type:type_name -> proto.EnumFilter
+	22, // 55: proto.FeeFilter.call_type:type_name -> proto.EnumFilter
+	18, // 56: proto.FeeFilter.parsed_calldata:type_name -> proto.FeeFilter.ParsedCalldataEntry
+	20, // 57: proto.FeeFilter.id:type_name -> proto.IntegerFilter
+	20, // 58: proto.EventFilter.height:type_name -> proto.IntegerFilter
+	21, // 59: proto.EventFilter.time:type_name -> proto.TimeFilter
+	23, // 60: proto.EventFilter.contract:type_name -> proto.BytesFilter
+	23, // 61: proto.EventFilter.from:type_name -> proto.BytesFilter
+	25, // 62: proto.EventFilter.name:type_name -> proto.StringFilter
+	19, // 63: proto.EventFilter.parsed_data:type_name -> proto.EventFilter.ParsedDataEntry
+	20, // 64: proto.EventFilter.id:type_name -> proto.IntegerFilter
+	20, // 65: proto.MessageFilter.height:type_name -> proto.IntegerFilter
+	21, // 66: proto.MessageFilter.time:type_name -> proto.TimeFilter
+	23, // 67: proto.MessageFilter.contract:type_name -> proto.BytesFilter
+	23, // 68: proto.MessageFilter.from:type_name -> proto.BytesFilter
+	23, // 69: proto.MessageFilter.to:type_name -> proto.BytesFilter
+	24, // 70: proto.MessageFilter.selector:type_name -> proto.EqualityFilter
+	20, // 71: proto.MessageFilter.id:type_name -> proto.IntegerFilter
+	20, // 72: proto.TransferFilter.height:type_name -> proto.IntegerFilter
+	21, // 73: proto.TransferFilter.time:type_name -> proto.TimeFilter
+	23, // 74: proto.TransferFilter.contract:type_name -> proto.BytesFilter
+	23, // 75: proto.TransferFilter.from:type_name -> proto.BytesFilter
+	23, // 76: proto.TransferFilter.to:type_name -> proto.BytesFilter
+	25, // 77: proto.TransferFilter.token_id:type_name -> proto.StringFilter
+	20, // 78: proto.TransferFilter.id:type_name -> proto.IntegerFilter
+	20, // 79: proto.StorageDiffFilter.height:type_name -> proto.IntegerFilter
+	23, // 80: proto.StorageDiffFilter.contract:type_name -> proto.BytesFilter
+	24, // 81: proto.StorageDiffFilter.key:type_name -> proto.EqualityFilter
+	20, // 82: proto.StorageDiffFilter.id:type_name -> proto.IntegerFilter
+	23, // 83: proto.TokenBalanceFilter.owner:type_name -> proto.BytesFilter
+	23, // 84: proto.TokenBalanceFilter.contract:type_name -> proto.BytesFilter
+	25, // 85: proto.TokenBalanceFilter.token_id:type_name -> proto.StringFilter
+	23, // 86: proto.TokenFilter.contract:type_name -> proto.BytesFilter
+	23, // 87: proto.TokenFilter.owner:type_name -> proto.BytesFilter
+	22, // 88: proto.TokenFilter.type:type_name -> proto.EnumFilter
+	89, // [89:89] is the sub-list for method output_type
+	89, // [89:89] is the sub-list for method input_type
+	89, // [89:89] is the sub-list for extension type_name
+	89, // [89:89] is the sub-list for extension extendee
+	0,  // [0:89] is the sub-list for field type_name
 }
 
 func init() { file_github_com_dipdup_io_starknet_indexer_pkg_grpc_proto_entity_filters_proto_init() }
@@ -1777,6 +1853,18 @@ func file_github_com_dipdup_io_starknet_indexer_pkg_grpc_proto_entity_filters_pr
 				return nil
 			}
 		}
+		file_github_com_dipdup_io_starknet_indexer_pkg_grpc_proto_entity_filters_proto_msgTypes[12].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*TokenFilter); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
@@ -1784,7 +1872,7 @@ func file_github_com_dipdup_io_starknet_indexer_pkg_grpc_proto_entity_filters_pr
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_github_com_dipdup_io_starknet_indexer_pkg_grpc_proto_entity_filters_proto_rawDesc,
 			NumEnums:      0,
-			NumMessages:   19,
+			NumMessages:   20,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

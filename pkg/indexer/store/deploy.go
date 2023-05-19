@@ -31,16 +31,10 @@ func (store *Store) saveDeploy(
 			return err
 		}
 
-		switch {
-		case result.Block.Deploy[i].ERC20 != nil:
-			err = tx.Add(ctx, result.Block.Deploy[i].ERC20)
-		case result.Block.Deploy[i].ERC721 != nil:
-			err = tx.Add(ctx, result.Block.Deploy[i].ERC721)
-		case result.Block.Deploy[i].ERC1155 != nil:
-			err = tx.Add(ctx, result.Block.Deploy[i].ERC1155)
-		}
-		if err != nil {
-			return err
+		if result.Block.Deploy[i].Token != nil {
+			if err = tx.Add(ctx, result.Block.Deploy[i].Token); err != nil {
+				return err
+			}
 		}
 	}
 

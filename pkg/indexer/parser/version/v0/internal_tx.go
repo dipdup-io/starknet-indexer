@@ -14,6 +14,7 @@ import (
 	parserData "github.com/dipdup-io/starknet-indexer/pkg/indexer/parser/data"
 	"github.com/dipdup-io/starknet-indexer/pkg/indexer/parser/interfaces"
 	"github.com/dipdup-io/starknet-indexer/pkg/indexer/parser/resolver"
+	"github.com/rs/zerolog/log"
 )
 
 // InternalTxParser -
@@ -130,25 +131,31 @@ func (parser InternalTxParser) Parse(ctx context.Context, txCtx parserData.TxCon
 		tx.Class.Height = tx.Height
 	}
 
-	isExecute := bytes.Equal(tx.Selector, encoding.ExecuteEntrypointSelector)
-	_, hasExecute := contractAbi.Functions[encoding.ExecuteEntrypoint]
-
-	isChangeModules := bytes.Equal(tx.Selector, encoding.ChangeModuleEntrypointSelector)
-	_, hasChangeModules := contractAbi.Functions[encoding.ChangeModulesEntrypoint]
-
 	if len(tx.Selector) > 0 {
-		if !(isExecute || isChangeModules) {
-			if _, has := contractAbi.GetByTypeAndSelector(internal.EntrypointType, encoding.EncodeHex(tx.Selector)); !has {
-				if tx.Class.ID == 0 {
-					class, err := parser.Cache.GetClassById(ctx, *tx.Contract.ClassID)
-					if err != nil {
-						return tx, err
-					}
-					tx.Class = *class
-				}
-				contractAbi, err = parser.Resolver.Proxy(ctx, txCtx, tx.Class, tx.Contract, tx.Selector)
+		var (
+			_, has = contractAbi.GetByTypeAndSelector(internal.EntrypointType, encoding.EncodeHex(tx.Selector))
+
+			isExecute       = bytes.Equal(tx.Selector, encoding.ExecuteEntrypointSelector)
+			isChangeModules = bytes.Equal(tx.Selector, encoding.ChangeModuleEntrypointSelector)
+			isUnknownProxy  = false
+		)
+
+		if !(isExecute || isChangeModules) && !has {
+			if tx.Class.ID == 0 {
+				class, err := parser.Cache.GetClassById(ctx, *tx.Contract.ClassID)
 				if err != nil {
 					return tx, err
+				}
+				tx.Class = *class
+			}
+			if !has {
+				contractAbi, err = parser.Resolver.Proxy(ctx, txCtx, tx.Class, tx.Contract, tx.Selector)
+				if err != nil {
+					isUnknownProxy = errors.Is(err, resolver.ErrUnknownProxy)
+					if !isUnknownProxy {
+						return tx, err
+					}
+					log.Warn().Hex("contract", tx.Contract.Hash).Msg("unknown proxy")
 				}
 				if tx.Class.Type.Is(storage.ClassTypeProxy) {
 					proxyId = tx.ContractID
@@ -156,12 +163,12 @@ func (parser InternalTxParser) Parse(ctx context.Context, txCtx parserData.TxCon
 			}
 		}
 
-		if len(internal.Calldata) > 0 {
+		if len(internal.Calldata) > 0 && !isUnknownProxy {
 			switch {
-			case isExecute && !hasExecute:
+			case isExecute && !has:
 				tx.Entrypoint = encoding.ExecuteEntrypoint
 				tx.ParsedCalldata, err = abi.DecodeExecuteCallData(internal.Calldata)
-			case isChangeModules && !hasChangeModules:
+			case isChangeModules && !has:
 				tx.Entrypoint = encoding.ChangeModulesEntrypoint
 				tx.ParsedCalldata, err = abi.DecodeChangeModulesCallData(internal.Calldata)
 			default:
@@ -169,22 +176,22 @@ func (parser InternalTxParser) Parse(ctx context.Context, txCtx parserData.TxCon
 			}
 
 			if err != nil {
-				if !errors.Is(err, abi.ErrNoLenField) {
+				if !(errors.Is(err, abi.ErrNoLenField) || errors.Is(err, abi.ErrTooShortCallData)) {
 					return tx, err
 				}
 			}
 		}
 
-		if len(internal.Result) > 0 {
+		if len(internal.Result) > 0 && !isUnknownProxy {
 			switch {
-			case isExecute && !hasExecute:
-			case isChangeModules && !hasChangeModules:
+			case isExecute && !has:
+			case isChangeModules && !has:
 				tx.ParsedResult, err = abi.DecodeChangeModulesResult(internal.Result)
 			default:
 				tx.ParsedResult, err = decode.Result(contractAbi, internal.Result, tx.Selector, tx.EntrypointType)
 			}
 			if err != nil {
-				if !errors.Is(err, abi.ErrNoLenField) {
+				if !(errors.Is(err, abi.ErrNoLenField) || errors.Is(err, abi.ErrTooShortCallData)) {
 					return tx, err
 				}
 			}
@@ -232,14 +239,15 @@ func (parser InternalTxParser) Parse(ctx context.Context, txCtx parserData.TxCon
 		}
 	}
 
-	if tx.EntrypointType == storage.EntrypointTypeConstructor && tx.Class.Type.OneOf(storage.ClassTypeERC20, storage.ClassTypeERC721, storage.ClassTypeERC1155) {
+	isParentDeploy := tx.DeployID != nil
+	isConstructor := tx.EntrypointType == storage.EntrypointTypeConstructor
+	isToken := tx.Class.Type.OneOf(storage.ClassTypeERC20, storage.ClassTypeERC721, storage.ClassTypeERC1155)
+	if (isParentDeploy || isConstructor) && isToken {
 		token, err := parser.TokenParser.Parse(ctx, txCtx, tx.Contract, tx.Class.Type, tx.ParsedCalldata)
 		if err != nil {
 			return tx, err
 		}
-		tx.ERC20 = token.ERC20
-		tx.ERC721 = token.ERC721
-		tx.ERC1155 = token.ERC1155
+		tx.Token = token
 	}
 
 	return tx, nil

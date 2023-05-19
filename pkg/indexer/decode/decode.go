@@ -26,7 +26,10 @@ func CalldataBySelector(contractAbi abi.Abi, selector []byte, calldata []string)
 func CalldataForConstructor(classAbi abi.Abi, calldata []string) (map[string]any, error) {
 	function, ok := classAbi.Constructor[encoding.ConstructorEntrypoint]
 	if !ok {
-		return nil, errors.Errorf("unknown constructor")
+		function, ok = classAbi.Functions[encoding.ConstructorEntrypoint]
+		if !ok {
+			return nil, errors.Errorf("unknown constructor")
+		}
 	}
 
 	return abi.DecodeFunctionCallData(calldata, *function, classAbi.Structs)

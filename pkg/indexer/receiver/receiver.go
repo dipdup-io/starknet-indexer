@@ -12,6 +12,7 @@ import (
 	"github.com/dipdup-io/starknet-indexer/internal/storage"
 	"github.com/dipdup-io/starknet-indexer/pkg/indexer/config"
 	"github.com/dipdup-net/workerpool"
+	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 )
 
@@ -24,12 +25,15 @@ type Result struct {
 
 // Receiver -
 type Receiver struct {
-	api     starknet.API
-	rpc     *starknetRpc.API
-	result  chan Result
-	pool    *workerpool.Pool[uint64]
-	timeout time.Duration
-	wg      *sync.WaitGroup
+	api          starknet.API
+	rpc          *starknetRpc.API
+	result       chan Result
+	pool         *workerpool.Pool[uint64]
+	processing   map[uint64]struct{}
+	processingMx *sync.Mutex
+	log          zerolog.Logger
+	timeout      time.Duration
+	wg           *sync.WaitGroup
 }
 
 // NewReceiver -
@@ -45,13 +49,16 @@ func NewReceiver(cfg config.Config) *Receiver {
 	api := starknet.NewAPI(cfg.Sequencer.Gateway, cfg.Sequencer.FeederGateway, opts...)
 
 	receiver := &Receiver{
-		api:     api,
-		result:  make(chan Result, cfg.ThreadsCount*2),
-		timeout: time.Duration(cfg.Timeout) * time.Second,
-		wg:      new(sync.WaitGroup),
+		api:          api,
+		result:       make(chan Result, cfg.ThreadsCount*2),
+		processing:   make(map[uint64]struct{}),
+		processingMx: new(sync.Mutex),
+		log:          log.With().Str("module", "receiver").Logger(),
+		timeout:      time.Duration(cfg.Timeout) * time.Second,
+		wg:           new(sync.WaitGroup),
 	}
 
-	if cfg.Node != nil {
+	if cfg.Node != nil && cfg.Node.Url != "" {
 		rpc := starknetRpc.NewAPI(cfg.Node.Url, starknetRpc.WithRateLimit(cfg.Node.Rps))
 		receiver.rpc = &rpc
 	}
@@ -67,7 +74,7 @@ func NewReceiver(cfg config.Config) *Receiver {
 
 // Close -
 func (r *Receiver) Close() error {
-	log.Info().Msg("closing receiver...")
+	r.log.Info().Msg("closing...")
 	r.wg.Wait()
 
 	if err := r.pool.Close(); err != nil {
@@ -84,6 +91,7 @@ func (r *Receiver) Start(ctx context.Context) {
 }
 
 func (r *Receiver) worker(ctx context.Context, height uint64) {
+	r.log.Info().Uint64("height", height).Msg("receiving block data...")
 	blockId := starknetData.BlockID{
 		Number: &height,
 	}
@@ -100,7 +108,7 @@ func (r *Receiver) worker(ctx context.Context, height uint64) {
 			if errors.Is(err, context.Canceled) {
 				return
 			}
-			log.Err(err).Msg("get block request")
+			r.log.Err(err).Msg("get block request")
 			time.Sleep(time.Second)
 			continue
 		}
@@ -120,7 +128,7 @@ func (r *Receiver) worker(ctx context.Context, height uint64) {
 			if errors.Is(err, context.Canceled) {
 				return
 			}
-			log.Err(err).Msg("get block traces request")
+			r.log.Err(err).Msg("get block traces request")
 			time.Sleep(time.Second)
 			continue
 		}
@@ -140,7 +148,7 @@ func (r *Receiver) worker(ctx context.Context, height uint64) {
 			if errors.Is(err, context.Canceled) {
 				return
 			}
-			log.Err(err).Msg("state update request")
+			r.log.Err(err).Msg("state update request")
 			time.Sleep(time.Second)
 			continue
 		}
@@ -149,11 +157,24 @@ func (r *Receiver) worker(ctx context.Context, height uint64) {
 	}
 
 	r.result <- result
+	r.processingMx.Lock()
+	{
+		delete(r.processing, height)
+	}
+	r.processingMx.Unlock()
 }
 
 // AddTask -
 func (r *Receiver) AddTask(height uint64) {
+	r.processingMx.Lock()
+	defer r.processingMx.Unlock()
+
+	if _, ok := r.processing[height]; ok {
+		return
+	}
+
 	r.pool.AddTask(height)
+	r.processing[height] = struct{}{}
 }
 
 // Head -

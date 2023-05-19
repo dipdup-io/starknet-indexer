@@ -83,6 +83,7 @@ func main() {
 		for i := range storage.Models {
 			models[i] = storage.Models[i]
 		}
+
 		if err := hasura.Create(ctx, hasura.GenerateArgs{
 			Config:         cfg.Hasura,
 			DatabaseConfig: cfg.Database,

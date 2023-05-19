@@ -92,9 +92,7 @@ var Models = []storage.Model{
 	&Message{},
 	&Transfer{},
 	&Fee{},
-	&ERC20{},
-	&ERC721{},
-	&ERC1155{},
+	&Token{},
 	&TokenBalance{},
 	&Proxy{},
 }

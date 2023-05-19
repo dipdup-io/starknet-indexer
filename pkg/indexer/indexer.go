@@ -17,6 +17,7 @@ import (
 	"github.com/dipdup-io/starknet-indexer/pkg/indexer/store"
 	"github.com/dipdup-net/indexer-sdk/pkg/modules"
 	"github.com/pkg/errors"
+	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 )
 
@@ -51,6 +52,8 @@ type Indexer struct {
 	statusChecker   *statusChecker
 	rollbackManager models.Rollback
 
+	log zerolog.Logger
+
 	txWriteMutex *sync.Mutex
 	wg           *sync.WaitGroup
 }
@@ -81,6 +84,7 @@ func New(
 		cache:           cache.New(storage.Address, storage.Class, storage.Proxy),
 		receiver:        receiver.NewReceiver(cfg),
 		rollbackManager: storage.RollbackManager,
+		log:             log.With().Str("module", "indexer").Logger(),
 		txWriteMutex:    new(sync.Mutex),
 		wg:              new(sync.WaitGroup),
 	}
@@ -117,9 +121,9 @@ func New(
 
 // Start -
 func (indexer *Indexer) Start(ctx context.Context) {
-	log.Info().Msg("starting indexer...")
+	indexer.log.Info().Msg("starting indexer...")
 	if err := indexer.init(ctx); err != nil {
-		log.Err(err).Msg("state initializing error")
+		indexer.log.Err(err).Msg("state initializing error")
 		return
 	}
 
@@ -145,7 +149,7 @@ func (indexer *Indexer) Name() string {
 // Close -
 func (indexer *Indexer) Close() error {
 	indexer.wg.Wait()
-	log.Info().Msgf("closing indexer...")
+	indexer.log.Info().Msgf("closing...")
 
 	if err := indexer.statusChecker.Close(); err != nil {
 		return err
@@ -198,7 +202,7 @@ func (indexer *Indexer) getNewBlocks(ctx context.Context) error {
 	}
 
 	for head > indexer.state.Height() {
-		log.Info().
+		indexer.log.Info().
 			Uint64("indexer_block", indexer.state.Height()).
 			Uint64("node_block", head).
 			Msg("syncing...")
@@ -206,6 +210,9 @@ func (indexer *Indexer) getNewBlocks(ctx context.Context) error {
 		startLevel := indexer.cfg.StartLevel
 		if startLevel < indexer.state.Height() {
 			startLevel = indexer.state.Height()
+			if indexer.state.Height() > 0 {
+				startLevel += 1
+			}
 		}
 
 		for height := startLevel; height <= head; height++ {
@@ -226,12 +233,12 @@ func (indexer *Indexer) getNewBlocks(ctx context.Context) error {
 				return nil
 			default:
 				log.Err(err).Msg("receive head error")
-				time.Sleep(time.Second * 5)
+				time.Sleep(time.Second * 30)
 			}
 		}
 	}
 
-	log.Info().Uint64("height", indexer.state.Height()).Msg("synced")
+	indexer.log.Info().Uint64("height", indexer.state.Height()).Msg("synced")
 	return nil
 }
 
@@ -239,10 +246,10 @@ func (indexer *Indexer) sync(ctx context.Context) {
 	defer indexer.wg.Done()
 
 	if err := indexer.getNewBlocks(ctx); err != nil {
-		log.Err(err).Msg("getNewBlocks")
+		indexer.log.Err(err).Msg("getNewBlocks")
 	}
 
-	ticker := time.NewTicker(time.Second * 15)
+	ticker := time.NewTicker(time.Second * 30)
 	defer ticker.Stop()
 
 	for {
@@ -251,7 +258,7 @@ func (indexer *Indexer) sync(ctx context.Context) {
 			return
 		case <-ticker.C:
 			if err := indexer.getNewBlocks(ctx); err != nil {
-				log.Err(err).Msg("getNewBlocks")
+				indexer.log.Err(err).Msg("getNewBlocks")
 			}
 		}
 	}
@@ -273,7 +280,7 @@ func (indexer *Indexer) saveBlocks(ctx context.Context) {
 			if indexer.state.Height() == 0 && !zeroBlock {
 				if data, ok := indexer.queue[0]; ok {
 					if err := indexer.handleBlock(ctx, data); err != nil {
-						log.Err(err).Msg("handle block")
+						indexer.log.Err(err).Msg("handle block")
 					}
 					zeroBlock = true
 				} else {
@@ -292,7 +299,7 @@ func (indexer *Indexer) saveBlocks(ctx context.Context) {
 						if errors.Is(err, context.Canceled) {
 							return
 						}
-						log.Err(err).Msg("handle block")
+						indexer.log.Err(err).Msg("handle block")
 						time.Sleep(time.Second * 3)
 					}
 					if next%25 == 0 {
@@ -334,7 +341,7 @@ func (indexer *Indexer) handleBlock(ctx context.Context, result receiver.Result)
 
 	delete(indexer.queue, result.Block.BlockNumber)
 
-	l := log.Info().
+	l := indexer.log.Info().
 		Uint64("height", result.Block.BlockNumber).
 		Int("tx_count", parseResult.Block.TxCount).
 		Time("block_time", parseResult.Block.Time).
@@ -369,6 +376,6 @@ func (indexer *Indexer) Rollback(ctx context.Context, height uint64) error {
 	indexer.txWriteMutex.Lock()
 	defer indexer.txWriteMutex.Unlock()
 
-	log.Info().Uint64("new_height", height).Msg("rollback starting...")
+	indexer.log.Info().Uint64("new_height", height).Msg("rollback starting...")
 	return indexer.rollbackManager.Rollback(ctx, indexer.Name(), height)
 }

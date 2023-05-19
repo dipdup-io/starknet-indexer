@@ -22,6 +22,7 @@
     - [MessageFilter](#proto-MessageFilter)
     - [StorageDiffFilter](#proto-StorageDiffFilter)
     - [TokenBalanceFilter](#proto-TokenBalanceFilter)
+    - [TokenFilter](#proto-TokenFilter)
     - [TransferFilter](#proto-TransferFilter)
   
 - [github.com/dipdup-io/starknet-indexer/pkg/grpc/proto/enum.proto](#github-com_dipdup-io_starknet-indexer_pkg_grpc_proto_enum-proto)
@@ -62,6 +63,7 @@
     - [L1Handler](#proto-L1Handler)
     - [StarknetMessage](#proto-StarknetMessage)
     - [StorageDiff](#proto-StorageDiff)
+    - [Token](#proto-Token)
     - [TokenBalance](#proto-TokenBalance)
     - [Transfer](#proto-Transfer)
   
@@ -415,6 +417,23 @@
 | owner | [BytesFilter](#proto-BytesFilter) |  |  |
 | contract | [BytesFilter](#proto-BytesFilter) |  |  |
 | token_id | [StringFilter](#proto-StringFilter) |  |  |
+
+
+
+
+
+
+<a name="proto-TokenFilter"></a>
+
+### TokenFilter
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| contract | [BytesFilter](#proto-BytesFilter) |  |  |
+| owner | [BytesFilter](#proto-BytesFilter) |  |  |
+| type | [EnumFilter](#proto-EnumFilter) |  |  |
 
 
 
@@ -775,6 +794,7 @@ List of requested subscriptions
 | transfers | [TransferFilter](#proto-TransferFilter) |  |  |
 | storage_diffs | [StorageDiffFilter](#proto-StorageDiffFilter) |  |  |
 | token_balances | [TokenBalanceFilter](#proto-TokenBalanceFilter) |  |  |
+| tokens | [TokenFilter](#proto-TokenFilter) |  |  |
 
 
 
@@ -803,6 +823,7 @@ Subscription entity. It contains subscription id and subscription&#39;s live not
 | storage_diff | [StorageDiff](#proto-StorageDiff) |  |  |
 | token_balance | [TokenBalance](#proto-TokenBalance) |  |  |
 | transfer | [Transfer](#proto-Transfer) |  |  |
+| token | [Token](#proto-Token) |  |  |
 | end_of_block | [bool](#bool) |  | message which signals about block data ends |
 
 
@@ -1119,6 +1140,27 @@ Desription of server interface
 | contract | [bytes](#bytes) |  |  |
 | key | [bytes](#bytes) |  |  |
 | value | [bytes](#bytes) |  |  |
+
+
+
+
+
+
+<a name="proto-Token"></a>
+
+### Token
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| id | [uint64](#uint64) |  |  |
+| deploy_height | [uint64](#uint64) |  |  |
+| deploy_time | [uint64](#uint64) |  |  |
+| contract | [bytes](#bytes) |  |  |
+| owner | [bytes](#bytes) |  |  |
+| type | [int32](#int32) |  |  |
+| metadata | [bytes](#bytes) |  |  |
 
 
 

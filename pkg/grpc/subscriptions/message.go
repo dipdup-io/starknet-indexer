@@ -17,6 +17,7 @@ type Message struct {
 	StorageDiff   *storage.StorageDiff
 	TokenBalance  *storage.TokenBalance
 	Transfer      *storage.Transfer
+	Token         *storage.Token
 
 	EndOfBlock bool
 }
@@ -109,6 +110,13 @@ func NewTokenBalanceMessage(model *storage.TokenBalance) *Message {
 func NewTransferMessage(model *storage.Transfer) *Message {
 	return &Message{
 		Transfer: model,
+	}
+}
+
+// NewTokenMessage -
+func NewTokenMessage(model *storage.Token) *Message {
+	return &Message{
+		Token: model,
 	}
 }
 

@@ -32,9 +32,7 @@ type Storage struct {
 	Proxy         models.IProxy
 	Transfer      models.ITransfer
 	Fee           models.IFee
-	ERC20         models.IERC20
-	ERC721        models.IERC721
-	ERC1155       models.IERC1155
+	Token         models.IToken
 	TokenBalance  models.ITokenBalance
 	State         models.IState
 
@@ -66,9 +64,7 @@ func Create(ctx context.Context, cfg config.Database) (Storage, error) {
 		Proxy:         NewProxy(strg.Connection()),
 		Transfer:      NewTransfer(strg.Connection()),
 		Fee:           NewFee(strg.Connection()),
-		ERC20:         NewERC20(strg.Connection()),
-		ERC721:        NewERC721(strg.Connection()),
-		ERC1155:       NewERC1155(strg.Connection()),
+		Token:         NewToken(strg.Connection()),
 		TokenBalance:  NewTokenBalance(strg.Connection()),
 		State:         NewState(strg.Connection()),
 
@@ -171,6 +167,14 @@ func createIndices(ctx context.Context, conn *database.PgGo) error {
 
 		// Message
 		if _, err := tx.ExecContext(ctx, `CREATE INDEX IF NOT EXISTS message_height_idx ON message USING BRIN (height)`); err != nil {
+			return err
+		}
+
+		// Token
+		if _, err := tx.ExecContext(ctx, `CREATE INDEX IF NOT EXISTS token_contract_idx ON token (contract_id)`); err != nil {
+			return err
+		}
+		if _, err := tx.ExecContext(ctx, `CREATE INDEX IF NOT EXISTS token_owner_idx ON token (owner_id)`); err != nil {
 			return err
 		}
 
