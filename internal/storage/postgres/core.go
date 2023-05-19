@@ -150,6 +150,9 @@ func createIndices(ctx context.Context, conn *database.PgGo) error {
 		if _, err := tx.ExecContext(ctx, `CREATE INDEX IF NOT EXISTS internal_tx_height_idx ON internal_tx USING BRIN (height)`); err != nil {
 			return err
 		}
+		if _, err := tx.ExecContext(ctx, `CREATE INDEX IF NOT EXISTS internal_tx_hash_idx ON internal_tx (hash)`); err != nil {
+			return err
+		}
 
 		// Event
 		if _, err := tx.ExecContext(ctx, `CREATE INDEX IF NOT EXISTS event_height_idx ON event USING BRIN (height)`); err != nil {

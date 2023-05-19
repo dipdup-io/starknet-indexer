@@ -51,6 +51,7 @@ type Transfer struct {
 	From     Address `pg:"rel:has-one" hasura:"table:address,field:from_id,remote_field:id,type:oto,name:from"`
 	To       Address `pg:"rel:has-one" hasura:"table:address,field:to_id,remote_field:id,type:oto,name:to"`
 	Contract Address `pg:"rel:has-one" hasura:"table:address,field:contract_id,remote_field:id,type:oto,name:contract"`
+	Token    Token   `pg:"rel:has-one,fk:contract_id" hasura:"table:token,field:contract_id,remote_field:contract_id,type:oto,name:token"`
 }
 
 // TableName -
