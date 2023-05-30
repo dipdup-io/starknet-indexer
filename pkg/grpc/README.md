@@ -904,7 +904,9 @@ Desription of server interface
 | version | [uint64](#uint64) |  |  |
 | position | [uint64](#uint64) |  |  |
 | sender | [bytes](#bytes) |  |  |
+| sender_id | [uint64](#uint64) |  |  |
 | contract | [bytes](#bytes) |  |  |
+| contract_id | [uint64](#uint64) |  |  |
 | status | [uint64](#uint64) |  |  |
 | class | [bytes](#bytes) |  |  |
 | hash | [bytes](#bytes) |  |  |
@@ -929,6 +931,7 @@ Desription of server interface
 | time | [uint64](#uint64) |  |  |
 | position | [uint64](#uint64) |  |  |
 | contract | [bytes](#bytes) |  |  |
+| contract_id | [uint64](#uint64) |  |  |
 | status | [uint64](#uint64) |  |  |
 | class | [bytes](#bytes) |  |  |
 | hash | [bytes](#bytes) |  |  |
@@ -954,6 +957,7 @@ Desription of server interface
 | time | [uint64](#uint64) |  |  |
 | position | [uint64](#uint64) |  |  |
 | contract | [bytes](#bytes) |  |  |
+| contract_id | [uint64](#uint64) |  |  |
 | status | [uint64](#uint64) |  |  |
 | class | [bytes](#bytes) |  |  |
 | hash | [bytes](#bytes) |  |  |
@@ -981,7 +985,9 @@ Desription of server interface
 | time | [uint64](#uint64) |  |  |
 | order | [uint64](#uint64) |  |  |
 | contract | [bytes](#bytes) |  |  |
+| contract_id | [uint64](#uint64) |  |  |
 | from | [bytes](#bytes) |  |  |
+| from_id | [uint64](#uint64) |  |  |
 | keys | [string](#string) | repeated |  |
 | data | [string](#string) | repeated |  |
 | name | [string](#string) |  |  |
@@ -1004,7 +1010,9 @@ Desription of server interface
 | height | [uint64](#uint64) |  |  |
 | time | [uint64](#uint64) |  |  |
 | contract | [bytes](#bytes) |  |  |
+| contract_id | [uint64](#uint64) |  |  |
 | caller | [bytes](#bytes) |  |  |
+| caller_id | [uint64](#uint64) |  |  |
 | class | [bytes](#bytes) |  |  |
 | selector | [bytes](#bytes) |  |  |
 | entrypoint_type | [uint64](#uint64) |  |  |
@@ -1033,7 +1041,9 @@ Desription of server interface
 | status | [uint64](#uint64) |  |  |
 | hash | [bytes](#bytes) |  |  |
 | contract | [bytes](#bytes) |  |  |
+| contract_id | [uint64](#uint64) |  |  |
 | caller | [bytes](#bytes) |  |  |
+| caller_id | [uint64](#uint64) |  |  |
 | class | [bytes](#bytes) |  |  |
 | selector | [bytes](#bytes) |  |  |
 | entrypoint_type | [uint64](#uint64) |  |  |
@@ -1065,6 +1075,7 @@ Desription of server interface
 | version | [uint64](#uint64) |  |  |
 | position | [uint64](#uint64) |  |  |
 | contract | [bytes](#bytes) |  |  |
+| contract_id | [uint64](#uint64) |  |  |
 | selector | [bytes](#bytes) |  |  |
 | max_fee | [string](#string) |  |  |
 | nonce | [string](#string) |  |  |
@@ -1092,6 +1103,7 @@ Desription of server interface
 | hash | [bytes](#bytes) |  |  |
 | position | [uint64](#uint64) |  |  |
 | contract | [bytes](#bytes) |  |  |
+| contract_id | [uint64](#uint64) |  |  |
 | selector | [bytes](#bytes) |  |  |
 | max_fee | [string](#string) |  |  |
 | nonce | [string](#string) |  |  |
@@ -1116,8 +1128,11 @@ Desription of server interface
 | height | [uint64](#uint64) |  |  |
 | time | [uint64](#uint64) |  |  |
 | contract | [bytes](#bytes) |  |  |
+| contract_id | [uint64](#uint64) |  |  |
 | from | [bytes](#bytes) |  |  |
+| from_id | [uint64](#uint64) |  |  |
 | to | [bytes](#bytes) |  |  |
+| to_id | [uint64](#uint64) |  |  |
 | selector | [string](#string) |  |  |
 | nonce | [string](#string) |  |  |
 | payload | [string](#string) | repeated |  |
@@ -1138,6 +1153,7 @@ Desription of server interface
 | id | [uint64](#uint64) |  |  |
 | height | [uint64](#uint64) |  |  |
 | contract | [bytes](#bytes) |  |  |
+| contract_id | [uint64](#uint64) |  |  |
 | key | [bytes](#bytes) |  |  |
 | value | [bytes](#bytes) |  |  |
 
@@ -1158,6 +1174,7 @@ Desription of server interface
 | deploy_height | [uint64](#uint64) |  |  |
 | deploy_time | [uint64](#uint64) |  |  |
 | contract | [bytes](#bytes) |  |  |
+| contract_id | [uint64](#uint64) |  |  |
 | owner | [bytes](#bytes) |  |  |
 | type | [int32](#int32) |  |  |
 | metadata | [bytes](#bytes) |  |  |
@@ -1176,7 +1193,9 @@ Desription of server interface
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | owner | [bytes](#bytes) |  |  |
+| owner_id | [uint64](#uint64) |  |  |
 | contract | [bytes](#bytes) |  |  |
+| contract_id | [uint64](#uint64) |  |  |
 | token_id | [string](#string) |  |  |
 | balance | [string](#string) |  |  |
 
@@ -1197,8 +1216,11 @@ Desription of server interface
 | height | [uint64](#uint64) |  |  |
 | time | [uint64](#uint64) |  |  |
 | contract | [bytes](#bytes) |  |  |
+| contract_id | [uint64](#uint64) |  |  |
 | from | [bytes](#bytes) |  |  |
+| from_id | [uint64](#uint64) |  |  |
 | to | [bytes](#bytes) |  |  |
+| to_id | [uint64](#uint64) |  |  |
 | amount | [string](#string) |  |  |
 | token_id | [string](#string) |  |  |
 
