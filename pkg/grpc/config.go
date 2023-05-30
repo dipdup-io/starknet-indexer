@@ -39,6 +39,39 @@ func (f Subscription) ToGrpcFilter() *pb.SubscribeRequest {
 	if f.EventFilter != nil {
 		req.Events = f.EventFilter.ToGrpcFilter()
 	}
+	if f.InvokeFilters != nil {
+		req.Invokes = f.InvokeFilters.ToGrpcFilter()
+	}
+	if f.DeclareFilters != nil {
+		req.Declares = f.DeclareFilters.ToGrpcFilter()
+	}
+	if f.DeployFilters != nil {
+		req.Deploys = f.DeployFilters.ToGrpcFilter()
+	}
+	if f.DeployAccountFilters != nil {
+		req.DeployAccounts = f.DeployAccountFilters.ToGrpcFilter()
+	}
+	if f.L1HandlerFilter != nil {
+		req.L1Handlers = f.L1HandlerFilter.ToGrpcFilter()
+	}
+	if f.InternalFilter != nil {
+		req.Internals = f.InternalFilter.ToGrpcFilter()
+	}
+	if f.FeeFilter != nil {
+		req.Fees = f.FeeFilter.ToGrpcFilter()
+	}
+	if f.MessageFilter != nil {
+		req.Msgs = f.MessageFilter.ToGrpcFilter()
+	}
+	if f.TransferFilter != nil {
+		req.Transfers = f.TransferFilter.ToGrpcFilter()
+	}
+	if f.StorageDiffFilter != nil {
+		req.StorageDiffs = f.StorageDiffFilter.ToGrpcFilter()
+	}
+	if f.TokenBalanceFilter != nil {
+		req.TokenBalances = f.TokenBalanceFilter.ToGrpcFilter()
+	}
 
 	return req
 }
