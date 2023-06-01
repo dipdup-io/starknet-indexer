@@ -145,12 +145,12 @@ func (event *Event) InsertByCopy(events []storage.Event) (io.Reader, string, err
 func (event *Event) Filter(ctx context.Context, fltr storage.EventFilter, opts ...storage.FilterOption) ([]storage.Event, error) {
 	q := event.DB().ModelContext(ctx, (*storage.Event)(nil))
 	q = integerFilter(q, "event.id", fltr.ID)
-	q = integerFilter(q, "height", fltr.Height)
-	q = timeFilter(q, "time", fltr.Time)
-	q = idFilter(q, "contract_id", fltr.Contract, "Contract")
-	q = idFilter(q, "from_id", fltr.From, "From")
-	q = stringFilter(q, "name", fltr.Name)
-	q = jsonFilter(q, "parsed_data", fltr.ParsedData)
+	q = integerFilter(q, "event.height", fltr.Height)
+	q = timeFilter(q, "event.time", fltr.Time)
+	q = idFilter(q, "event.contract_id", fltr.Contract, "Contract")
+	q = idFilter(q, "event.from_id", fltr.From, "From")
+	q = stringFilter(q, "event.name", fltr.Name)
+	q = jsonFilter(q, "event.parsed_data", fltr.ParsedData)
 	q = optionsFilter(q, opts...)
 
 	var result []storage.Event
