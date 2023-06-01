@@ -14,10 +14,8 @@ github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSs
 github.com/decred/dcrd/crypto/blake256 v1.0.0 h1:/8DMNYp9SGi5f0w7uCm6d6M4OU2rGFK09Y2A4Xv7EE0=
 github.com/decred/dcrd/dcrec/secp256k1/v4 v4.1.0 h1:HbphB4TFFXpv7MNrT52FGrrgVXF1owhMVTHFZIlnvd4=
 github.com/decred/dcrd/dcrec/secp256k1/v4 v4.1.0/go.mod h1:DZGJHZMqrU4JJqFAWUS2UO1+lbSKsdiOoYi9Zzey7Fc=
-github.com/dipdup-io/starknet-go-api v0.0.0-20230509222627-ae25a206f165 h1:HGMMVz7728RU5tdTsPorxde7bV8V3y2eIhq5UUCMrPA=
-github.com/dipdup-io/starknet-go-api v0.0.0-20230509222627-ae25a206f165/go.mod h1:Dh1ZUXPbmjiIsfTYeYl3BzK8HuvQOTyrg2CcpQiSOD8=
-github.com/dipdup-io/starknet-go-api v0.0.0-20230524130729-a6cb4095c9f8 h1:8fbXr/lDlP7EbU+CW7/t5EfGdDwfNNXKu94EwmaVZfk=
-github.com/dipdup-io/starknet-go-api v0.0.0-20230524130729-a6cb4095c9f8/go.mod h1:Dh1ZUXPbmjiIsfTYeYl3BzK8HuvQOTyrg2CcpQiSOD8=
+github.com/dipdup-io/starknet-go-api v0.0.0-20230601120914-cb5965133047 h1:D8AqGagMfAGv6GAYiTr6+tca+xPwgRnhQtIM31sNkRI=
+github.com/dipdup-io/starknet-go-api v0.0.0-20230601120914-cb5965133047/go.mod h1:Dh1ZUXPbmjiIsfTYeYl3BzK8HuvQOTyrg2CcpQiSOD8=
 github.com/dipdup-net/go-lib v0.2.34 h1:ug5Fm+LoX6HcMrbt8jxiJZ8d+ydhaVn/hrqaBsre6os=
 github.com/dipdup-net/go-lib v0.2.34/go.mod h1:oXILRskGR7bXvuFyc6B8prCKOjGJdDc76kMcf65EvcE=
 github.com/dipdup-net/indexer-sdk v0.0.0-20230413120903-791a286443f9 h1:ciwPsLGIIbQrnwI00RKeEfCuL+pvgUVezKW7Ngkedr0=
