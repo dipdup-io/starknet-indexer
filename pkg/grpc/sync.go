@@ -43,7 +43,7 @@ func newTable[T storage.Heightable, F any](store storage.Filterable[T, F], fltr 
 		store:    store,
 		fltr:     fltr,
 		priority: priority,
-		limit:    100,
+		limit:    1000,
 	}
 }
 
