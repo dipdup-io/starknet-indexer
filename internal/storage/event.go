@@ -63,3 +63,8 @@ func (Event) TableName() string {
 func (e Event) GetHeight() uint64 {
 	return e.Height
 }
+
+// GetId -
+func (e Event) GetId() uint64 {
+	return e.ID
+}

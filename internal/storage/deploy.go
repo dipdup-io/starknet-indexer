@@ -59,3 +59,8 @@ func (Deploy) TableName() string {
 func (d Deploy) GetHeight() uint64 {
 	return d.Height
 }
+
+// GetId -
+func (d Deploy) GetId() uint64 {
+	return d.ID
+}

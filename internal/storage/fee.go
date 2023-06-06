@@ -76,3 +76,8 @@ func (Fee) TableName() string {
 func (f Fee) GetHeight() uint64 {
 	return f.Height
 }
+
+// GetId -
+func (f Fee) GetId() uint64 {
+	return f.ID
+}

@@ -6,6 +6,7 @@ import (
 	"github.com/dipdup-io/starknet-indexer/internal/storage"
 	"github.com/dipdup-net/go-lib/database"
 	"github.com/dipdup-net/indexer-sdk/pkg/storage/postgres"
+	"github.com/go-pg/pg/v10/orm"
 	"github.com/shopspring/decimal"
 )
 
@@ -88,14 +89,22 @@ func (tb *TokenBalance) Balances(ctx context.Context, contractId uint64, tokenId
 }
 
 // Filter -
-func (tb *TokenBalance) Filter(ctx context.Context, fltr storage.TokenBalanceFilter, opts ...storage.FilterOption) ([]storage.TokenBalance, error) {
-	q := tb.DB().ModelContext(ctx, (*storage.TokenBalance)(nil))
-	q = addressFilter(q, "hash", fltr.Contract, "Contract")
-	q = addressFilter(q, "hash", fltr.Owner, "Owner")
-	q = stringFilter(q, "token_id", fltr.TokenId)
-	q = optionsFilter(q, opts...)
+func (tb *TokenBalance) Filter(ctx context.Context, fltr []storage.TokenBalanceFilter, opts ...storage.FilterOption) ([]storage.TokenBalance, error) {
+	query := tb.DB().ModelContext(ctx, (*storage.TokenBalance)(nil))
+	query = query.WhereGroup(func(q1 *orm.Query) (*orm.Query, error) {
+		for i := range fltr {
+			q1 = q1.WhereOrGroup(func(q *orm.Query) (*orm.Query, error) {
+				q = addressFilter(q, "token_balance.contract_id", fltr[i].Contract, "Contract")
+				q = addressFilter(q, "token_balance.owner_id", fltr[i].Owner, "Owner")
+				q = stringFilter(q, "token_balance.token_id", fltr[i].TokenId)
+				return q, nil
+			})
+		}
+		return q1, nil
+	})
+	query = optionsFilter(query, "token_balance", opts...)
 
 	var result []storage.TokenBalance
-	err := q.Select(&result)
+	err := query.Select(&result)
 	return result, err
 }

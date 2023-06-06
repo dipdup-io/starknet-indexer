@@ -16,19 +16,20 @@ type ClientConfig struct {
 
 // Subscription -
 type Subscription struct {
-	Head                 bool                  `yaml:"head" validate:"omitempty"`
-	InvokeFilters        *InvokeFilters        `yaml:"invokes" validate:"omitempty"`
-	DeclareFilters       *DeclareFilters       `yaml:"filters" validate:"omitempty"`
-	DeployFilters        *DeployFilters        `yaml:"deploys" validate:"omitempty"`
-	DeployAccountFilters *DeployAccountFilters `yaml:"deploy_accounts" validate:"omitempty"`
-	L1HandlerFilter      *L1HandlerFilters     `yaml:"l1_handlers" validate:"omitempty"`
-	InternalFilter       *InternalFilters      `yaml:"internals" validate:"omitempty"`
-	FeeFilter            *FeeFilters           `yaml:"fees" validate:"omitempty"`
-	EventFilter          *EventFilter          `yaml:"events" validate:"omitempty"`
-	MessageFilter        *MessageFilter        `yaml:"messages" validate:"omitempty"`
-	TransferFilter       *TransferFilter       `yaml:"transfers" validate:"omitempty"`
-	StorageDiffFilter    *StorageDiffFilter    `yaml:"storage_diffs" validate:"omitempty"`
-	TokenBalanceFilter   *TokenBalanceFilter   `yaml:"token_balances" validate:"omitempty"`
+	Head                 bool                    `yaml:"head" validate:"omitempty"`
+	InvokeFilters        []*InvokeFilters        `yaml:"invokes" validate:"omitempty"`
+	DeclareFilters       []*DeclareFilters       `yaml:"filters" validate:"omitempty"`
+	DeployFilters        []*DeployFilters        `yaml:"deploys" validate:"omitempty"`
+	DeployAccountFilters []*DeployAccountFilters `yaml:"deploy_accounts" validate:"omitempty"`
+	L1HandlerFilter      []*L1HandlerFilters     `yaml:"l1_handlers" validate:"omitempty"`
+	InternalFilter       []*InternalFilters      `yaml:"internals" validate:"omitempty"`
+	FeeFilter            []*FeeFilters           `yaml:"fees" validate:"omitempty"`
+	EventFilter          []*EventFilter          `yaml:"events" validate:"omitempty"`
+	MessageFilter        []*MessageFilter        `yaml:"messages" validate:"omitempty"`
+	TransferFilter       []*TransferFilter       `yaml:"transfers" validate:"omitempty"`
+	StorageDiffFilter    []*StorageDiffFilter    `yaml:"storage_diffs" validate:"omitempty"`
+	TokenBalanceFilter   []*TokenBalanceFilter   `yaml:"token_balances" validate:"omitempty"`
+	AddressFilter        []*AddressFilter        `yaml:"addresses" validate:"omitempty"`
 }
 
 // ToGrpcFilter -
@@ -36,44 +37,107 @@ func (f Subscription) ToGrpcFilter() *pb.SubscribeRequest {
 	req := new(pb.SubscribeRequest)
 	req.Head = f.Head
 
-	if f.EventFilter != nil {
-		req.Events = f.EventFilter.ToGrpcFilter()
+	if len(f.AddressFilter) > 0 {
+		req.Addresses = make([]*pb.AddressFilter, len(f.AddressFilter))
+		for i := range f.AddressFilter {
+			req.Addresses[i] = f.AddressFilter[i].ToGrpcFilter()
+		}
 	}
-	if f.InvokeFilters != nil {
-		req.Invokes = f.InvokeFilters.ToGrpcFilter()
+	if len(f.EventFilter) > 0 {
+		req.Events = make([]*pb.EventFilter, len(f.EventFilter))
+		for i := range f.EventFilter {
+			req.Events[i] = f.EventFilter[i].ToGrpcFilter()
+		}
 	}
-	if f.DeclareFilters != nil {
-		req.Declares = f.DeclareFilters.ToGrpcFilter()
+	if len(f.InvokeFilters) > 0 {
+		req.Invokes = make([]*pb.InvokeFilters, len(f.InvokeFilters))
+		for i := range f.InvokeFilters {
+			req.Invokes[i] = f.InvokeFilters[i].ToGrpcFilter()
+		}
 	}
-	if f.DeployFilters != nil {
-		req.Deploys = f.DeployFilters.ToGrpcFilter()
+	if len(f.DeclareFilters) > 0 {
+		req.Declares = make([]*pb.DeclareFilters, len(f.DeclareFilters))
+		for i := range f.DeclareFilters {
+			req.Declares[i] = f.DeclareFilters[i].ToGrpcFilter()
+		}
 	}
-	if f.DeployAccountFilters != nil {
-		req.DeployAccounts = f.DeployAccountFilters.ToGrpcFilter()
+	if len(f.DeployFilters) > 0 {
+		req.Deploys = make([]*pb.DeployFilters, len(f.DeployFilters))
+		for i := range f.DeployFilters {
+			req.Deploys[i] = f.DeployFilters[i].ToGrpcFilter()
+		}
 	}
-	if f.L1HandlerFilter != nil {
-		req.L1Handlers = f.L1HandlerFilter.ToGrpcFilter()
+	if len(f.DeployAccountFilters) > 0 {
+		req.DeployAccounts = make([]*pb.DeployAccountFilters, len(f.DeployAccountFilters))
+		for i := range f.DeployAccountFilters {
+			req.DeployAccounts[i] = f.DeployAccountFilters[i].ToGrpcFilter()
+		}
 	}
-	if f.InternalFilter != nil {
-		req.Internals = f.InternalFilter.ToGrpcFilter()
+	if len(f.L1HandlerFilter) > 0 {
+		req.L1Handlers = make([]*pb.L1HandlerFilter, len(f.L1HandlerFilter))
+		for i := range f.L1HandlerFilter {
+			req.L1Handlers[i] = f.L1HandlerFilter[i].ToGrpcFilter()
+		}
 	}
-	if f.FeeFilter != nil {
-		req.Fees = f.FeeFilter.ToGrpcFilter()
+	if len(f.InternalFilter) > 0 {
+		req.Internals = make([]*pb.InternalFilter, len(f.InternalFilter))
+		for i := range f.InternalFilter {
+			req.Internals[i] = f.InternalFilter[i].ToGrpcFilter()
+		}
 	}
-	if f.MessageFilter != nil {
-		req.Msgs = f.MessageFilter.ToGrpcFilter()
+	if len(f.FeeFilter) > 0 {
+		req.Fees = make([]*pb.FeeFilter, len(f.FeeFilter))
+		for i := range f.FeeFilter {
+			req.Fees[i] = f.FeeFilter[i].ToGrpcFilter()
+		}
 	}
-	if f.TransferFilter != nil {
-		req.Transfers = f.TransferFilter.ToGrpcFilter()
+	if len(f.MessageFilter) > 0 {
+		req.Msgs = make([]*pb.MessageFilter, len(f.MessageFilter))
+		for i := range f.MessageFilter {
+			req.Msgs[i] = f.MessageFilter[i].ToGrpcFilter()
+		}
 	}
-	if f.StorageDiffFilter != nil {
-		req.StorageDiffs = f.StorageDiffFilter.ToGrpcFilter()
+	if len(f.TransferFilter) > 0 {
+		req.Transfers = make([]*pb.TransferFilter, len(f.TransferFilter))
+		for i := range f.TransferFilter {
+			req.Transfers[i] = f.TransferFilter[i].ToGrpcFilter()
+		}
 	}
-	if f.TokenBalanceFilter != nil {
-		req.TokenBalances = f.TokenBalanceFilter.ToGrpcFilter()
+	if len(f.StorageDiffFilter) > 0 {
+		req.StorageDiffs = make([]*pb.StorageDiffFilter, len(f.StorageDiffFilter))
+		for i := range f.StorageDiffFilter {
+			req.StorageDiffs[i] = f.StorageDiffFilter[i].ToGrpcFilter()
+		}
+	}
+	if len(f.TokenBalanceFilter) > 0 {
+		req.TokenBalances = make([]*pb.TokenBalanceFilter, len(f.TokenBalanceFilter))
+		for i := range f.TokenBalanceFilter {
+			req.TokenBalances[i] = f.TokenBalanceFilter[i].ToGrpcFilter()
+		}
 	}
 
 	return req
+}
+
+// AddressFilter -
+type AddressFilter struct {
+	Id           *IntegerFilter `yaml:"id" validate:"omitempty"`
+	Height       *IntegerFilter `yaml:"height" validate:"omitempty"`
+	OnlyStarknet bool           `yaml:"only_starknet" validate:"omitempty"`
+}
+
+// ToGrpcFilter -
+func (f AddressFilter) ToGrpcFilter() *pb.AddressFilter {
+	fltr := new(pb.AddressFilter)
+	fltr.OnlyStarknet = f.OnlyStarknet
+
+	if f.Id != nil {
+		fltr.Id = f.Id.ToGrpcFilter()
+	}
+	if f.Height != nil {
+		fltr.Height = f.Height.ToGrpcFilter()
+	}
+	return fltr
 }
 
 // DeclareFilters -

@@ -9,32 +9,36 @@ import (
 
 // TokenBalance -
 type TokenBalance struct {
-	*pb.TokenBalanceFilter
+	fltrs []*pb.TokenBalanceFilter
 
-	contracts ids
-	owners    ids
+	contracts []ids
+	owners    []ids
 
 	isEmpty bool
 }
 
 // NewTokenBalance -
-func NewTokenBalance(ctx context.Context, address storage.IAddress, req *pb.TokenBalanceFilter) (TokenBalance, error) {
+func NewTokenBalance(ctx context.Context, address storage.IAddress, req []*pb.TokenBalanceFilter) (TokenBalance, error) {
 	balance := TokenBalance{
-		isEmpty:   true,
-		contracts: make(ids),
-		owners:    make(ids),
+		isEmpty: true,
 	}
 	if req == nil {
 		return balance, nil
 	}
 	balance.isEmpty = false
-	balance.TokenBalanceFilter = req
+	balance.fltrs = req
+	balance.contracts = make([]ids, 0)
+	balance.owners = make([]ids, 0)
 
-	if err := fillAddressMapFromBytesFilter(ctx, address, req.Contract, balance.contracts); err != nil {
-		return balance, err
-	}
-	if err := fillAddressMapFromBytesFilter(ctx, address, req.Owner, balance.owners); err != nil {
-		return balance, err
+	for i := range balance.fltrs {
+		balance.contracts = append(balance.contracts, make(ids))
+		if err := fillAddressMapFromBytesFilter(ctx, address, balance.fltrs[i].Contract, balance.contracts[i]); err != nil {
+			return balance, err
+		}
+		balance.owners = append(balance.owners, make(ids))
+		if err := fillAddressMapFromBytesFilter(ctx, address, balance.fltrs[i].Owner, balance.owners[i]); err != nil {
+			return balance, err
+		}
 	}
 
 	return balance, nil
@@ -45,24 +49,27 @@ func (f TokenBalance) Filter(data storage.TokenBalance) bool {
 	if f.isEmpty {
 		return true
 	}
-	if f.TokenBalanceFilter == nil {
-		return false
-	}
 
-	if f.Contract != nil {
-		if !f.contracts.In(data.ContractID) {
-			return false
+	var ok bool
+	for i := range f.fltrs {
+		if f.fltrs[i].Contract != nil {
+			if !f.contracts[i].In(data.ContractID) {
+				continue
+			}
 		}
-	}
-	if f.Owner != nil {
-		if !f.owners.In(data.OwnerID) {
-			return false
+		if f.fltrs[i].Owner != nil {
+			if !f.owners[i].In(data.OwnerID) {
+				continue
+			}
 		}
+
+		if !validString(f.fltrs[i].TokenId, data.TokenID.String()) {
+			continue
+		}
+
+		ok = true
+		break
 	}
 
-	if !validString(f.TokenId, data.TokenID.String()) {
-		return false
-	}
-
-	return true
+	return ok
 }

@@ -162,7 +162,7 @@ func (checker *statusChecker) init(ctx context.Context) error {
 }
 
 func byHeight[T sdk.Model, F any](ctx context.Context, src storage.Filterable[T, F], fltr F) (t T, err error) {
-	tx, err := src.Filter(ctx, fltr, storage.WithLimitFilter(1))
+	tx, err := src.Filter(ctx, []F{fltr}, storage.WithLimitFilter(1))
 	if err != nil {
 		return t, err
 	}

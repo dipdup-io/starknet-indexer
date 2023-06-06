@@ -9,18 +9,19 @@ import (
 )
 
 type subscriptionFilters struct {
-	declare       *storage.DeclareFilter
-	deploy        *storage.DeployFilter
-	deployAccount *storage.DeployAccountFilter
-	event         *storage.EventFilter
-	fee           *storage.FeeFilter
-	internal      *storage.InternalFilter
-	invoke        *storage.InvokeFilter
-	l1Handler     *storage.L1HandlerFilter
-	message       *storage.MessageFilter
-	storageDiff   *storage.StorageDiffFilter
-	tokenBalance  *storage.TokenBalanceFilter
-	transfer      *storage.TransferFilter
+	declare       []storage.DeclareFilter
+	deploy        []storage.DeployFilter
+	deployAccount []storage.DeployAccountFilter
+	event         []storage.EventFilter
+	fee           []storage.FeeFilter
+	internal      []storage.InternalFilter
+	invoke        []storage.InvokeFilter
+	l1Handler     []storage.L1HandlerFilter
+	message       []storage.MessageFilter
+	storageDiff   []storage.StorageDiffFilter
+	tokenBalance  []storage.TokenBalanceFilter
+	transfer      []storage.TransferFilter
+	address       []storage.AddressFilter
 }
 
 func newSubscriptionFilters(ctx context.Context, req *pb.SubscribeRequest, db postgres.Storage) (subscriptionFilters, error) {
@@ -41,199 +42,271 @@ func newSubscriptionFilters(ctx context.Context, req *pb.SubscribeRequest, db po
 		storageDiff:   storageDiffFilter(req.GetStorageDiffs()),
 		tokenBalance:  tokenBalanceFilter(req.GetTokenBalances()),
 		transfer:      transferFilter(req.GetTransfers()),
+		address:       addressFilter(req.GetAddresses()),
 	}, nil
 }
 
-func declareFilter(fltr *pb.DeclareFilters) *storage.DeclareFilter {
-	if fltr == nil {
+func addressFilter(fltr []*pb.AddressFilter) []storage.AddressFilter {
+	if len(fltr) == 0 {
 		return nil
 	}
-	return &storage.DeclareFilter{
-		ID:      integerFilter(fltr.Id),
-		Height:  integerFilter(fltr.Height),
-		Time:    timeFilter(fltr.Time),
-		Version: enumFilter(fltr.Version),
-		Status:  enumFilter(fltr.Status),
+	result := make([]storage.AddressFilter, len(fltr))
+	for i := range fltr {
+		result[i] = storage.AddressFilter{
+			ID:           integerFilter(fltr[i].Id),
+			OnlyStarknet: fltr[i].OnlyStarknet,
+			Height:       integerFilter(fltr[i].Height),
+		}
 	}
+	return result
 }
 
-func deployFilter(fltr *pb.DeployFilters) *storage.DeployFilter {
-	if fltr == nil {
+func declareFilter(fltr []*pb.DeclareFilters) []storage.DeclareFilter {
+	if len(fltr) == 0 {
 		return nil
 	}
-	return &storage.DeployFilter{
-		ID:             integerFilter(fltr.Id),
-		Height:         integerFilter(fltr.Height),
-		Time:           timeFilter(fltr.Time),
-		Status:         enumFilter(fltr.Status),
-		Class:          bytesFilter(fltr.Class),
-		ParsedCalldata: fltr.GetParsedCalldata(),
+	result := make([]storage.DeclareFilter, len(fltr))
+	for i := range fltr {
+		result[i] = storage.DeclareFilter{
+			ID:      integerFilter(fltr[i].Id),
+			Height:  integerFilter(fltr[i].Height),
+			Time:    timeFilter(fltr[i].Time),
+			Version: enumFilter(fltr[i].Version),
+			Status:  enumFilter(fltr[i].Status),
+		}
 	}
+	return result
 }
 
-func deployAccountFilter(fltr *pb.DeployAccountFilters) *storage.DeployAccountFilter {
-	if fltr == nil {
+func deployFilter(fltr []*pb.DeployFilters) []storage.DeployFilter {
+	if len(fltr) == 0 {
 		return nil
 	}
-	return &storage.DeployAccountFilter{
-		ID:             integerFilter(fltr.Id),
-		Height:         integerFilter(fltr.Height),
-		Time:           timeFilter(fltr.Time),
-		Status:         enumFilter(fltr.Status),
-		Class:          bytesFilter(fltr.Class),
-		ParsedCalldata: fltr.GetParsedCalldata(),
+	result := make([]storage.DeployFilter, len(fltr))
+	for i := range fltr {
+		result[i] = storage.DeployFilter{
+			ID:             integerFilter(fltr[i].Id),
+			Height:         integerFilter(fltr[i].Height),
+			Time:           timeFilter(fltr[i].Time),
+			Status:         enumFilter(fltr[i].Status),
+			Class:          bytesFilter(fltr[i].Class),
+			ParsedCalldata: fltr[i].GetParsedCalldata(),
+		}
 	}
+	return result
 }
 
-func eventFilter(ctx context.Context, address storage.IAddress, fltr *pb.EventFilter) (*storage.EventFilter, error) {
-	if fltr == nil {
+func deployAccountFilter(fltr []*pb.DeployAccountFilters) []storage.DeployAccountFilter {
+	if len(fltr) == 0 {
+		return nil
+	}
+	result := make([]storage.DeployAccountFilter, len(fltr))
+	for i := range fltr {
+		result[i] = storage.DeployAccountFilter{
+			ID:             integerFilter(fltr[i].Id),
+			Height:         integerFilter(fltr[i].Height),
+			Time:           timeFilter(fltr[i].Time),
+			Status:         enumFilter(fltr[i].Status),
+			Class:          bytesFilter(fltr[i].Class),
+			ParsedCalldata: fltr[i].GetParsedCalldata(),
+		}
+	}
+	return result
+}
+
+func eventFilter(ctx context.Context, address storage.IAddress, fltr []*pb.EventFilter) ([]storage.EventFilter, error) {
+	if len(fltr) == 0 {
 		return nil, nil
 	}
 
-	contractFilter, err := idFilter(ctx, address, fltr.Contract)
-	if err != nil {
-		return nil, err
-	}
-	fromFilter, err := idFilter(ctx, address, fltr.From)
-	if err != nil {
-		return nil, err
+	result := make([]storage.EventFilter, len(fltr))
+	for i := range fltr {
+		contractFilter, err := idFilter(ctx, address, fltr[i].Contract)
+		if err != nil {
+			return nil, err
+		}
+		fromFilter, err := idFilter(ctx, address, fltr[i].From)
+		if err != nil {
+			return nil, err
+		}
+		result[i] = storage.EventFilter{
+			ID:         integerFilter(fltr[i].Id),
+			Height:     integerFilter(fltr[i].Height),
+			Time:       timeFilter(fltr[i].Time),
+			Contract:   contractFilter,
+			From:       fromFilter,
+			Name:       stringFilter(fltr[i].Name),
+			ParsedData: fltr[i].GetParsedData(),
+		}
 	}
 
-	return &storage.EventFilter{
-		ID:         integerFilter(fltr.Id),
-		Height:     integerFilter(fltr.Height),
-		Time:       timeFilter(fltr.Time),
-		Contract:   contractFilter,
-		From:       fromFilter,
-		Name:       stringFilter(fltr.Name),
-		ParsedData: fltr.GetParsedData(),
-	}, nil
+	return result, nil
 }
 
-func feeFilter(fltr *pb.FeeFilter) *storage.FeeFilter {
-	if fltr == nil {
+func feeFilter(fltr []*pb.FeeFilter) []storage.FeeFilter {
+	if len(fltr) == 0 {
 		return nil
 	}
-	return &storage.FeeFilter{
-		ID:             integerFilter(fltr.Id),
-		Height:         integerFilter(fltr.Height),
-		Time:           timeFilter(fltr.Time),
-		Status:         enumFilter(fltr.Status),
-		Contract:       bytesFilter(fltr.Contract),
-		Caller:         bytesFilter(fltr.Caller),
-		Class:          bytesFilter(fltr.Class),
-		Selector:       equalityFilter(fltr.Selector),
-		Entrypoint:     stringFilter(fltr.Entrypoint),
-		EntrypointType: enumFilter(fltr.EntrypointType),
-		CallType:       enumFilter(fltr.CallType),
-		ParsedCalldata: fltr.GetParsedCalldata(),
+
+	result := make([]storage.FeeFilter, len(fltr))
+	for i := range fltr {
+		result[i] = storage.FeeFilter{
+			ID:             integerFilter(fltr[i].Id),
+			Height:         integerFilter(fltr[i].Height),
+			Time:           timeFilter(fltr[i].Time),
+			Status:         enumFilter(fltr[i].Status),
+			Contract:       bytesFilter(fltr[i].Contract),
+			Caller:         bytesFilter(fltr[i].Caller),
+			Class:          bytesFilter(fltr[i].Class),
+			Selector:       equalityFilter(fltr[i].Selector),
+			Entrypoint:     stringFilter(fltr[i].Entrypoint),
+			EntrypointType: enumFilter(fltr[i].EntrypointType),
+			CallType:       enumFilter(fltr[i].CallType),
+			ParsedCalldata: fltr[i].GetParsedCalldata(),
+		}
 	}
+	return result
 }
 
-func internalFilter(fltr *pb.InternalFilter) *storage.InternalFilter {
-	if fltr == nil {
+func internalFilter(fltr []*pb.InternalFilter) []storage.InternalFilter {
+	if len(fltr) == 0 {
 		return nil
 	}
-	return &storage.InternalFilter{
-		ID:             integerFilter(fltr.Id),
-		Height:         integerFilter(fltr.Height),
-		Time:           timeFilter(fltr.Time),
-		Status:         enumFilter(fltr.Status),
-		Contract:       bytesFilter(fltr.Contract),
-		Caller:         bytesFilter(fltr.Caller),
-		Class:          bytesFilter(fltr.Class),
-		Selector:       equalityFilter(fltr.Selector),
-		Entrypoint:     stringFilter(fltr.Entrypoint),
-		EntrypointType: enumFilter(fltr.EntrypointType),
-		CallType:       enumFilter(fltr.CallType),
-		ParsedCalldata: fltr.GetParsedCalldata(),
+
+	result := make([]storage.InternalFilter, len(fltr))
+	for i := range fltr {
+		result[i] = storage.InternalFilter{
+			ID:             integerFilter(fltr[i].Id),
+			Height:         integerFilter(fltr[i].Height),
+			Time:           timeFilter(fltr[i].Time),
+			Status:         enumFilter(fltr[i].Status),
+			Contract:       bytesFilter(fltr[i].Contract),
+			Caller:         bytesFilter(fltr[i].Caller),
+			Class:          bytesFilter(fltr[i].Class),
+			Selector:       equalityFilter(fltr[i].Selector),
+			Entrypoint:     stringFilter(fltr[i].Entrypoint),
+			EntrypointType: enumFilter(fltr[i].EntrypointType),
+			CallType:       enumFilter(fltr[i].CallType),
+			ParsedCalldata: fltr[i].GetParsedCalldata(),
+		}
 	}
+	return result
 }
 
-func invokeFilter(fltr *pb.InvokeFilters) *storage.InvokeFilter {
-	if fltr == nil {
+func invokeFilter(fltr []*pb.InvokeFilters) []storage.InvokeFilter {
+	if len(fltr) == 0 {
 		return nil
 	}
-	return &storage.InvokeFilter{
-		ID:             integerFilter(fltr.Id),
-		Height:         integerFilter(fltr.Height),
-		Time:           timeFilter(fltr.Time),
-		Status:         enumFilter(fltr.Status),
-		Version:        enumFilter(fltr.Version),
-		Contract:       bytesFilter(fltr.Contract),
-		Selector:       equalityFilter(fltr.Selector),
-		Entrypoint:     stringFilter(fltr.Entrypoint),
-		ParsedCalldata: fltr.GetParsedCalldata(),
+
+	result := make([]storage.InvokeFilter, len(fltr))
+	for i := range fltr {
+		result[i] = storage.InvokeFilter{
+			ID:             integerFilter(fltr[i].Id),
+			Height:         integerFilter(fltr[i].Height),
+			Time:           timeFilter(fltr[i].Time),
+			Status:         enumFilter(fltr[i].Status),
+			Version:        enumFilter(fltr[i].Version),
+			Contract:       bytesFilter(fltr[i].Contract),
+			Selector:       equalityFilter(fltr[i].Selector),
+			Entrypoint:     stringFilter(fltr[i].Entrypoint),
+			ParsedCalldata: fltr[i].GetParsedCalldata(),
+		}
 	}
+	return result
 }
 
-func l1HandlerFilter(fltr *pb.L1HandlerFilter) *storage.L1HandlerFilter {
-	if fltr == nil {
+func l1HandlerFilter(fltr []*pb.L1HandlerFilter) []storage.L1HandlerFilter {
+	if len(fltr) == 0 {
 		return nil
 	}
-	return &storage.L1HandlerFilter{
-		ID:             integerFilter(fltr.Id),
-		Height:         integerFilter(fltr.Height),
-		Time:           timeFilter(fltr.Time),
-		Status:         enumFilter(fltr.Status),
-		Contract:       bytesFilter(fltr.Contract),
-		Selector:       equalityFilter(fltr.Selector),
-		Entrypoint:     stringFilter(fltr.Entrypoint),
-		ParsedCalldata: fltr.GetParsedCalldata(),
+
+	result := make([]storage.L1HandlerFilter, len(fltr))
+	for i := range fltr {
+		result[i] = storage.L1HandlerFilter{
+			ID:             integerFilter(fltr[i].Id),
+			Height:         integerFilter(fltr[i].Height),
+			Time:           timeFilter(fltr[i].Time),
+			Status:         enumFilter(fltr[i].Status),
+			Contract:       bytesFilter(fltr[i].Contract),
+			Selector:       equalityFilter(fltr[i].Selector),
+			Entrypoint:     stringFilter(fltr[i].Entrypoint),
+			ParsedCalldata: fltr[i].GetParsedCalldata(),
+		}
 	}
+	return result
 }
 
-func messageFilter(fltr *pb.MessageFilter) *storage.MessageFilter {
-	if fltr == nil {
+func messageFilter(fltr []*pb.MessageFilter) []storage.MessageFilter {
+	if len(fltr) == 0 {
 		return nil
 	}
-	return &storage.MessageFilter{
-		ID:       integerFilter(fltr.Id),
-		Height:   integerFilter(fltr.Height),
-		Time:     timeFilter(fltr.Time),
-		Contract: bytesFilter(fltr.Contract),
-		From:     bytesFilter(fltr.From),
-		To:       bytesFilter(fltr.To),
-		Selector: equalityFilter(fltr.Selector),
+
+	result := make([]storage.MessageFilter, len(fltr))
+	for i := range fltr {
+		result[i] = storage.MessageFilter{
+			ID:       integerFilter(fltr[i].Id),
+			Height:   integerFilter(fltr[i].Height),
+			Time:     timeFilter(fltr[i].Time),
+			Contract: bytesFilter(fltr[i].Contract),
+			From:     bytesFilter(fltr[i].From),
+			To:       bytesFilter(fltr[i].To),
+			Selector: equalityFilter(fltr[i].Selector),
+		}
 	}
+	return result
 }
 
-func storageDiffFilter(fltr *pb.StorageDiffFilter) *storage.StorageDiffFilter {
-	if fltr == nil {
+func storageDiffFilter(fltr []*pb.StorageDiffFilter) []storage.StorageDiffFilter {
+	if len(fltr) == 0 {
 		return nil
 	}
-	return &storage.StorageDiffFilter{
-		ID:       integerFilter(fltr.Id),
-		Height:   integerFilter(fltr.Height),
-		Contract: bytesFilter(fltr.Contract),
-		Key:      equalityFilter(fltr.Key),
+
+	result := make([]storage.StorageDiffFilter, len(fltr))
+	for i := range fltr {
+		result[i] = storage.StorageDiffFilter{
+			ID:       integerFilter(fltr[i].Id),
+			Height:   integerFilter(fltr[i].Height),
+			Contract: bytesFilter(fltr[i].Contract),
+			Key:      equalityFilter(fltr[i].Key),
+		}
 	}
+	return result
 }
 
-func tokenBalanceFilter(fltr *pb.TokenBalanceFilter) *storage.TokenBalanceFilter {
-	if fltr == nil {
+func tokenBalanceFilter(fltr []*pb.TokenBalanceFilter) []storage.TokenBalanceFilter {
+	if len(fltr) == 0 {
 		return nil
 	}
-	return &storage.TokenBalanceFilter{
-		Owner:    bytesFilter(fltr.Owner),
-		Contract: bytesFilter(fltr.Contract),
-		TokenId:  stringFilter(fltr.TokenId),
+
+	result := make([]storage.TokenBalanceFilter, len(fltr))
+	for i := range fltr {
+		result[i] = storage.TokenBalanceFilter{
+			Owner:    bytesFilter(fltr[i].Owner),
+			Contract: bytesFilter(fltr[i].Contract),
+			TokenId:  stringFilter(fltr[i].TokenId),
+		}
 	}
+	return result
 }
 
-func transferFilter(fltr *pb.TransferFilter) *storage.TransferFilter {
-	if fltr == nil {
+func transferFilter(fltr []*pb.TransferFilter) []storage.TransferFilter {
+	if len(fltr) == 0 {
 		return nil
 	}
-	return &storage.TransferFilter{
-		ID:       integerFilter(fltr.Id),
-		Height:   integerFilter(fltr.Height),
-		Time:     timeFilter(fltr.Time),
-		Contract: bytesFilter(fltr.Contract),
-		From:     bytesFilter(fltr.From),
-		To:       bytesFilter(fltr.To),
-		TokenId:  stringFilter(fltr.TokenId),
+
+	result := make([]storage.TransferFilter, len(fltr))
+	for i := range fltr {
+		result[i] = storage.TransferFilter{
+			ID:       integerFilter(fltr[i].Id),
+			Height:   integerFilter(fltr[i].Height),
+			Time:     timeFilter(fltr[i].Time),
+			Contract: bytesFilter(fltr[i].Contract),
+			From:     bytesFilter(fltr[i].From),
+			To:       bytesFilter(fltr[i].To),
+			TokenId:  stringFilter(fltr[i].TokenId),
+		}
 	}
+	return result
 }
 
 func integerFilter(fltr *pb.IntegerFilter) (result storage.IntegerFilter) {

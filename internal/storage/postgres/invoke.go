@@ -9,6 +9,7 @@ import (
 	"github.com/dipdup-io/starknet-indexer/internal/storage"
 	"github.com/dipdup-net/go-lib/database"
 	"github.com/dipdup-net/indexer-sdk/pkg/storage/postgres"
+	"github.com/go-pg/pg/v10/orm"
 )
 
 // Invoke -
@@ -123,20 +124,28 @@ func (invoke *Invoke) InsertByCopy(txs []storage.Invoke) (io.Reader, string, err
 }
 
 // Filter -
-func (invoke *Invoke) Filter(ctx context.Context, fltr storage.InvokeFilter, opts ...storage.FilterOption) ([]storage.Invoke, error) {
-	q := invoke.DB().ModelContext(ctx, (*storage.Invoke)(nil))
-	q = integerFilter(q, "invoke.id", fltr.ID)
-	q = integerFilter(q, "height", fltr.Height)
-	q = timeFilter(q, "time", fltr.Time)
-	q = enumFilter(q, "status", fltr.Status)
-	q = enumFilter(q, "version", fltr.Version)
-	q = addressFilter(q, "hash", fltr.Contract, "Contract")
-	q = equalityFilter(q, "selector", fltr.Selector)
-	q = stringFilter(q, "entrypoint", fltr.Entrypoint)
-	q = jsonFilter(q, "parsed_calldata", fltr.ParsedCalldata)
-	q = optionsFilter(q, opts...)
+func (invoke *Invoke) Filter(ctx context.Context, fltr []storage.InvokeFilter, opts ...storage.FilterOption) ([]storage.Invoke, error) {
+	query := invoke.DB().ModelContext(ctx, (*storage.Invoke)(nil))
+	query = query.WhereGroup(func(q1 *orm.Query) (*orm.Query, error) {
+		for i := range fltr {
+			q1 = q1.WhereOrGroup(func(q *orm.Query) (*orm.Query, error) {
+				q = integerFilter(q, "invoke.id", fltr[i].ID)
+				q = integerFilter(q, "invoke.height", fltr[i].Height)
+				q = timeFilter(q, "invoke.time", fltr[i].Time)
+				q = enumFilter(q, "invoke.status", fltr[i].Status)
+				q = enumFilter(q, "invoke.version", fltr[i].Version)
+				q = addressFilter(q, "invoke.contract_id", fltr[i].Contract, "Contract")
+				q = equalityFilter(q, "invoke.selector", fltr[i].Selector)
+				q = stringFilter(q, "invoke.entrypoint", fltr[i].Entrypoint)
+				q = jsonFilter(q, "invoke.parsed_calldata", fltr[i].ParsedCalldata)
+				return q, nil
+			})
+		}
+		return q1, nil
+	})
+	query = optionsFilter(query, "invoke", opts...)
 
 	var result []storage.Invoke
-	err := q.Select(&result)
+	err := query.Select(&result)
 	return result, err
 }

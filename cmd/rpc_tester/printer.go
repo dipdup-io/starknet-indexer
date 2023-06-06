@@ -56,7 +56,7 @@ func (p *Printer) listen(ctx context.Context) {
 			switch typ := msg.(type) {
 			case *pb.Subscription:
 				switch {
-				case typ.GetEndOfBlock():
+				case typ.GetEndOfBlock() != nil:
 					log.Info().
 						Uint64("subscription", typ.Response.Id).
 						Msg("end of block")

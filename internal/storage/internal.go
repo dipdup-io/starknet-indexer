@@ -77,6 +77,11 @@ func (Internal) TableName() string {
 }
 
 // GetHeight -
-func (invoke Internal) GetHeight() uint64 {
-	return invoke.Height
+func (i Internal) GetHeight() uint64 {
+	return i.Height
+}
+
+// GetId -
+func (i Internal) GetId() uint64 {
+	return i.ID
 }

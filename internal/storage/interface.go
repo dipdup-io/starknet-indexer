@@ -22,11 +22,12 @@ type Heightable interface {
 	storage.Model
 
 	GetHeight() uint64
+	GetId() uint64
 }
 
 // Filterable -
 type Filterable[M storage.Model, F any] interface {
-	Filter(ctx context.Context, flt F, opts ...FilterOption) ([]M, error)
+	Filter(ctx context.Context, flt []F, opts ...FilterOption) ([]M, error)
 }
 
 // FilterOptions -
@@ -36,6 +37,9 @@ type FilterOptions struct {
 
 	SortField string
 	SortOrder storage.SortOrder
+
+	MaxHeight uint64
+	Cursor    uint64
 }
 
 // FilterOption -
@@ -72,6 +76,20 @@ func WithAscSortByIdFilter() FilterOption {
 	return func(opt *FilterOptions) {
 		opt.SortField = "id"
 		opt.SortOrder = storage.SortOrderAsc
+	}
+}
+
+// WithMaxHeight -
+func WithMaxHeight(height uint64) FilterOption {
+	return func(opt *FilterOptions) {
+		opt.MaxHeight = height
+	}
+}
+
+// WithCursor -
+func WithCursor(id uint64) FilterOption {
+	return func(opt *FilterOptions) {
+		opt.Cursor = id
 	}
 }
 

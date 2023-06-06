@@ -9,6 +9,7 @@ import (
 	"github.com/dipdup-io/starknet-indexer/internal/storage"
 	"github.com/dipdup-net/go-lib/database"
 	"github.com/dipdup-net/indexer-sdk/pkg/storage/postgres"
+	"github.com/go-pg/pg/v10/orm"
 )
 
 // Event -
@@ -142,18 +143,27 @@ func (event *Event) InsertByCopy(events []storage.Event) (io.Reader, string, err
 }
 
 // Filter -
-func (event *Event) Filter(ctx context.Context, fltr storage.EventFilter, opts ...storage.FilterOption) ([]storage.Event, error) {
-	q := event.DB().ModelContext(ctx, (*storage.Event)(nil))
-	q = integerFilter(q, "event.id", fltr.ID)
-	q = integerFilter(q, "event.height", fltr.Height)
-	q = timeFilter(q, "event.time", fltr.Time)
-	q = idFilter(q, "event.contract_id", fltr.Contract, "Contract")
-	q = idFilter(q, "event.from_id", fltr.From, "From")
-	q = stringFilter(q, "event.name", fltr.Name)
-	q = jsonFilter(q, "event.parsed_data", fltr.ParsedData)
-	q = optionsFilter(q, opts...)
+func (event *Event) Filter(ctx context.Context, fltr []storage.EventFilter, opts ...storage.FilterOption) ([]storage.Event, error) {
+	query := event.DB().ModelContext(ctx, (*storage.Event)(nil))
+	query = query.WhereGroup(func(q1 *orm.Query) (*orm.Query, error) {
+		for i := range fltr {
+			q1 = q1.WhereOrGroup(func(q *orm.Query) (*orm.Query, error) {
+				q = integerFilter(q, "event.id", fltr[i].ID)
+				q = integerFilter(q, "event.height", fltr[i].Height)
+				q = timeFilter(q, "event.time", fltr[i].Time)
+				q = idFilter(q, "event.contract_id", fltr[i].Contract, "Contract")
+				q = idFilter(q, "event.from_id", fltr[i].From, "From")
+				q = stringFilter(q, "event.name", fltr[i].Name)
+				q = jsonFilter(q, "event.parsed_data", fltr[i].ParsedData)
+				return q, nil
+			})
+		}
+		return q1, nil
+	})
+
+	query = optionsFilter(query, "event", opts...)
 
 	var result []storage.Event
-	err := q.Select(&result)
+	err := query.Select(&result)
 	return result, err
 }

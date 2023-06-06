@@ -11,6 +11,12 @@ const (
 	OutputBlocks string = "blocks"
 )
 
+// IndexerMessage -
+type IndexerMessage struct {
+	Block     *storage.Block
+	Addresses map[string]*storage.Address
+}
+
 // Input -
 func (indexer *Indexer) Input(name string) (*modules.Input, error) {
 	return nil, errors.Wrap(modules.ErrUnknownInput, name)
@@ -35,6 +41,9 @@ func (indexer *Indexer) AttachTo(name string, input *modules.Input) error {
 	return nil
 }
 
-func (indexer *Indexer) notifyAllAboutBlock(blocks storage.Block) {
-	indexer.outputs[OutputBlocks].Push(&blocks)
+func (indexer *Indexer) notifyAllAboutBlock(blocks storage.Block, addresses map[string]*storage.Address) {
+	indexer.outputs[OutputBlocks].Push(&IndexerMessage{
+		Block:     &blocks,
+		Addresses: addresses,
+	})
 }

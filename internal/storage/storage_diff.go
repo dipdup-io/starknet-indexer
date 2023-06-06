@@ -46,3 +46,8 @@ func (StorageDiff) TableName() string {
 func (sd StorageDiff) GetHeight() uint64 {
 	return sd.Height
 }
+
+// GetId -
+func (sd StorageDiff) GetId() uint64 {
+	return sd.ID
+}

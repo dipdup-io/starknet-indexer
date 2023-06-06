@@ -64,3 +64,8 @@ func (Message) TableName() string {
 func (msg Message) GetHeight() uint64 {
 	return msg.Height
 }
+
+// GetId -
+func (msg Message) GetId() uint64 {
+	return msg.ID
+}

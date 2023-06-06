@@ -5,27 +5,27 @@ import (
 	"github.com/dipdup-io/starknet-indexer/pkg/grpc/pb"
 )
 
-// Declare -
-type Declare struct {
-	fltrs   []*pb.DeclareFilters
+// Address -
+type Address struct {
+	fltrs   []*pb.AddressFilter
 	isEmpty bool
 }
 
-// NewDeclare -
-func NewDeclare(req []*pb.DeclareFilters) Declare {
-	declare := Declare{
+// NewAddress -
+func NewAddress(req []*pb.AddressFilter) Address {
+	address := Address{
 		isEmpty: true,
 	}
 	if req == nil {
-		return declare
+		return address
 	}
-	declare.isEmpty = false
-	declare.fltrs = req
-	return declare
+	address.isEmpty = false
+	address.fltrs = req
+	return address
 }
 
 // Filter -
-func (f Declare) Filter(data storage.Declare) bool {
+func (f Address) Filter(data storage.Address) bool {
 	if f.isEmpty {
 		return true
 	}
@@ -39,20 +39,11 @@ func (f Declare) Filter(data storage.Declare) bool {
 		if !validInteger(f.fltrs[i].Id, data.ID) {
 			continue
 		}
-
 		if !validInteger(f.fltrs[i].Height, data.Height) {
 			continue
 		}
 
-		if !validTime(f.fltrs[i].Time, data.Time) {
-			continue
-		}
-
-		if !validEnum(f.fltrs[i].Status, uint64(data.Status)) {
-			continue
-		}
-
-		if !validEnum(f.fltrs[i].Version, data.Version) {
+		if f.fltrs[i].OnlyStarknet && data.ClassID == nil {
 			continue
 		}
 

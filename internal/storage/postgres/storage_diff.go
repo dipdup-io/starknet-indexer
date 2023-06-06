@@ -9,6 +9,7 @@ import (
 	"github.com/dipdup-io/starknet-indexer/internal/storage"
 	"github.com/dipdup-net/go-lib/database"
 	"github.com/dipdup-net/indexer-sdk/pkg/storage/postgres"
+	"github.com/go-pg/pg/v10/orm"
 )
 
 // StorageDiff -
@@ -80,15 +81,23 @@ func (sd *StorageDiff) InsertByCopy(diffs []storage.StorageDiff) (io.Reader, str
 }
 
 // Filter -
-func (sd *StorageDiff) Filter(ctx context.Context, fltr storage.StorageDiffFilter, opts ...storage.FilterOption) ([]storage.StorageDiff, error) {
-	q := sd.DB().ModelContext(ctx, (*storage.StorageDiff)(nil))
-	q = integerFilter(q, "storage_diff.id", fltr.ID)
-	q = integerFilter(q, "height", fltr.Height)
-	q = addressFilter(q, "hash", fltr.Contract, "Contract")
-	q = equalityFilter(q, "key", fltr.Key)
-	q = optionsFilter(q, opts...)
+func (sd *StorageDiff) Filter(ctx context.Context, fltr []storage.StorageDiffFilter, opts ...storage.FilterOption) ([]storage.StorageDiff, error) {
+	query := sd.DB().ModelContext(ctx, (*storage.StorageDiff)(nil))
+	query = query.WhereGroup(func(q1 *orm.Query) (*orm.Query, error) {
+		for i := range fltr {
+			q1 = q1.WhereOrGroup(func(q *orm.Query) (*orm.Query, error) {
+				q = integerFilter(q, "storage_diff.id", fltr[i].ID)
+				q = integerFilter(q, "storage_diff.height", fltr[i].Height)
+				q = addressFilter(q, "storage_diff.contract_id", fltr[i].Contract, "Contract")
+				q = equalityFilter(q, "storage_diff.key", fltr[i].Key)
+				return q, nil
+			})
+		}
+		return q1, nil
+	})
+	query = optionsFilter(query, "storage_diff", opts...)
 
 	var result []storage.StorageDiff
-	err := q.Select(&result)
+	err := query.Select(&result)
 	return result, err
 }

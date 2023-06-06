@@ -26,6 +26,7 @@ type Subscription struct {
 	tokenBalances  filters.TokenBalance
 	transfers      filters.Transfer
 	tokens         filters.Token
+	addresses      filters.Address
 }
 
 // NewSubscription -
@@ -38,6 +39,9 @@ func NewSubscription(ctx context.Context, db postgres.Storage, req *pb.Subscribe
 	}
 	all.blocks = req.Head
 
+	if req.Addresses != nil {
+		all.addresses = filters.NewAddress(req.Addresses)
+	}
 	if req.Declares != nil {
 		all.declares = filters.NewDeclare(req.Declares)
 	}
@@ -134,7 +138,10 @@ func (s *Subscription) Filter(msg *Message) bool {
 	if msg == nil {
 		return false
 	}
-	if msg.EndOfBlock {
+	if msg.EndOfBlock != nil {
+		return true
+	}
+	if msg.Address != nil && s.addresses.Filter(*msg.Address) {
 		return true
 	}
 	if s.blocks && msg.Block != nil {

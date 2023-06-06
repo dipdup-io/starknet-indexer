@@ -9,25 +9,28 @@ import (
 
 // Deploy -
 type Deploy struct {
-	*pb.DeployFilters
+	fltrs   []*pb.DeployFilters
 	isEmpty bool
 
-	classes ids
+	classes []ids
 }
 
 // NewDeploy -
-func NewDeploy(ctx context.Context, class storage.IClass, req *pb.DeployFilters) (Deploy, error) {
+func NewDeploy(ctx context.Context, class storage.IClass, req []*pb.DeployFilters) (Deploy, error) {
 	deploy := Deploy{
 		isEmpty: true,
-		classes: make(ids),
 	}
 	if req == nil {
 		return deploy, nil
 	}
+	deploy.classes = make([]ids, 0)
 	deploy.isEmpty = false
-	deploy.DeployFilters = req
-	if err := fillClassMapFromBytesFilter(ctx, class, req.Class, deploy.classes); err != nil {
-		return deploy, err
+	deploy.fltrs = req
+	for i := range deploy.fltrs {
+		deploy.classes = append(deploy.classes, make(ids))
+		if err := fillClassMapFromBytesFilter(ctx, class, deploy.fltrs[i].Class, deploy.classes[i]); err != nil {
+			return deploy, err
+		}
 	}
 	return deploy, nil
 }
@@ -37,35 +40,38 @@ func (f Deploy) Filter(data storage.Deploy) bool {
 	if f.isEmpty {
 		return true
 	}
-	if f.DeployFilters == nil {
-		return false
-	}
 
-	if !validInteger(f.Id, data.ID) {
-		return false
-	}
-
-	if !validInteger(f.Height, data.Height) {
-		return false
-	}
-
-	if !validTime(f.Time, data.Time) {
-		return false
-	}
-
-	if !validEnum(f.Status, uint64(data.Status)) {
-		return false
-	}
-
-	if f.Class != nil {
-		if !f.classes.In(data.ClassID) {
-			return false
+	var ok bool
+	for i := range f.fltrs {
+		if !validInteger(f.fltrs[i].Id, data.ID) {
+			continue
 		}
+
+		if !validInteger(f.fltrs[i].Height, data.Height) {
+			continue
+		}
+
+		if !validTime(f.fltrs[i].Time, data.Time) {
+			continue
+		}
+
+		if !validEnum(f.fltrs[i].Status, uint64(data.Status)) {
+			continue
+		}
+
+		if f.fltrs[i].Class != nil {
+			if !f.classes[i].In(data.ClassID) {
+				continue
+			}
+		}
+
+		if !validMap(f.fltrs[i].ParsedCalldata, data.ParsedCalldata) {
+			continue
+		}
+
+		ok = true
+		break
 	}
 
-	if !validMap(f.ParsedCalldata, data.ParsedCalldata) {
-		return false
-	}
-
-	return false
+	return ok
 }

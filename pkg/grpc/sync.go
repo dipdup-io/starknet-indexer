@@ -6,6 +6,7 @@ import (
 
 	"github.com/dipdup-io/starknet-indexer/internal/storage"
 	"github.com/dipdup-io/starknet-indexer/pkg/grpc/pb"
+	"github.com/dipdup-io/starknet-indexer/pkg/grpc/subscriptions"
 	generalPB "github.com/dipdup-net/indexer-sdk/pkg/modules/grpc/pb"
 	"golang.org/x/exp/slices"
 )
@@ -23,21 +24,23 @@ const (
 	priorityDeclare       = 30
 	priorityL1Handler     = 31
 	priorityInvoke        = 32
+	priorityAddress       = 33
 )
 
 type table[T storage.Heightable, F any] struct {
 	Data         []T
 	store        storage.Filterable[T, F]
-	fltr         F
+	fltr         []F
 	priority     int
 	offset       int
 	limit        int
 	targetHeight uint64
+	cursor       uint64
 
 	end bool
 }
 
-func newTable[T storage.Heightable, F any](store storage.Filterable[T, F], fltr F, priority int) *table[T, F] {
+func newTable[T storage.Heightable, F any](store storage.Filterable[T, F], fltr []F, priority int) *table[T, F] {
 	return &table[T, F]{
 		Data:     make([]T, 0),
 		store:    store,
@@ -65,11 +68,9 @@ func (t *table[T, F]) Push(arr []T) {
 func (t *table[T, F]) Pop() (T, bool) {
 	result, ok := t.getFirst()
 	if ok {
-		t.end = t.targetHeight < result.GetHeight()
-		if t.end {
-			return result, false
-		}
 		t.Data = t.Data[1:]
+		t.cursor = result.GetId()
+		t.offset += 1
 	}
 	return result, ok
 }
@@ -121,14 +122,14 @@ func (t *table[T, F]) Receive(ctx context.Context) error {
 		t.fltr,
 		storage.WithAscSortByIdFilter(),
 		storage.WithLimitFilter(t.limit),
-		storage.WithOffsetFilter(t.offset),
+		storage.WithMaxHeight(t.targetHeight),
+		storage.WithCursor(t.cursor),
 	)
 	if err != nil {
 		return err
 	}
 	t.Push(data)
-	t.offset += len(data)
-	t.end = len(data) == 0 || t.GetHeight() > t.targetHeight
+	t.end = len(data) == 0
 	return nil
 }
 
@@ -160,45 +161,48 @@ func (a tables) Finished() bool {
 	return true
 }
 
-func (module *Server) sync(ctx context.Context, subscriptionID uint64, req *pb.SubscribeRequest, stream pb.IndexerService_SubscribeServer) error {
+func (module *Server) sync(ctx context.Context, subscriptionID uint64, req *pb.SubscribeRequest, stream pb.IndexerService_SubscribeServer) (uint64, error) {
 	sf, err := newSubscriptionFilters(ctx, req, module.db)
 	if err != nil {
-		return err
+		return 0, err
 	}
 
 	syncTables := make(tables, 0)
+	if sf.address != nil {
+		syncTables = append(syncTables, newTable[storage.Address, storage.AddressFilter](module.db.Address, sf.address, priorityAddress))
+	}
 	if sf.invoke != nil {
-		syncTables = append(syncTables, newTable[storage.Invoke, storage.InvokeFilter](module.db.Invoke, *sf.invoke, priorityInvoke))
+		syncTables = append(syncTables, newTable[storage.Invoke, storage.InvokeFilter](module.db.Invoke, sf.invoke, priorityInvoke))
 	}
 	if sf.l1Handler != nil {
-		syncTables = append(syncTables, newTable[storage.L1Handler, storage.L1HandlerFilter](module.db.L1Handler, *sf.l1Handler, priorityL1Handler))
+		syncTables = append(syncTables, newTable[storage.L1Handler, storage.L1HandlerFilter](module.db.L1Handler, sf.l1Handler, priorityL1Handler))
 	}
 	if sf.declare != nil {
-		syncTables = append(syncTables, newTable[storage.Declare, storage.DeclareFilter](module.db.Declare, *sf.declare, priorityDeclare))
+		syncTables = append(syncTables, newTable[storage.Declare, storage.DeclareFilter](module.db.Declare, sf.declare, priorityDeclare))
 	}
 	if sf.deploy != nil {
-		syncTables = append(syncTables, newTable[storage.Deploy, storage.DeployFilter](module.db.Deploy, *sf.deploy, priorityDeploy))
+		syncTables = append(syncTables, newTable[storage.Deploy, storage.DeployFilter](module.db.Deploy, sf.deploy, priorityDeploy))
 	}
 	if sf.deployAccount != nil {
-		syncTables = append(syncTables, newTable[storage.DeployAccount, storage.DeployAccountFilter](module.db.DeployAccount, *sf.deployAccount, priorityDeployAccount))
+		syncTables = append(syncTables, newTable[storage.DeployAccount, storage.DeployAccountFilter](module.db.DeployAccount, sf.deployAccount, priorityDeployAccount))
 	}
 	if sf.internal != nil {
-		syncTables = append(syncTables, newTable[storage.Internal, storage.InternalFilter](module.db.Internal, *sf.internal, priorityInternal))
+		syncTables = append(syncTables, newTable[storage.Internal, storage.InternalFilter](module.db.Internal, sf.internal, priorityInternal))
 	}
 	if sf.fee != nil {
-		syncTables = append(syncTables, newTable[storage.Fee, storage.FeeFilter](module.db.Fee, *sf.fee, priorityFee))
+		syncTables = append(syncTables, newTable[storage.Fee, storage.FeeFilter](module.db.Fee, sf.fee, priorityFee))
 	}
 	if sf.event != nil {
-		syncTables = append(syncTables, newTable[storage.Event, storage.EventFilter](module.db.Event, *sf.event, priorityEvent))
+		syncTables = append(syncTables, newTable[storage.Event, storage.EventFilter](module.db.Event, sf.event, priorityEvent))
 	}
 	if sf.message != nil {
-		syncTables = append(syncTables, newTable[storage.Message, storage.MessageFilter](module.db.Message, *sf.message, priorityMessage))
+		syncTables = append(syncTables, newTable[storage.Message, storage.MessageFilter](module.db.Message, sf.message, priorityMessage))
 	}
 	if sf.transfer != nil {
-		syncTables = append(syncTables, newTable[storage.Transfer, storage.TransferFilter](module.db.Transfer, *sf.transfer, priorityTransfer))
+		syncTables = append(syncTables, newTable[storage.Transfer, storage.TransferFilter](module.db.Transfer, sf.transfer, priorityTransfer))
 	}
 	if sf.storageDiff != nil {
-		syncTables = append(syncTables, newTable[storage.StorageDiff, storage.StorageDiffFilter](module.db.StorageDiff, *sf.storageDiff, priorityStorageDiff))
+		syncTables = append(syncTables, newTable[storage.StorageDiff, storage.StorageDiffFilter](module.db.StorageDiff, sf.storageDiff, priorityStorageDiff))
 	}
 
 	var height uint64
@@ -206,13 +210,13 @@ func (module *Server) sync(ctx context.Context, subscriptionID uint64, req *pb.S
 	for {
 		select {
 		case <-ctx.Done():
-			return nil
+			return height, nil
 		default:
 		}
 
 		block, err := module.db.Blocks.Last(ctx)
 		if err != nil {
-			return err
+			return height, err
 		}
 		if height == block.Height {
 			break
@@ -220,17 +224,17 @@ func (module *Server) sync(ctx context.Context, subscriptionID uint64, req *pb.S
 		height = block.Height
 
 		if err := module.syncTables(ctx, syncTables, height, subscriptionID, stream); err != nil {
-			return err
+			return height, err
 		}
 	}
 
 	if sf.tokenBalance != nil {
-		if err := module.syncTokenBalances(ctx, *sf.tokenBalance, subscriptionID, stream); err != nil {
-			return err
+		if err := module.syncTokenBalances(ctx, sf.tokenBalance, subscriptionID, stream); err != nil {
+			return height, err
 		}
 	}
 
-	return nil
+	return height, nil
 }
 
 func (module *Server) syncTables(ctx context.Context, tables tables, targetHeight, subscriptionID uint64, stream pb.IndexerService_SubscribeServer) error {
@@ -242,6 +246,8 @@ func (module *Server) syncTables(ctx context.Context, tables tables, targetHeigh
 		}
 	}
 
+	var currentHeight uint64
+
 	for !tables.Finished() {
 		slices.SortFunc(tables, func(a synchronizable, b synchronizable) bool {
 			aH := a.GetHeight()
@@ -251,6 +257,22 @@ func (module *Server) syncTables(ctx context.Context, tables tables, targetHeigh
 			}
 			return aH < bH
 		})
+
+		if h := tables[0].GetHeight(); h < math.MaxUint64 {
+			if currentHeight == 0 {
+				currentHeight = h
+			} else if currentHeight < h {
+				if err := stream.Send(SubscriptionEnd(subscriptionID, &subscriptions.Message{
+					EndOfBlock: &subscriptions.EndOfBlock{
+						Height: currentHeight,
+					},
+				})); err != nil {
+					return err
+				}
+				currentHeight = h
+			}
+		}
+
 		if head := tables[0].Head(); head != nil {
 			if err := sendModelToClient(ctx, subscriptionID, stream, head); err != nil {
 				return err
@@ -354,13 +376,27 @@ func sendModelToClient(ctx context.Context, subscriptionID uint64, stream pb.Ind
 			},
 			TokenBalance: TokenBalance(&typ),
 		}
+	case storage.Address:
+		msg = pb.Subscription{
+			Response: &generalPB.SubscribeResponse{
+				Id: subscriptionID,
+			},
+			Address: Address(&typ),
+		}
+	case storage.Token:
+		msg = pb.Subscription{
+			Response: &generalPB.SubscribeResponse{
+				Id: subscriptionID,
+			},
+			Token: Token(&typ),
+		}
 	default:
 		return nil
 	}
 	return stream.Send(&msg)
 }
 
-func (module *Server) syncTokenBalances(ctx context.Context, fltr storage.TokenBalanceFilter, subscriptionID uint64, stream pb.IndexerService_SubscribeServer) error {
+func (module *Server) syncTokenBalances(ctx context.Context, fltr []storage.TokenBalanceFilter, subscriptionID uint64, stream pb.IndexerService_SubscribeServer) error {
 	var (
 		offset int
 		end    bool

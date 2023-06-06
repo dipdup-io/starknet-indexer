@@ -64,3 +64,8 @@ func (Invoke) TableName() string {
 func (invoke Invoke) GetHeight() uint64 {
 	return invoke.Height
 }
+
+// GetId -
+func (invoke Invoke) GetId() uint64 {
+	return invoke.ID
+}

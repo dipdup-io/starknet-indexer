@@ -73,6 +73,16 @@ message EqualityFilter {
 }
 
 /**
+* Equality filters for integer values 
+**/
+message EqualityIntegerFilter {
+    oneof filter {
+        uint64 eq = 1; // equals
+        uint64 neq = 2; // not equals
+    }
+}
+
+/**
 * Set of bytes filters 
 **/
 message BytesFilter {

@@ -102,6 +102,12 @@ func createIndices(ctx context.Context, conn *database.PgGo) error {
 		if _, err := tx.ExecContext(ctx, `CREATE INDEX IF NOT EXISTS address_hash_idx ON address (hash)`); err != nil {
 			return err
 		}
+		if _, err := tx.ExecContext(ctx, `CREATE INDEX IF NOT EXISTS address_height_idx ON address USING BRIN (height)`); err != nil {
+			return err
+		}
+		if _, err := tx.ExecContext(ctx, `CREATE INDEX IF NOT EXISTS address_class_id_idx ON address (class_id)`); err != nil {
+			return err
+		}
 
 		// Proxy
 		if _, err := tx.ExecContext(ctx, `CREATE UNIQUE INDEX IF NOT EXISTS proxy_hash_selector_idx ON proxy (hash, selector) NULLS NOT DISTINCT`); err != nil {

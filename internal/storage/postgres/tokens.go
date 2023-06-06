@@ -45,3 +45,5 @@ func (tokens *Token) ListByType(ctx context.Context, typ storage.TokenType, limi
 	err := query.Select(&result)
 	return result, err
 }
+
+// TODO: implement Filterable
