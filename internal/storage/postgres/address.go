@@ -7,6 +7,7 @@ import (
 	"github.com/dipdup-net/go-lib/database"
 	"github.com/dipdup-net/indexer-sdk/pkg/storage/postgres"
 	"github.com/go-pg/pg/v10"
+	"github.com/go-pg/pg/v10/orm"
 )
 
 // Address -
@@ -52,4 +53,30 @@ func (a *Address) GetIdsByHash(ctx context.Context, hash [][]byte) (ids []uint64
 		Where("hash in (?)", pg.In(hash)).
 		Select(&ids)
 	return
+}
+
+// Filter -
+func (a *Address) Filter(ctx context.Context, fltr []storage.AddressFilter, opts ...storage.FilterOption) ([]storage.Address, error) {
+	query := a.DB().ModelContext(ctx, (*storage.Address)(nil))
+
+	query = query.WhereGroup(func(q1 *orm.Query) (*orm.Query, error) {
+		for i := range fltr {
+			q1 = q1.WhereOrGroup(func(q *orm.Query) (*orm.Query, error) {
+				q = integerFilter(q, "address.id", fltr[i].ID)
+				q = integerFilter(q, "address.height", fltr[i].Height)
+
+				if fltr[i].OnlyStarknet {
+					q = q.Where("address.class_id is not null")
+				}
+				return q, nil
+			})
+		}
+		return q1, nil
+	})
+
+	query = optionsFilter(query, "address", opts...)
+
+	var result []storage.Address
+	err := query.Select(&result)
+	return result, err
 }

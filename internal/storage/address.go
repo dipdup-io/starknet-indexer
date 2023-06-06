@@ -10,9 +10,18 @@ import (
 type IAddress interface {
 	storage.Table[*Address]
 
+	Filterable[Address, AddressFilter]
+
 	GetByHash(ctx context.Context, hash []byte) (Address, error)
 	GetAddresses(ctx context.Context, ids ...uint64) ([]Address, error)
 	GetIdsByHash(ctx context.Context, hash [][]byte) (ids []uint64, err error)
+}
+
+// AddressFilter -
+type AddressFilter struct {
+	ID           IntegerFilter
+	Height       IntegerFilter
+	OnlyStarknet bool
 }
 
 // Address -
@@ -31,4 +40,14 @@ type Address struct {
 // TableName -
 func (Address) TableName() string {
 	return "address"
+}
+
+// GetHeight -
+func (address Address) GetHeight() uint64 {
+	return address.Height
+}
+
+// GetId -
+func (address Address) GetId() uint64 {
+	return address.ID
 }

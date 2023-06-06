@@ -60,3 +60,8 @@ func (DeployAccount) TableName() string {
 func (d DeployAccount) GetHeight() uint64 {
 	return d.Height
 }
+
+// GetId -
+func (d DeployAccount) GetId() uint64 {
+	return d.ID
+}

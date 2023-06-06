@@ -18,8 +18,13 @@ type Message struct {
 	TokenBalance  *storage.TokenBalance
 	Transfer      *storage.Transfer
 	Token         *storage.Token
+	Address       *storage.Address
+	EndOfBlock    *EndOfBlock
+}
 
-	EndOfBlock bool
+// EndOfBlock -
+type EndOfBlock struct {
+	Height uint64
 }
 
 // NewBlockMessage -
@@ -120,9 +125,18 @@ func NewTokenMessage(model *storage.Token) *Message {
 	}
 }
 
-// NewEndMessage -
-func NewEndMessage() *Message {
+// NewAddressMessage -
+func NewAddressMessage(model *storage.Address) *Message {
 	return &Message{
-		EndOfBlock: true,
+		Address: model,
+	}
+}
+
+// NewEndMessage -
+func NewEndMessage(block *storage.Block) *Message {
+	return &Message{
+		EndOfBlock: &EndOfBlock{
+			Height: block.Height,
+		},
 	}
 }

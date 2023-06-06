@@ -23,12 +23,24 @@ func (module *Server) Subscribe(req *pb.SubscribeRequest, stream pb.IndexerServi
 	if err != nil {
 		return err
 	}
+	var height uint64
 	return grpcSDK.DefaultSubscribeOn[*subscriptions.Message, *pb.Subscription](
 		stream,
 		module.subscriptions,
 		subscription,
 		func(id uint64) error {
-			return module.sync(stream.Context(), id, req, stream)
+			height, err = module.sync(stream.Context(), id, req, stream)
+			return err
+		},
+		func(id uint64) error {
+			return stream.Send(&pb.Subscription{
+				Response: &generalPB.SubscribeResponse{
+					Id: id,
+				},
+				EndOfBlock: &pb.EndOfBlock{
+					Height: height,
+				},
+			})
 		},
 	)
 }

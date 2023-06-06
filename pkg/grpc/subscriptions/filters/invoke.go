@@ -10,24 +10,27 @@ import (
 
 // Invoke -
 type Invoke struct {
-	*pb.InvokeFilters
+	fltrs     []*pb.InvokeFilters
 	isEmpty   bool
-	contracts ids
+	contracts []ids
 }
 
 // NewInvoke -
-func NewInvoke(ctx context.Context, address storage.IAddress, req *pb.InvokeFilters) (Invoke, error) {
+func NewInvoke(ctx context.Context, address storage.IAddress, req []*pb.InvokeFilters) (Invoke, error) {
 	invoke := Invoke{
-		isEmpty:   true,
-		contracts: make(ids),
+		isEmpty: true,
 	}
 	if req == nil {
 		return invoke, nil
 	}
 	invoke.isEmpty = false
-	invoke.InvokeFilters = req
-	if err := fillAddressMapFromBytesFilter(ctx, address, req.Contract, invoke.contracts); err != nil {
-		return invoke, err
+	invoke.fltrs = req
+	invoke.contracts = make([]ids, 0)
+	for i := range invoke.fltrs {
+		invoke.contracts = append(invoke.contracts, make(ids))
+		if err := fillAddressMapFromBytesFilter(ctx, address, invoke.fltrs[i].Contract, invoke.contracts[i]); err != nil {
+			return invoke, err
+		}
 	}
 	return invoke, nil
 }
@@ -37,47 +40,50 @@ func (f Invoke) Filter(data storage.Invoke) bool {
 	if f.isEmpty {
 		return true
 	}
-	if f.InvokeFilters == nil {
-		return false
-	}
 
-	if !validInteger(f.Id, data.ID) {
-		return false
-	}
-
-	if !validInteger(f.Height, data.Height) {
-		return false
-	}
-
-	if !validTime(f.Time, data.Time) {
-		return false
-	}
-
-	if !validEnum(f.Status, uint64(data.Status)) {
-		return false
-	}
-
-	if !validEnum(f.Version, data.Version) {
-		return false
-	}
-
-	if f.Contract != nil {
-		if !f.contracts.In(data.ContractID) {
-			return false
+	var ok bool
+	for i := range f.fltrs {
+		if !validInteger(f.fltrs[i].Id, data.ID) {
+			continue
 		}
+
+		if !validInteger(f.fltrs[i].Height, data.Height) {
+			continue
+		}
+
+		if !validTime(f.fltrs[i].Time, data.Time) {
+			continue
+		}
+
+		if !validEnum(f.fltrs[i].Status, uint64(data.Status)) {
+			continue
+		}
+
+		if !validEnum(f.fltrs[i].Version, data.Version) {
+			continue
+		}
+
+		if f.fltrs[i].Contract != nil {
+			if !f.contracts[i].In(data.ContractID) {
+				continue
+			}
+		}
+
+		if !validString(f.fltrs[i].Entrypoint, data.Entrypoint) {
+			continue
+		}
+
+		if !validEquality(f.fltrs[i].Selector, encoding.EncodeHex(data.EntrypointSelector)) {
+			continue
+		}
+
+		if !validMap(f.fltrs[i].ParsedCalldata, data.ParsedCalldata) {
+			continue
+		}
+
+		ok = true
+		break
 	}
 
-	if !validString(f.Entrypoint, data.Entrypoint) {
-		return false
-	}
-
-	if !validEquality(f.Selector, encoding.EncodeHex(data.EntrypointSelector)) {
-		return false
-	}
-
-	if !validMap(f.ParsedCalldata, data.ParsedCalldata) {
-		return false
-	}
-
-	return false
+	return ok
 }

@@ -352,7 +352,7 @@ func (indexer *Indexer) handleBlock(ctx context.Context, result receiver.Result)
 	}
 	l.Msg("indexed")
 
-	indexer.notifyAllAboutBlock(parseResult.Block)
+	indexer.notifyAllAboutBlock(parseResult.Block, parseResult.Context.Addresses())
 	return nil
 }
 

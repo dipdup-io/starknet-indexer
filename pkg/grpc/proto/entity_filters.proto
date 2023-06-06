@@ -134,3 +134,9 @@ message TokenFilter {
     BytesFilter owner = 2;
     EnumFilter type = 3;
 }
+
+message AddressFilter {
+    IntegerFilter id = 1;
+    bool only_starknet = 2;
+    IntegerFilter height = 3;
+}

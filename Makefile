@@ -20,6 +20,7 @@ build-proto:
 		--doc_opt=markdown,README.md \
 		--go-grpc_out=${GOPATH}/src \
 		--go_out=${GOPATH}/src \
+		--experimental_allow_proto3_optional \
 		${GOPATH}/src/github.com/dipdup-io/starknet-indexer/pkg/grpc/proto/*.proto
 
 build:

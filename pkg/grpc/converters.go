@@ -63,8 +63,6 @@ func Declare(model *storage.Declare) *pb.Declare {
 		Time:     uint64(model.Time.Unix()),
 		Version:  model.Version,
 		Position: uint64(model.Position),
-		Sender:   model.Sender.Hash,
-		Contract: model.Contract.Hash,
 		Class:    model.Class.Hash,
 		Status:   uint64(model.Status),
 		Hash:     model.Hash,
@@ -72,10 +70,10 @@ func Declare(model *storage.Declare) *pb.Declare {
 		Nonce:    model.Nonce.String(),
 	}
 	if model.ContractID != nil {
-		pbDeclare.ContractId = *model.ContractID
+		pbDeclare.Contract = Address(&model.Contract)
 	}
 	if model.SenderID != nil {
-		pbDeclare.SenderId = *model.SenderID
+		pbDeclare.Sender = Address(&model.Sender)
 	}
 	return pbDeclare
 }
@@ -93,17 +91,17 @@ func SubscriptionDeploy(id uint64, msg *subscriptions.Message) *pb.Subscription 
 // Deploy -
 func Deploy(model *storage.Deploy) *pb.Deploy {
 	pbModel := &pb.Deploy{
-		Id:         model.ID,
-		Height:     model.Height,
-		Time:       uint64(model.Time.Unix()),
-		Position:   uint64(model.Position),
-		Contract:   model.Contract.Hash,
-		ContractId: model.ContractID,
-		Class:      model.Class.Hash,
-		Status:     uint64(model.Status),
-		Hash:       model.Hash,
-		Salt:       model.ContractAddressSalt,
-		Calldata:   model.ConstructorCalldata,
+		Id:       model.ID,
+		Height:   model.Height,
+		Time:     uint64(model.Time.Unix()),
+		Position: uint64(model.Position),
+		Contract: Address(&model.Contract),
+
+		Class:    model.Class.Hash,
+		Status:   uint64(model.Status),
+		Hash:     model.Hash,
+		Salt:     model.ContractAddressSalt,
+		Calldata: model.ConstructorCalldata,
 	}
 
 	if model.ParsedCalldata != nil {
@@ -130,19 +128,19 @@ func SubscriptionDeployAccount(id uint64, msg *subscriptions.Message) *pb.Subscr
 // DeployAccount -
 func DeployAccount(model *storage.DeployAccount) *pb.DeployAccount {
 	pbModel := &pb.DeployAccount{
-		Id:         model.ID,
-		Height:     model.Height,
-		Time:       uint64(model.Time.Unix()),
-		Position:   uint64(model.Position),
-		Contract:   model.Contract.Hash,
-		ContractId: model.ContractID,
-		Class:      model.Class.Hash,
-		Status:     uint64(model.Status),
-		Hash:       model.Hash,
-		MaxFee:     model.MaxFee.String(),
-		Nonce:      model.Nonce.String(),
-		Salt:       model.ContractAddressSalt,
-		Calldata:   model.ConstructorCalldata,
+		Id:       model.ID,
+		Height:   model.Height,
+		Time:     uint64(model.Time.Unix()),
+		Position: uint64(model.Position),
+		Contract: Address(&model.Contract),
+
+		Class:    model.Class.Hash,
+		Status:   uint64(model.Status),
+		Hash:     model.Hash,
+		MaxFee:   model.MaxFee.String(),
+		Nonce:    model.Nonce.String(),
+		Salt:     model.ContractAddressSalt,
+		Calldata: model.ConstructorCalldata,
 	}
 
 	if model.ParsedCalldata != nil {
@@ -169,17 +167,17 @@ func SubscriptionEvent(id uint64, msg *subscriptions.Message) *pb.Subscription {
 // Event -
 func Event(model *storage.Event) *pb.Event {
 	pbModel := &pb.Event{
-		Id:         model.ID,
-		Height:     model.Height,
-		Time:       uint64(model.Time.Unix()),
-		Order:      model.Order,
-		Contract:   model.Contract.Hash,
-		ContractId: model.ContractID,
-		From:       model.From.Hash,
-		FromId:     model.FromID,
-		Keys:       model.Keys,
-		Data:       model.Data,
-		Name:       model.Name,
+		Id:       model.ID,
+		Height:   model.Height,
+		Time:     uint64(model.Time.Unix()),
+		Order:    model.Order,
+		Contract: Address(&model.Contract),
+
+		From: Address(&model.From),
+
+		Keys: model.Keys,
+		Data: model.Data,
+		Name: model.Name,
 	}
 
 	if model.ParsedData != nil {
@@ -209,10 +207,8 @@ func Fee(model *storage.Fee) *pb.Fee {
 		Id:             model.ID,
 		Height:         model.Height,
 		Time:           uint64(model.Time.Unix()),
-		Contract:       model.Contract.Hash,
-		ContractId:     model.ContractID,
-		Caller:         model.Caller.Hash,
-		CallerId:       model.CallerID,
+		Contract:       Address(&model.Contract),
+		Caller:         Address(&model.Caller),
 		Class:          model.Class.Hash,
 		Selector:       model.Selector,
 		EntrypointType: uint64(model.EntrypointType),
@@ -251,10 +247,8 @@ func Internal(model *storage.Internal) *pb.Internal {
 		Time:           uint64(model.Time.Unix()),
 		Status:         uint64(model.Status),
 		Hash:           model.Hash,
-		Contract:       model.Contract.Hash,
-		ContractId:     model.ContractID,
-		Caller:         model.Caller.Hash,
-		CallerId:       model.CallerID,
+		Contract:       Address(&model.Contract),
+		Caller:         Address(&model.Caller),
 		Class:          model.Class.Hash,
 		Selector:       model.Selector,
 		EntrypointType: uint64(model.EntrypointType),
@@ -294,15 +288,15 @@ func SubscriptionInvoke(id uint64, msg *subscriptions.Message) *pb.Subscription 
 // Invoke -
 func Invoke(model *storage.Invoke) *pb.Invoke {
 	pbModel := &pb.Invoke{
-		Id:         model.ID,
-		Height:     model.Height,
-		Time:       uint64(model.Time.Unix()),
-		Status:     uint64(model.Status),
-		Hash:       model.Hash,
-		Position:   uint64(model.Position),
-		Version:    model.Version,
-		Contract:   model.Contract.Hash,
-		ContractId: model.ContractID,
+		Id:       model.ID,
+		Height:   model.Height,
+		Time:     uint64(model.Time.Unix()),
+		Status:   uint64(model.Status),
+		Hash:     model.Hash,
+		Position: uint64(model.Position),
+		Version:  model.Version,
+		Contract: Address(&model.Contract),
+
 		Selector:   model.EntrypointSelector,
 		Calldata:   model.CallData,
 		MaxFee:     model.MaxFee.String(),
@@ -333,14 +327,14 @@ func SubscriptionL1Handler(id uint64, msg *subscriptions.Message) *pb.Subscripti
 // L1Handler -
 func L1Handler(model *storage.L1Handler) *pb.L1Handler {
 	pbModel := &pb.L1Handler{
-		Id:         model.ID,
-		Height:     model.Height,
-		Time:       uint64(model.Time.Unix()),
-		Status:     uint64(model.Status),
-		Hash:       model.Hash,
-		Position:   uint64(model.Position),
-		Contract:   model.Contract.Hash,
-		ContractId: model.ContractID,
+		Id:       model.ID,
+		Height:   model.Height,
+		Time:     uint64(model.Time.Unix()),
+		Status:   uint64(model.Status),
+		Hash:     model.Hash,
+		Position: uint64(model.Position),
+		Contract: Address(&model.Contract),
+
 		Selector:   model.Selector,
 		Calldata:   model.CallData,
 		MaxFee:     model.MaxFee.String(),
@@ -371,18 +365,15 @@ func SubscriptionMessage(id uint64, msg *subscriptions.Message) *pb.Subscription
 // Message -
 func Message(model *storage.Message) *pb.StarknetMessage {
 	pbModel := &pb.StarknetMessage{
-		Id:         model.ID,
-		Height:     model.Height,
-		Time:       uint64(model.Time.Unix()),
-		Contract:   model.Contract.Hash,
-		From:       model.From.Hash,
-		To:         model.To.Hash,
-		Nonce:      model.Nonce.String(),
-		Selector:   model.Selector,
-		Payload:    model.Payload,
-		ContractId: model.ContractID,
-		FromId:     model.FromID,
-		ToId:       model.ToID,
+		Id:       model.ID,
+		Height:   model.Height,
+		Time:     uint64(model.Time.Unix()),
+		Contract: Address(&model.Contract),
+		From:     Address(&model.From),
+		To:       Address(&model.To),
+		Nonce:    model.Nonce.String(),
+		Selector: model.Selector,
+		Payload:  model.Payload,
 	}
 	return pbModel
 }
@@ -400,12 +391,11 @@ func SubscriptionStorageDiff(id uint64, msg *subscriptions.Message) *pb.Subscrip
 // StorageDiff -
 func StorageDiff(model *storage.StorageDiff) *pb.StorageDiff {
 	pbModel := &pb.StorageDiff{
-		Id:         model.ID,
-		Height:     model.Height,
-		Contract:   model.Contract.Hash,
-		ContractId: model.ContractID,
-		Key:        model.Key,
-		Value:      model.Value,
+		Id:       model.ID,
+		Height:   model.Height,
+		Contract: Address(&model.Contract),
+		Key:      model.Key,
+		Value:    model.Value,
 	}
 	return pbModel
 }
@@ -423,12 +413,10 @@ func SubscriptionTokenBalance(id uint64, msg *subscriptions.Message) *pb.Subscri
 // TokenBalance -
 func TokenBalance(model *storage.TokenBalance) *pb.TokenBalance {
 	pbModel := &pb.TokenBalance{
-		Owner:      model.Owner.Hash,
-		OwnerId:    model.OwnerID,
-		Contract:   model.Contract.Hash,
-		ContractId: model.ContractID,
-		TokenId:    model.TokenID.String(),
-		Balance:    model.Balance.String(),
+		Owner:    Address(&model.Owner),
+		Contract: Address(&model.Contract),
+		TokenId:  model.TokenID.String(),
+		Balance:  model.Balance.String(),
 	}
 	return pbModel
 }
@@ -446,17 +434,14 @@ func SubscriptionTransfer(id uint64, msg *subscriptions.Message) *pb.Subscriptio
 // Transfer -
 func Transfer(model *storage.Transfer) *pb.Transfer {
 	pbModel := &pb.Transfer{
-		Id:         model.ID,
-		Height:     model.Height,
-		Time:       uint64(model.Time.Unix()),
-		Contract:   model.Contract.Hash,
-		ContractId: model.ContractID,
-		From:       model.From.Hash,
-		FromId:     model.FromID,
-		To:         model.To.Hash,
-		ToId:       model.ToID,
-		Amount:     model.Amount.String(),
-		TokenId:    model.TokenID.String(),
+		Id:       model.ID,
+		Height:   model.Height,
+		Time:     uint64(model.Time.Unix()),
+		Contract: Address(&model.Contract),
+		From:     Address(&model.From),
+		To:       Address(&model.To),
+		Amount:   model.Amount.String(),
+		TokenId:  model.TokenID.String(),
 	}
 	return pbModel
 }
@@ -477,8 +462,7 @@ func Token(model *storage.Token) *pb.Token {
 		Id:           model.ID,
 		DeployHeight: model.DeployHeight,
 		DeployTime:   uint64(model.DeployTime.Unix()),
-		Contract:     model.Contract.Hash,
-		ContractId:   model.ContractID,
+		Contract:     Address(&model.Contract),
 		Owner:        model.Owner.Hash,
 		Type:         int32(model.Type),
 	}
@@ -492,12 +476,47 @@ func Token(model *storage.Token) *pb.Token {
 	return pbModel
 }
 
+// EndOfBlock -
+func EndOfBlock(model *subscriptions.EndOfBlock) *pb.EndOfBlock {
+	if model == nil {
+		return nil
+	}
+
+	return &pb.EndOfBlock{
+		Height: model.Height,
+	}
+}
+
 // SubscriptionEnd -
 func SubscriptionEnd(id uint64, msg *subscriptions.Message) *pb.Subscription {
 	return &pb.Subscription{
 		Response: &generalPB.SubscribeResponse{
 			Id: id,
 		},
-		EndOfBlock: true,
+		EndOfBlock: EndOfBlock(msg.EndOfBlock),
+	}
+}
+
+// Address -
+func Address(model *storage.Address) *pb.Address {
+	if model == nil || (model.ID == 0 && model.Hash == nil) {
+		return nil
+	}
+
+	return &pb.Address{
+		Id:      model.ID,
+		Hash:    model.Hash,
+		ClassId: model.ClassID,
+		Height:  model.Height,
+	}
+}
+
+// SubscriptionAddress -
+func SubscriptionAddress(id uint64, msg *subscriptions.Message) *pb.Subscription {
+	return &pb.Subscription{
+		Response: &generalPB.SubscribeResponse{
+			Id: id,
+		},
+		Address: Address(msg.Address),
 	}
 }

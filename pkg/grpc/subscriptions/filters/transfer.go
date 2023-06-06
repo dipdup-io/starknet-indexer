@@ -9,16 +9,16 @@ import (
 
 // Transfer -
 type Transfer struct {
-	*pb.TransferFilter
+	fltrs   []*pb.TransferFilter
 	isEmpty bool
 
-	contracts ids
-	from      ids
-	to        ids
+	contracts []ids
+	from      []ids
+	to        []ids
 }
 
 // NewTransfer -
-func NewTransfer(ctx context.Context, address storage.IAddress, req *pb.TransferFilter) (Transfer, error) {
+func NewTransfer(ctx context.Context, address storage.IAddress, req []*pb.TransferFilter) (Transfer, error) {
 	transfer := Transfer{
 		isEmpty: true,
 	}
@@ -26,16 +26,24 @@ func NewTransfer(ctx context.Context, address storage.IAddress, req *pb.Transfer
 		return transfer, nil
 	}
 	transfer.isEmpty = false
-	transfer.TransferFilter = req
+	transfer.fltrs = req
+	transfer.contracts = make([]ids, 0)
+	transfer.from = make([]ids, 0)
+	transfer.to = make([]ids, 0)
 
-	if err := fillAddressMapFromBytesFilter(ctx, address, req.Contract, transfer.contracts); err != nil {
-		return transfer, err
-	}
-	if err := fillAddressMapFromBytesFilter(ctx, address, req.From, transfer.from); err != nil {
-		return transfer, err
-	}
-	if err := fillAddressMapFromBytesFilter(ctx, address, req.To, transfer.to); err != nil {
-		return transfer, err
+	for i := range transfer.fltrs {
+		transfer.contracts = append(transfer.contracts, make(ids))
+		if err := fillAddressMapFromBytesFilter(ctx, address, transfer.fltrs[i].Contract, transfer.contracts[i]); err != nil {
+			return transfer, err
+		}
+		transfer.from = append(transfer.from, make(ids))
+		if err := fillAddressMapFromBytesFilter(ctx, address, transfer.fltrs[i].From, transfer.from[i]); err != nil {
+			return transfer, err
+		}
+		transfer.to = append(transfer.to, make(ids))
+		if err := fillAddressMapFromBytesFilter(ctx, address, transfer.fltrs[i].To, transfer.to[i]); err != nil {
+			return transfer, err
+		}
 	}
 	return transfer, nil
 }
@@ -45,43 +53,46 @@ func (f Transfer) Filter(data storage.Transfer) bool {
 	if f.isEmpty {
 		return true
 	}
-	if f.TransferFilter == nil {
-		return false
-	}
 
-	if !validInteger(f.Id, data.ID) {
-		return false
-	}
-
-	if !validInteger(f.Height, data.Height) {
-		return false
-	}
-
-	if !validTime(f.Time, data.Time) {
-		return false
-	}
-
-	if f.Contract != nil {
-		if !f.contracts.In(data.ContractID) {
-			return false
+	var ok bool
+	for i := range f.fltrs {
+		if !validInteger(f.fltrs[i].Id, data.ID) {
+			continue
 		}
-	}
 
-	if f.From != nil {
-		if !f.from.In(data.FromID) {
-			return false
+		if !validInteger(f.fltrs[i].Height, data.Height) {
+			continue
 		}
-	}
 
-	if f.To != nil {
-		if !f.to.In(data.ToID) {
-			return false
+		if !validTime(f.fltrs[i].Time, data.Time) {
+			continue
 		}
+
+		if f.fltrs[i].Contract != nil {
+			if !f.contracts[i].In(data.ContractID) {
+				continue
+			}
+		}
+
+		if f.fltrs[i].From != nil {
+			if !f.from[i].In(data.FromID) {
+				continue
+			}
+		}
+
+		if f.fltrs[i].To != nil {
+			if !f.to[i].In(data.ToID) {
+				continue
+			}
+		}
+
+		if !validString(f.fltrs[i].TokenId, data.TokenID.String()) {
+			continue
+		}
+
+		ok = true
+		break
 	}
 
-	if !validString(f.TokenId, data.TokenID.String()) {
-		return false
-	}
-
-	return true
+	return ok
 }

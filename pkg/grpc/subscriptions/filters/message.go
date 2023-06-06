@@ -9,35 +9,40 @@ import (
 
 // Message -
 type Message struct {
-	*pb.MessageFilter
+	fltrs   []*pb.MessageFilter
 	isEmpty bool
 
-	contracts ids
-	from      ids
-	to        ids
+	contracts []ids
+	from      []ids
+	to        []ids
 }
 
 // NewMessage -
-func NewMessage(ctx context.Context, address storage.IAddress, req *pb.MessageFilter) (Message, error) {
+func NewMessage(ctx context.Context, address storage.IAddress, req []*pb.MessageFilter) (Message, error) {
 	msg := Message{
-		isEmpty:   true,
-		contracts: make(ids),
-		from:      make(ids),
-		to:        make(ids),
+		isEmpty: true,
 	}
 	if req == nil {
 		return msg, nil
 	}
 	msg.isEmpty = false
-	msg.MessageFilter = req
-	if err := fillAddressMapFromBytesFilter(ctx, address, req.Contract, msg.contracts); err != nil {
-		return msg, err
-	}
-	if err := fillAddressMapFromBytesFilter(ctx, address, req.From, msg.from); err != nil {
-		return msg, err
-	}
-	if err := fillAddressMapFromBytesFilter(ctx, address, req.To, msg.to); err != nil {
-		return msg, err
+	msg.fltrs = req
+	msg.contracts = make([]ids, 0)
+	msg.from = make([]ids, 0)
+	msg.to = make([]ids, 0)
+	for i := range msg.fltrs {
+		msg.contracts = append(msg.contracts, make(ids))
+		if err := fillAddressMapFromBytesFilter(ctx, address, msg.fltrs[i].Contract, msg.contracts[i]); err != nil {
+			return msg, err
+		}
+		msg.from = append(msg.from, make(ids))
+		if err := fillAddressMapFromBytesFilter(ctx, address, msg.fltrs[i].From, msg.from[i]); err != nil {
+			return msg, err
+		}
+		msg.to = append(msg.to, make(ids))
+		if err := fillAddressMapFromBytesFilter(ctx, address, msg.fltrs[i].To, msg.to[i]); err != nil {
+			return msg, err
+		}
 	}
 	return msg, nil
 }
@@ -47,43 +52,46 @@ func (f Message) Filter(data storage.Message) bool {
 	if f.isEmpty {
 		return true
 	}
-	if f.MessageFilter == nil {
-		return false
-	}
 
-	if !validInteger(f.Id, data.ID) {
-		return false
-	}
-
-	if !validInteger(f.Height, data.Height) {
-		return false
-	}
-
-	if !validTime(f.Time, data.Time) {
-		return false
-	}
-
-	if f.Contract != nil {
-		if !f.contracts.In(data.ContractID) {
-			return false
+	var ok bool
+	for i := range f.fltrs {
+		if !validInteger(f.fltrs[i].Id, data.ID) {
+			continue
 		}
-	}
 
-	if f.From != nil {
-		if !f.from.In(data.FromID) {
-			return false
+		if !validInteger(f.fltrs[i].Height, data.Height) {
+			continue
 		}
-	}
 
-	if f.To != nil {
-		if !f.to.In(data.ToID) {
-			return false
+		if !validTime(f.fltrs[i].Time, data.Time) {
+			continue
 		}
+
+		if f.fltrs[i].Contract != nil {
+			if !f.contracts[i].In(data.ContractID) {
+				continue
+			}
+		}
+
+		if f.fltrs[i].From != nil {
+			if !f.from[i].In(data.FromID) {
+				continue
+			}
+		}
+
+		if f.fltrs[i].To != nil {
+			if !f.to[i].In(data.ToID) {
+				continue
+			}
+		}
+
+		if !validEquality(f.fltrs[i].Selector, data.Selector) {
+			continue
+		}
+
+		ok = true
+		break
 	}
 
-	if !validEquality(f.Selector, data.Selector) {
-		return false
-	}
-
-	return true
+	return ok
 }

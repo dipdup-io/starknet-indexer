@@ -9,32 +9,37 @@ import (
 
 // Message -
 type Token struct {
-	*pb.TokenFilter
+	fltrs   []*pb.TokenFilter
 	isEmpty bool
 
-	contracts ids
-	owners    ids
+	contracts []ids
+	owners    []ids
 }
 
 // NewToken -
-func NewToken(ctx context.Context, address storage.IAddress, req *pb.TokenFilter) (Token, error) {
-	msg := Token{
-		isEmpty:   true,
-		contracts: make(ids),
-		owners:    make(ids),
+func NewToken(ctx context.Context, address storage.IAddress, req []*pb.TokenFilter) (Token, error) {
+	token := Token{
+		isEmpty: true,
 	}
 	if req == nil {
-		return msg, nil
+		return token, nil
 	}
-	msg.isEmpty = false
-	msg.TokenFilter = req
-	if err := fillAddressMapFromBytesFilter(ctx, address, req.Contract, msg.contracts); err != nil {
-		return msg, err
+	token.isEmpty = false
+	token.fltrs = req
+	token.contracts = make([]ids, 0)
+	token.owners = make([]ids, 0)
+
+	for i := range token.fltrs {
+		token.contracts = append(token.contracts, make(ids))
+		if err := fillAddressMapFromBytesFilter(ctx, address, token.fltrs[i].Contract, token.contracts[i]); err != nil {
+			return token, err
+		}
+		token.owners = append(token.owners, make(ids))
+		if err := fillAddressMapFromBytesFilter(ctx, address, token.fltrs[i].Owner, token.owners[i]); err != nil {
+			return token, err
+		}
 	}
-	if err := fillAddressMapFromBytesFilter(ctx, address, req.Owner, msg.owners); err != nil {
-		return msg, err
-	}
-	return msg, nil
+	return token, nil
 }
 
 // Filter -
@@ -42,25 +47,28 @@ func (f Token) Filter(data storage.Token) bool {
 	if f.isEmpty {
 		return true
 	}
-	if f.TokenFilter == nil {
-		return false
-	}
 
-	if f.Contract != nil {
-		if !f.contracts.In(data.ContractID) {
-			return false
+	var ok bool
+	for i := range f.fltrs {
+		if f.fltrs[i].Contract != nil {
+			if !f.contracts[i].In(data.ContractID) {
+				continue
+			}
 		}
-	}
 
-	if f.Owner != nil {
-		if !f.owners.In(data.OwnerID) {
-			return false
+		if f.fltrs[i].Owner != nil {
+			if !f.owners[i].In(data.OwnerID) {
+				continue
+			}
 		}
+
+		if !validEnum(f.fltrs[i].Type, uint64(data.Type)) {
+			continue
+		}
+
+		ok = true
+		break
 	}
 
-	if !validEnum(f.Type, uint64(data.Type)) {
-		return false
-	}
-
-	return true
+	return ok
 }

@@ -4,6 +4,7 @@
 ## Table of Contents
 
 - [github.com/dipdup-io/starknet-indexer/pkg/grpc/proto/entity_filters.proto](#github-com_dipdup-io_starknet-indexer_pkg_grpc_proto_entity_filters-proto)
+    - [AddressFilter](#proto-AddressFilter)
     - [DeclareFilters](#proto-DeclareFilters)
     - [DeployAccountFilters](#proto-DeployAccountFilters)
     - [DeployAccountFilters.ParsedCalldataEntry](#proto-DeployAccountFilters-ParsedCalldataEntry)
@@ -36,6 +37,7 @@
     - [BytesFilter](#proto-BytesFilter)
     - [EnumFilter](#proto-EnumFilter)
     - [EqualityFilter](#proto-EqualityFilter)
+    - [EqualityIntegerFilter](#proto-EqualityIntegerFilter)
     - [IntegerArray](#proto-IntegerArray)
     - [IntegerFilter](#proto-IntegerFilter)
     - [StringArray](#proto-StringArray)
@@ -52,10 +54,12 @@
     - [IndexerService](#proto-IndexerService)
   
 - [github.com/dipdup-io/starknet-indexer/pkg/grpc/proto/response.proto](#github-com_dipdup-io_starknet-indexer_pkg_grpc_proto_response-proto)
+    - [Address](#proto-Address)
     - [Block](#proto-Block)
     - [Declare](#proto-Declare)
     - [Deploy](#proto-Deploy)
     - [DeployAccount](#proto-DeployAccount)
+    - [EndOfBlock](#proto-EndOfBlock)
     - [Event](#proto-Event)
     - [Fee](#proto-Fee)
     - [Internal](#proto-Internal)
@@ -75,6 +79,23 @@
 <p align="right"><a href="#top">Top</a></p>
 
 ## github.com/dipdup-io/starknet-indexer/pkg/grpc/proto/entity_filters.proto
+
+
+
+<a name="proto-AddressFilter"></a>
+
+### AddressFilter
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| id | [IntegerFilter](#proto-IntegerFilter) |  |  |
+| only_starknet | [bool](#bool) |  |  |
+| height | [IntegerFilter](#proto-IntegerFilter) |  |  |
+
+
+
 
 
 
@@ -621,6 +642,22 @@ Equality filters
 
 
 
+<a name="proto-EqualityIntegerFilter"></a>
+
+### EqualityIntegerFilter
+Equality filters for integer values
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| eq | [uint64](#uint64) |  | equals |
+| neq | [uint64](#uint64) |  | not equals |
+
+
+
+
+
+
 <a name="proto-IntegerArray"></a>
 
 ### IntegerArray
@@ -782,19 +819,20 @@ List of requested subscriptions
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | head | [bool](#bool) |  |  |
-| invokes | [InvokeFilters](#proto-InvokeFilters) |  |  |
-| declares | [DeclareFilters](#proto-DeclareFilters) |  |  |
-| deploys | [DeployFilters](#proto-DeployFilters) |  |  |
-| deploy_accounts | [DeployAccountFilters](#proto-DeployAccountFilters) |  |  |
-| l1_handlers | [L1HandlerFilter](#proto-L1HandlerFilter) |  |  |
-| internals | [InternalFilter](#proto-InternalFilter) |  |  |
-| fees | [FeeFilter](#proto-FeeFilter) |  |  |
-| events | [EventFilter](#proto-EventFilter) |  |  |
-| msgs | [MessageFilter](#proto-MessageFilter) |  |  |
-| transfers | [TransferFilter](#proto-TransferFilter) |  |  |
-| storage_diffs | [StorageDiffFilter](#proto-StorageDiffFilter) |  |  |
-| token_balances | [TokenBalanceFilter](#proto-TokenBalanceFilter) |  |  |
-| tokens | [TokenFilter](#proto-TokenFilter) |  |  |
+| invokes | [InvokeFilters](#proto-InvokeFilters) | repeated |  |
+| declares | [DeclareFilters](#proto-DeclareFilters) | repeated |  |
+| deploys | [DeployFilters](#proto-DeployFilters) | repeated |  |
+| deploy_accounts | [DeployAccountFilters](#proto-DeployAccountFilters) | repeated |  |
+| l1_handlers | [L1HandlerFilter](#proto-L1HandlerFilter) | repeated |  |
+| internals | [InternalFilter](#proto-InternalFilter) | repeated |  |
+| fees | [FeeFilter](#proto-FeeFilter) | repeated |  |
+| events | [EventFilter](#proto-EventFilter) | repeated |  |
+| msgs | [MessageFilter](#proto-MessageFilter) | repeated |  |
+| transfers | [TransferFilter](#proto-TransferFilter) | repeated |  |
+| storage_diffs | [StorageDiffFilter](#proto-StorageDiffFilter) | repeated |  |
+| token_balances | [TokenBalanceFilter](#proto-TokenBalanceFilter) | repeated |  |
+| tokens | [TokenFilter](#proto-TokenFilter) | repeated |  |
+| addresses | [AddressFilter](#proto-AddressFilter) | repeated |  |
 
 
 
@@ -824,7 +862,8 @@ Subscription entity. It contains subscription id and subscription&#39;s live not
 | token_balance | [TokenBalance](#proto-TokenBalance) |  |  |
 | transfer | [Transfer](#proto-Transfer) |  |  |
 | token | [Token](#proto-Token) |  |  |
-| end_of_block | [bool](#bool) |  | message which signals about block data ends |
+| address | [Address](#proto-Address) |  |  |
+| end_of_block | [EndOfBlock](#proto-EndOfBlock) |  | message which signals about block data ends |
 
 
 
@@ -857,6 +896,24 @@ Desription of server interface
 <p align="right"><a href="#top">Top</a></p>
 
 ## github.com/dipdup-io/starknet-indexer/pkg/grpc/proto/response.proto
+
+
+
+<a name="proto-Address"></a>
+
+### Address
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| id | [uint64](#uint64) |  |  |
+| hash | [bytes](#bytes) |  |  |
+| class_id | [uint64](#uint64) | optional |  |
+| height | [uint64](#uint64) |  |  |
+
+
+
 
 
 
@@ -903,10 +960,8 @@ Desription of server interface
 | time | [uint64](#uint64) |  |  |
 | version | [uint64](#uint64) |  |  |
 | position | [uint64](#uint64) |  |  |
-| sender | [bytes](#bytes) |  |  |
-| sender_id | [uint64](#uint64) |  |  |
-| contract | [bytes](#bytes) |  |  |
-| contract_id | [uint64](#uint64) |  |  |
+| sender | [Address](#proto-Address) | optional |  |
+| contract | [Address](#proto-Address) | optional |  |
 | status | [uint64](#uint64) |  |  |
 | class | [bytes](#bytes) |  |  |
 | hash | [bytes](#bytes) |  |  |
@@ -930,8 +985,7 @@ Desription of server interface
 | height | [uint64](#uint64) |  |  |
 | time | [uint64](#uint64) |  |  |
 | position | [uint64](#uint64) |  |  |
-| contract | [bytes](#bytes) |  |  |
-| contract_id | [uint64](#uint64) |  |  |
+| contract | [Address](#proto-Address) |  |  |
 | status | [uint64](#uint64) |  |  |
 | class | [bytes](#bytes) |  |  |
 | hash | [bytes](#bytes) |  |  |
@@ -956,8 +1010,7 @@ Desription of server interface
 | height | [uint64](#uint64) |  |  |
 | time | [uint64](#uint64) |  |  |
 | position | [uint64](#uint64) |  |  |
-| contract | [bytes](#bytes) |  |  |
-| contract_id | [uint64](#uint64) |  |  |
+| contract | [Address](#proto-Address) |  |  |
 | status | [uint64](#uint64) |  |  |
 | class | [bytes](#bytes) |  |  |
 | hash | [bytes](#bytes) |  |  |
@@ -966,6 +1019,21 @@ Desription of server interface
 | nonce | [string](#string) |  |  |
 | calldata | [string](#string) | repeated |  |
 | parsed_calldata | [bytes](#bytes) |  |  |
+
+
+
+
+
+
+<a name="proto-EndOfBlock"></a>
+
+### EndOfBlock
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| height | [uint64](#uint64) |  |  |
 
 
 
@@ -984,10 +1052,8 @@ Desription of server interface
 | height | [uint64](#uint64) |  |  |
 | time | [uint64](#uint64) |  |  |
 | order | [uint64](#uint64) |  |  |
-| contract | [bytes](#bytes) |  |  |
-| contract_id | [uint64](#uint64) |  |  |
-| from | [bytes](#bytes) |  |  |
-| from_id | [uint64](#uint64) |  |  |
+| contract | [Address](#proto-Address) |  |  |
+| from | [Address](#proto-Address) |  |  |
 | keys | [string](#string) | repeated |  |
 | data | [string](#string) | repeated |  |
 | name | [string](#string) |  |  |
@@ -1009,10 +1075,8 @@ Desription of server interface
 | id | [uint64](#uint64) |  |  |
 | height | [uint64](#uint64) |  |  |
 | time | [uint64](#uint64) |  |  |
-| contract | [bytes](#bytes) |  |  |
-| contract_id | [uint64](#uint64) |  |  |
-| caller | [bytes](#bytes) |  |  |
-| caller_id | [uint64](#uint64) |  |  |
+| contract | [Address](#proto-Address) |  |  |
+| caller | [Address](#proto-Address) |  |  |
 | class | [bytes](#bytes) |  |  |
 | selector | [bytes](#bytes) |  |  |
 | entrypoint_type | [uint64](#uint64) |  |  |
@@ -1040,10 +1104,8 @@ Desription of server interface
 | time | [uint64](#uint64) |  |  |
 | status | [uint64](#uint64) |  |  |
 | hash | [bytes](#bytes) |  |  |
-| contract | [bytes](#bytes) |  |  |
-| contract_id | [uint64](#uint64) |  |  |
-| caller | [bytes](#bytes) |  |  |
-| caller_id | [uint64](#uint64) |  |  |
+| contract | [Address](#proto-Address) |  |  |
+| caller | [Address](#proto-Address) |  |  |
 | class | [bytes](#bytes) |  |  |
 | selector | [bytes](#bytes) |  |  |
 | entrypoint_type | [uint64](#uint64) |  |  |
@@ -1074,8 +1136,7 @@ Desription of server interface
 | hash | [bytes](#bytes) |  |  |
 | version | [uint64](#uint64) |  |  |
 | position | [uint64](#uint64) |  |  |
-| contract | [bytes](#bytes) |  |  |
-| contract_id | [uint64](#uint64) |  |  |
+| contract | [Address](#proto-Address) |  |  |
 | selector | [bytes](#bytes) |  |  |
 | max_fee | [string](#string) |  |  |
 | nonce | [string](#string) |  |  |
@@ -1102,8 +1163,7 @@ Desription of server interface
 | status | [uint64](#uint64) |  |  |
 | hash | [bytes](#bytes) |  |  |
 | position | [uint64](#uint64) |  |  |
-| contract | [bytes](#bytes) |  |  |
-| contract_id | [uint64](#uint64) |  |  |
+| contract | [Address](#proto-Address) |  |  |
 | selector | [bytes](#bytes) |  |  |
 | max_fee | [string](#string) |  |  |
 | nonce | [string](#string) |  |  |
@@ -1127,12 +1187,9 @@ Desription of server interface
 | id | [uint64](#uint64) |  |  |
 | height | [uint64](#uint64) |  |  |
 | time | [uint64](#uint64) |  |  |
-| contract | [bytes](#bytes) |  |  |
-| contract_id | [uint64](#uint64) |  |  |
-| from | [bytes](#bytes) |  |  |
-| from_id | [uint64](#uint64) |  |  |
-| to | [bytes](#bytes) |  |  |
-| to_id | [uint64](#uint64) |  |  |
+| contract | [Address](#proto-Address) |  |  |
+| from | [Address](#proto-Address) |  |  |
+| to | [Address](#proto-Address) |  |  |
 | selector | [string](#string) |  |  |
 | nonce | [string](#string) |  |  |
 | payload | [string](#string) | repeated |  |
@@ -1152,8 +1209,7 @@ Desription of server interface
 | ----- | ---- | ----- | ----------- |
 | id | [uint64](#uint64) |  |  |
 | height | [uint64](#uint64) |  |  |
-| contract | [bytes](#bytes) |  |  |
-| contract_id | [uint64](#uint64) |  |  |
+| contract | [Address](#proto-Address) |  |  |
 | key | [bytes](#bytes) |  |  |
 | value | [bytes](#bytes) |  |  |
 
@@ -1173,8 +1229,7 @@ Desription of server interface
 | id | [uint64](#uint64) |  |  |
 | deploy_height | [uint64](#uint64) |  |  |
 | deploy_time | [uint64](#uint64) |  |  |
-| contract | [bytes](#bytes) |  |  |
-| contract_id | [uint64](#uint64) |  |  |
+| contract | [Address](#proto-Address) |  |  |
 | owner | [bytes](#bytes) |  |  |
 | type | [int32](#int32) |  |  |
 | metadata | [bytes](#bytes) |  |  |
@@ -1192,10 +1247,8 @@ Desription of server interface
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| owner | [bytes](#bytes) |  |  |
-| owner_id | [uint64](#uint64) |  |  |
-| contract | [bytes](#bytes) |  |  |
-| contract_id | [uint64](#uint64) |  |  |
+| owner | [Address](#proto-Address) |  |  |
+| contract | [Address](#proto-Address) |  |  |
 | token_id | [string](#string) |  |  |
 | balance | [string](#string) |  |  |
 
@@ -1215,12 +1268,9 @@ Desription of server interface
 | id | [uint64](#uint64) |  |  |
 | height | [uint64](#uint64) |  |  |
 | time | [uint64](#uint64) |  |  |
-| contract | [bytes](#bytes) |  |  |
-| contract_id | [uint64](#uint64) |  |  |
-| from | [bytes](#bytes) |  |  |
-| from_id | [uint64](#uint64) |  |  |
-| to | [bytes](#bytes) |  |  |
-| to_id | [uint64](#uint64) |  |  |
+| contract | [Address](#proto-Address) |  |  |
+| from | [Address](#proto-Address) |  |  |
+| to | [Address](#proto-Address) |  |  |
 | amount | [string](#string) |  |  |
 | token_id | [string](#string) |  |  |
 

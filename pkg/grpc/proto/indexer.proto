@@ -28,19 +28,20 @@ service IndexerService {
 **/
 message SubscribeRequest {
     bool head = 1;    
-    InvokeFilters invokes = 2;
-    DeclareFilters declares = 3;
-    DeployFilters deploys = 4;
-    DeployAccountFilters deploy_accounts = 5;
-    L1HandlerFilter l1_handlers = 6;
-    InternalFilter internals = 7;
-    FeeFilter fees = 8;
-    EventFilter events = 9;
-    MessageFilter msgs = 10;
-    TransferFilter transfers = 11;
-    StorageDiffFilter storage_diffs = 12;
-    TokenBalanceFilter token_balances = 13;
-    TokenFilter tokens = 14;
+    repeated InvokeFilters invokes = 2;
+    repeated DeclareFilters declares = 3;
+    repeated DeployFilters deploys = 4;
+    repeated DeployAccountFilters deploy_accounts = 5;
+    repeated L1HandlerFilter l1_handlers = 6;
+    repeated InternalFilter internals = 7;
+    repeated FeeFilter fees = 8;
+    repeated EventFilter events = 9;
+    repeated MessageFilter msgs = 10;
+    repeated TransferFilter transfers = 11;
+    repeated StorageDiffFilter storage_diffs = 12;
+    repeated TokenBalanceFilter token_balances = 13;
+    repeated TokenFilter tokens = 14;
+    repeated AddressFilter addresses = 15;
 }
 
 /**
@@ -62,7 +63,8 @@ message Subscription {
     TokenBalance token_balance = 13;
     Transfer transfer = 14;
     Token token = 15;
-    bool end_of_block = 16; // message which signals about block data ends
+    Address address = 16;
+    EndOfBlock end_of_block = 17; // message which signals about block data ends
 }
 
 /**

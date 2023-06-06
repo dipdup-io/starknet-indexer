@@ -9,6 +9,7 @@ import (
 	"github.com/dipdup-io/starknet-indexer/internal/storage"
 	"github.com/dipdup-net/go-lib/database"
 	"github.com/dipdup-net/indexer-sdk/pkg/storage/postgres"
+	"github.com/go-pg/pg/v10/orm"
 )
 
 // Fee -
@@ -153,23 +154,31 @@ func (fee *Fee) InsertByCopy(txs []storage.Fee) (io.Reader, string, error) {
 }
 
 // Filter -
-func (fee *Fee) Filter(ctx context.Context, fltr storage.FeeFilter, opts ...storage.FilterOption) ([]storage.Fee, error) {
-	q := fee.DB().ModelContext(ctx, (*storage.Fee)(nil))
-	q = integerFilter(q, "fee.id", fltr.ID)
-	q = integerFilter(q, "height", fltr.Height)
-	q = timeFilter(q, "time", fltr.Time)
-	q = enumFilter(q, "status", fltr.Status)
-	q = addressFilter(q, "hash", fltr.Contract, "Contract")
-	q = addressFilter(q, "hash", fltr.Caller, "Caller")
-	q = addressFilter(q, "hash", fltr.Class, "Class")
-	q = equalityFilter(q, "selector", fltr.Selector)
-	q = stringFilter(q, "entrypoint", fltr.Entrypoint)
-	q = enumFilter(q, "entrypoint_type", fltr.EntrypointType)
-	q = enumFilter(q, "call_type", fltr.CallType)
-	q = jsonFilter(q, "parsed_calldata", fltr.ParsedCalldata)
-	q = optionsFilter(q, opts...)
+func (fee *Fee) Filter(ctx context.Context, fltr []storage.FeeFilter, opts ...storage.FilterOption) ([]storage.Fee, error) {
+	query := fee.DB().ModelContext(ctx, (*storage.Fee)(nil))
+	query = query.WhereGroup(func(q1 *orm.Query) (*orm.Query, error) {
+		for i := range fltr {
+			q1 = q1.WhereOrGroup(func(q *orm.Query) (*orm.Query, error) {
+				q = integerFilter(q, "fee.id", fltr[i].ID)
+				q = integerFilter(q, "fee.height", fltr[i].Height)
+				q = timeFilter(q, "fee.time", fltr[i].Time)
+				q = enumFilter(q, "fee.status", fltr[i].Status)
+				q = addressFilter(q, "fee.contract_id", fltr[i].Contract, "Contract")
+				q = addressFilter(q, "fee.caller_id", fltr[i].Caller, "Caller")
+				q = addressFilter(q, "fee.class_id", fltr[i].Class, "Class")
+				q = equalityFilter(q, "fee.selector", fltr[i].Selector)
+				q = stringFilter(q, "fee.entrypoint", fltr[i].Entrypoint)
+				q = enumFilter(q, "fee.entrypoint_type", fltr[i].EntrypointType)
+				q = enumFilter(q, "fee.call_type", fltr[i].CallType)
+				q = jsonFilter(q, "fee.parsed_calldata", fltr[i].ParsedCalldata)
+				return q, nil
+			})
+		}
+		return q1, nil
+	})
+	query = optionsFilter(query, "fee", opts...)
 
 	var result []storage.Fee
-	err := q.Select(&result)
+	err := query.Select(&result)
 	return result, err
 }

@@ -10,26 +10,29 @@ import (
 
 // L1Handler -
 type L1Handler struct {
-	*pb.L1HandlerFilter
+	fltrs   []*pb.L1HandlerFilter
 	isEmpty bool
 
-	contracts ids
+	contracts []ids
 }
 
 // NewL1Handler -
-func NewL1Handler(ctx context.Context, address storage.IAddress, req *pb.L1HandlerFilter) (L1Handler, error) {
+func NewL1Handler(ctx context.Context, address storage.IAddress, req []*pb.L1HandlerFilter) (L1Handler, error) {
 	l1Handler := L1Handler{
-		isEmpty:   true,
-		contracts: make(ids),
+		isEmpty: true,
 	}
 	if req == nil {
 		return l1Handler, nil
 	}
 	l1Handler.isEmpty = false
-	l1Handler.L1HandlerFilter = req
+	l1Handler.fltrs = req
+	l1Handler.contracts = make([]ids, 0)
 
-	if err := fillAddressMapFromBytesFilter(ctx, address, req.Contract, l1Handler.contracts); err != nil {
-		return l1Handler, err
+	for i := range l1Handler.fltrs {
+		l1Handler.contracts = append(l1Handler.contracts, make(ids))
+		if err := fillAddressMapFromBytesFilter(ctx, address, l1Handler.fltrs[i].Contract, l1Handler.contracts[i]); err != nil {
+			return l1Handler, err
+		}
 	}
 	return l1Handler, nil
 }
@@ -39,43 +42,46 @@ func (f L1Handler) Filter(data storage.L1Handler) bool {
 	if f.isEmpty {
 		return true
 	}
-	if f.L1HandlerFilter == nil {
-		return false
-	}
 
-	if !validInteger(f.Id, data.ID) {
-		return false
-	}
-
-	if !validInteger(f.Height, data.Height) {
-		return false
-	}
-
-	if !validTime(f.Time, data.Time) {
-		return false
-	}
-
-	if !validEnum(f.Status, uint64(data.Status)) {
-		return false
-	}
-
-	if f.Contract != nil {
-		if !f.contracts.In(data.ContractID) {
-			return false
+	var ok bool
+	for i := range f.fltrs {
+		if !validInteger(f.fltrs[i].Id, data.ID) {
+			continue
 		}
+
+		if !validInteger(f.fltrs[i].Height, data.Height) {
+			continue
+		}
+
+		if !validTime(f.fltrs[i].Time, data.Time) {
+			continue
+		}
+
+		if !validEnum(f.fltrs[i].Status, uint64(data.Status)) {
+			continue
+		}
+
+		if f.fltrs[i].Contract != nil {
+			if !f.contracts[i].In(data.ContractID) {
+				continue
+			}
+		}
+
+		if !validString(f.fltrs[i].Entrypoint, data.Entrypoint) {
+			continue
+		}
+
+		if !validEquality(f.fltrs[i].Selector, encoding.EncodeHex(data.Selector)) {
+			continue
+		}
+
+		if !validMap(f.fltrs[i].ParsedCalldata, data.ParsedCalldata) {
+			continue
+		}
+
+		ok = true
+		break
 	}
 
-	if !validString(f.Entrypoint, data.Entrypoint) {
-		return false
-	}
-
-	if !validEquality(f.Selector, encoding.EncodeHex(data.Selector)) {
-		return false
-	}
-
-	if !validMap(f.ParsedCalldata, data.ParsedCalldata) {
-		return false
-	}
-
-	return false
+	return ok
 }

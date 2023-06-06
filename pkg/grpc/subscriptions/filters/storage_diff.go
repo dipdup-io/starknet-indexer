@@ -10,25 +10,29 @@ import (
 
 // StorageDiff -
 type StorageDiff struct {
-	*pb.StorageDiffFilter
+	fltrs   []*pb.StorageDiffFilter
 	isEmpty bool
 
-	contracts ids
+	contracts []ids
 }
 
 // NewStorageDiff -
-func NewStorageDiff(ctx context.Context, address storage.IAddress, req *pb.StorageDiffFilter) (StorageDiff, error) {
+func NewStorageDiff(ctx context.Context, address storage.IAddress, req []*pb.StorageDiffFilter) (StorageDiff, error) {
 	sd := StorageDiff{
-		isEmpty:   true,
-		contracts: make(ids),
+		isEmpty: true,
 	}
 	if req == nil {
 		return sd, nil
 	}
 	sd.isEmpty = false
-	sd.StorageDiffFilter = req
-	if err := fillAddressMapFromBytesFilter(ctx, address, req.Contract, sd.contracts); err != nil {
-		return sd, err
+	sd.fltrs = req
+	sd.contracts = make([]ids, 0)
+
+	for i := range sd.fltrs {
+		sd.contracts = append(sd.contracts, make(ids))
+		if err := fillAddressMapFromBytesFilter(ctx, address, sd.fltrs[i].Contract, sd.contracts[i]); err != nil {
+			return sd, err
+		}
 	}
 	return sd, nil
 }
@@ -38,27 +42,30 @@ func (f StorageDiff) Filter(data storage.StorageDiff) bool {
 	if f.isEmpty {
 		return true
 	}
-	if f.StorageDiffFilter == nil {
-		return false
-	}
 
-	if !validInteger(f.Id, data.ID) {
-		return false
-	}
-
-	if !validInteger(f.Height, data.Height) {
-		return false
-	}
-
-	if f.Contract != nil {
-		if !f.contracts.In(data.ContractID) {
-			return false
+	var ok bool
+	for i := range f.fltrs {
+		if !validInteger(f.fltrs[i].Id, data.ID) {
+			continue
 		}
+
+		if !validInteger(f.fltrs[i].Height, data.Height) {
+			continue
+		}
+
+		if f.fltrs[i].Contract != nil {
+			if !f.contracts[i].In(data.ContractID) {
+				continue
+			}
+		}
+
+		if !validEquality(f.fltrs[i].Key, encoding.EncodeHex(data.Key)) {
+			continue
+		}
+
+		ok = true
+		break
 	}
 
-	if !validEquality(f.Key, encoding.EncodeHex(data.Key)) {
-		return false
-	}
-
-	return true
+	return ok
 }

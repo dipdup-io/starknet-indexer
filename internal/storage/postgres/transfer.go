@@ -9,6 +9,7 @@ import (
 	"github.com/dipdup-io/starknet-indexer/internal/storage"
 	"github.com/dipdup-net/go-lib/database"
 	"github.com/dipdup-net/indexer-sdk/pkg/storage/postgres"
+	"github.com/go-pg/pg/v10/orm"
 )
 
 // Transfer -
@@ -125,18 +126,26 @@ func (t *Transfer) InsertByCopy(transfers []storage.Transfer) (io.Reader, string
 }
 
 // Filter -
-func (t *Transfer) Filter(ctx context.Context, fltr storage.TransferFilter, opts ...storage.FilterOption) ([]storage.Transfer, error) {
-	q := t.DB().ModelContext(ctx, (*storage.Transfer)(nil))
-	q = integerFilter(q, "transfer.id", fltr.ID)
-	q = integerFilter(q, "height", fltr.Height)
-	q = timeFilter(q, "time", fltr.Time)
-	q = addressFilter(q, "hash", fltr.Contract, "Contract")
-	q = addressFilter(q, "hash", fltr.From, "From")
-	q = addressFilter(q, "hash", fltr.To, "To")
-	q = stringFilter(q, "token_id", fltr.TokenId)
-	q = optionsFilter(q, opts...)
+func (t *Transfer) Filter(ctx context.Context, fltr []storage.TransferFilter, opts ...storage.FilterOption) ([]storage.Transfer, error) {
+	query := t.DB().ModelContext(ctx, (*storage.Transfer)(nil))
+	query = query.WhereGroup(func(q1 *orm.Query) (*orm.Query, error) {
+		for i := range fltr {
+			q1 = q1.WhereOrGroup(func(q *orm.Query) (*orm.Query, error) {
+				q = integerFilter(q, "transfer.id", fltr[i].ID)
+				q = integerFilter(q, "transfer.height", fltr[i].Height)
+				q = timeFilter(q, "transfer.time", fltr[i].Time)
+				q = addressFilter(q, "transfer.contract_id", fltr[i].Contract, "Contract")
+				q = addressFilter(q, "transfer.from_id", fltr[i].From, "From")
+				q = addressFilter(q, "transfer.to_id", fltr[i].To, "To")
+				q = stringFilter(q, "transfer.token_id", fltr[i].TokenId)
+				return q, nil
+			})
+		}
+		return q1, nil
+	})
+	query = optionsFilter(query, "transfer", opts...)
 
 	var result []storage.Transfer
-	err := q.Select(&result)
+	err := query.Select(&result)
 	return result, err
 }

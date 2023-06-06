@@ -90,3 +90,8 @@ func (transfer Transfer) TokenBalanceUpdates() []TokenBalance {
 func (transfer Transfer) GetHeight() uint64 {
 	return transfer.Height
 }
+
+// GetId -
+func (transfer Transfer) GetId() uint64 {
+	return transfer.ID
+}

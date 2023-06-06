@@ -62,3 +62,8 @@ func (L1Handler) TableName() string {
 func (l1 L1Handler) GetHeight() uint64 {
 	return l1.Height
 }
+
+// GetId -
+func (l1 L1Handler) GetId() uint64 {
+	return l1.ID
+}

@@ -10,36 +10,41 @@ import (
 
 // Fee -
 type Fee struct {
-	*pb.FeeFilter
+	fltrs   []*pb.FeeFilter
 	isEmpty bool
 
-	contracts ids
-	callers   ids
-	class     ids
+	contracts []ids
+	callers   []ids
+	class     []ids
 }
 
 // NewFee -
-func NewFee(ctx context.Context, address storage.IAddress, class storage.IClass, req *pb.FeeFilter) (Fee, error) {
+func NewFee(ctx context.Context, address storage.IAddress, class storage.IClass, req []*pb.FeeFilter) (Fee, error) {
 	fee := Fee{
-		isEmpty:   true,
-		contracts: make(ids),
-		callers:   make(ids),
-		class:     make(ids),
+		isEmpty: true,
 	}
 	if req == nil {
 		return fee, nil
 	}
+	fee.callers = make([]ids, 0)
+	fee.class = make([]ids, 0)
+	fee.contracts = make([]ids, 0)
 	fee.isEmpty = false
-	fee.FeeFilter = req
+	fee.fltrs = req
 
-	if err := fillAddressMapFromBytesFilter(ctx, address, req.Contract, fee.contracts); err != nil {
-		return fee, err
-	}
-	if err := fillAddressMapFromBytesFilter(ctx, address, req.Caller, fee.callers); err != nil {
-		return fee, err
-	}
-	if err := fillClassMapFromBytesFilter(ctx, class, req.Class, fee.class); err != nil {
-		return fee, err
+	for i := range fee.fltrs {
+		fee.contracts = append(fee.contracts, make(ids))
+		if err := fillAddressMapFromBytesFilter(ctx, address, fee.fltrs[i].Contract, fee.contracts[i]); err != nil {
+			return fee, err
+		}
+		fee.callers = append(fee.callers, make(ids))
+		if err := fillAddressMapFromBytesFilter(ctx, address, fee.fltrs[i].Caller, fee.callers[i]); err != nil {
+			return fee, err
+		}
+		fee.class = append(fee.class, make(ids))
+		if err := fillClassMapFromBytesFilter(ctx, class, fee.fltrs[i].Class, fee.class[i]); err != nil {
+			return fee, err
+		}
 	}
 
 	return fee, nil
@@ -50,63 +55,66 @@ func (f Fee) Filter(data storage.Fee) bool {
 	if f.isEmpty {
 		return true
 	}
-	if f.FeeFilter == nil {
-		return false
-	}
 
-	if !validInteger(f.Id, data.ID) {
-		return false
-	}
-
-	if !validInteger(f.Height, data.Height) {
-		return false
-	}
-
-	if !validTime(f.Time, data.Time) {
-		return false
-	}
-
-	if !validEnum(f.Status, uint64(data.Status)) {
-		return false
-	}
-
-	if f.Contract != nil {
-		if !f.contracts.In(data.ContractID) {
-			return false
+	var ok bool
+	for i := range f.fltrs {
+		if !validInteger(f.fltrs[i].Id, data.ID) {
+			continue
 		}
-	}
 
-	if f.Caller != nil {
-		if !f.callers.In(data.CallerID) {
-			return false
+		if !validInteger(f.fltrs[i].Height, data.Height) {
+			continue
 		}
-	}
 
-	if f.Class != nil {
-		if !f.class.In(data.ClassID) {
-			return false
+		if !validTime(f.fltrs[i].Time, data.Time) {
+			continue
 		}
+
+		if !validEnum(f.fltrs[i].Status, uint64(data.Status)) {
+			continue
+		}
+
+		if f.fltrs[i].Contract != nil {
+			if !f.contracts[i].In(data.ContractID) {
+				continue
+			}
+		}
+
+		if f.fltrs[i].Caller != nil {
+			if !f.callers[i].In(data.CallerID) {
+				continue
+			}
+		}
+
+		if f.fltrs[i].Class != nil {
+			if !f.class[i].In(data.ClassID) {
+				continue
+			}
+		}
+
+		if !validString(f.fltrs[i].Entrypoint, data.Entrypoint) {
+			continue
+		}
+
+		if !validEquality(f.fltrs[i].Selector, encoding.EncodeHex(data.Selector)) {
+			continue
+		}
+
+		if !validEnum(f.fltrs[i].EntrypointType, uint64(data.EntrypointType)) {
+			continue
+		}
+
+		if !validEnum(f.fltrs[i].CallType, uint64(data.CallType)) {
+			continue
+		}
+
+		if !validMap(f.fltrs[i].ParsedCalldata, data.ParsedCalldata) {
+			continue
+		}
+
+		ok = true
+		break
 	}
 
-	if !validString(f.Entrypoint, data.Entrypoint) {
-		return false
-	}
-
-	if !validEquality(f.Selector, encoding.EncodeHex(data.Selector)) {
-		return false
-	}
-
-	if !validEnum(f.EntrypointType, uint64(data.EntrypointType)) {
-		return false
-	}
-
-	if !validEnum(f.CallType, uint64(data.CallType)) {
-		return false
-	}
-
-	if !validMap(f.ParsedCalldata, data.ParsedCalldata) {
-		return false
-	}
-
-	return false
+	return ok
 }

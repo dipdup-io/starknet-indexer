@@ -59,3 +59,8 @@ func (Declare) TableName() string {
 func (d Declare) GetHeight() uint64 {
 	return d.Height
 }
+
+// GetId -
+func (d Declare) GetId() uint64 {
+	return d.ID
+}

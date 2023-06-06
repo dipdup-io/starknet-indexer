@@ -9,6 +9,7 @@ import (
 	"github.com/dipdup-io/starknet-indexer/internal/storage"
 	"github.com/dipdup-net/go-lib/database"
 	"github.com/dipdup-net/indexer-sdk/pkg/storage/postgres"
+	"github.com/go-pg/pg/v10/orm"
 )
 
 // L1Handler -
@@ -117,19 +118,28 @@ func (l1 *L1Handler) InsertByCopy(txs []storage.L1Handler) (io.Reader, string, e
 }
 
 // Filter -
-func (l1 *L1Handler) Filter(ctx context.Context, fltr storage.L1HandlerFilter, opts ...storage.FilterOption) ([]storage.L1Handler, error) {
-	q := l1.DB().ModelContext(ctx, (*storage.L1Handler)(nil))
-	q = integerFilter(q, "l1_handler.id", fltr.ID)
-	q = integerFilter(q, "height", fltr.Height)
-	q = timeFilter(q, "time", fltr.Time)
-	q = enumFilter(q, "status", fltr.Status)
-	q = addressFilter(q, "hash", fltr.Contract, "Contract")
-	q = equalityFilter(q, "selector", fltr.Selector)
-	q = stringFilter(q, "entrypoint", fltr.Entrypoint)
-	q = jsonFilter(q, "parsed_calldata", fltr.ParsedCalldata)
-	q = optionsFilter(q, opts...)
+func (l1 *L1Handler) Filter(ctx context.Context, fltr []storage.L1HandlerFilter, opts ...storage.FilterOption) ([]storage.L1Handler, error) {
+	query := l1.DB().ModelContext(ctx, (*storage.L1Handler)(nil))
+	query = query.WhereGroup(func(q1 *orm.Query) (*orm.Query, error) {
+		for i := range fltr {
+			q1 = q1.WhereOrGroup(func(q *orm.Query) (*orm.Query, error) {
+				q = integerFilter(q, "l1_handler.id", fltr[i].ID)
+				q = integerFilter(q, "l1_handler.height", fltr[i].Height)
+				q = timeFilter(q, "l1_handler.time", fltr[i].Time)
+				q = enumFilter(q, "l1_handler.status", fltr[i].Status)
+				q = addressFilter(q, "l1_handler.contract_id", fltr[i].Contract, "Contract")
+				q = equalityFilter(q, "l1_handler.selector", fltr[i].Selector)
+				q = stringFilter(q, "l1_handler.entrypoint", fltr[i].Entrypoint)
+				q = jsonFilter(q, "l1_handler.parsed_calldata", fltr[i].ParsedCalldata)
+				return q, nil
+			})
+		}
+		return q1, nil
+	})
+
+	query = optionsFilter(query, "l1_handler", opts...)
 
 	var result []storage.L1Handler
-	err := q.Select(&result)
+	err := query.Select(&result)
 	return result, err
 }
