@@ -18,8 +18,8 @@ github.com/dipdup-io/starknet-go-api v0.0.0-20230601120914-cb5965133047 h1:D8AqG
 github.com/dipdup-io/starknet-go-api v0.0.0-20230601120914-cb5965133047/go.mod h1:Dh1ZUXPbmjiIsfTYeYl3BzK8HuvQOTyrg2CcpQiSOD8=
 github.com/dipdup-net/go-lib v0.2.34 h1:ug5Fm+LoX6HcMrbt8jxiJZ8d+ydhaVn/hrqaBsre6os=
 github.com/dipdup-net/go-lib v0.2.34/go.mod h1:oXILRskGR7bXvuFyc6B8prCKOjGJdDc76kMcf65EvcE=
-github.com/dipdup-net/indexer-sdk v0.0.0-20230606123933-f7206850018d h1:14+9TkBeeYtA1ZnG0+EuWGDqB6nzQyMTxfq86s27Wtk=
-github.com/dipdup-net/indexer-sdk v0.0.0-20230606123933-f7206850018d/go.mod h1:WZsLr9ElN3ImgLmtwhK0YZ0WgzMxYyBPXfZR7Z3DZXA=
+github.com/dipdup-net/indexer-sdk v0.0.0-20230607120505-500072a4250b h1:wWF1QkJ9kowXnsiT/Roj/+mnzuax1r5QQtICzkKcRxI=
+github.com/dipdup-net/indexer-sdk v0.0.0-20230607120505-500072a4250b/go.mod h1:WZsLr9ElN3ImgLmtwhK0YZ0WgzMxYyBPXfZR7Z3DZXA=
 github.com/dipdup-net/workerpool v0.0.2 h1:k0LMr52FdNj8AsV5KFgRLG7+tPxwLLJwHSDZqqXJESY=
 github.com/dipdup-net/workerpool v0.0.2/go.mod h1:wd9wCXcBW3sZrXTFBDVln52JUJnHTxxKwa5/G/oyn9g=
 github.com/envoyproxy/go-control-plane v0.9.1-0.20191026205805-5f8ba28d4473/go.mod h1:YTl/9mNaCwkRvm6d1a2C3ymFceY/DCBVvsKhRF0iEA4=

@@ -16,6 +16,7 @@ import (
 // //////////////////////////////////////////////
 // ////////////    HANDLERS    //////////////////
 // //////////////////////////////////////////////
+
 // Subscribe -
 func (module *Server) Subscribe(req *pb.SubscribeRequest, stream pb.IndexerService_SubscribeServer) error {
 	module.log.Info().Msg("subscribe request")
