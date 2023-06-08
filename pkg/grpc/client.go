@@ -19,12 +19,6 @@ const (
 	OutputMessages = "messages"
 )
 
-// ReconnectMessage -
-type ReconnectMessage struct {
-	OldId uint64
-	NewId uint64
-}
-
 // Stream -
 type Stream struct {
 	stream  *grpcSDK.Stream[pb.Subscription]
@@ -49,7 +43,7 @@ type Client struct {
 	streams map[uint64]*Stream
 
 	service   pb.IndexerServiceClient
-	reconnect chan ReconnectMessage
+	reconnect chan uint64
 
 	wg *sync.WaitGroup
 }
@@ -60,7 +54,7 @@ func NewClient(cfg ClientConfig) *Client {
 		grpc:      grpcSDK.NewClient(cfg.ServerAddress),
 		output:    modules.NewOutput(OutputMessages),
 		streams:   make(map[uint64]*Stream),
-		reconnect: make(chan ReconnectMessage, 16),
+		reconnect: make(chan uint64, 16),
 		wg:        new(sync.WaitGroup),
 	}
 }
@@ -71,7 +65,7 @@ func NewClientWithServerAddress(address string) *Client {
 		grpc:      grpcSDK.NewClient(address),
 		output:    modules.NewOutput(OutputMessages),
 		streams:   make(map[uint64]*Stream),
-		reconnect: make(chan ReconnectMessage, 16),
+		reconnect: make(chan uint64, 16),
 		wg:        new(sync.WaitGroup),
 	}
 }
@@ -145,7 +139,7 @@ func (client *Client) Close() error {
 }
 
 // Reconnect -
-func (client *Client) Reconnect() <-chan ReconnectMessage {
+func (client *Client) Reconnect() <-chan uint64 {
 	return client.reconnect
 }
 
@@ -162,18 +156,8 @@ func (client *Client) reconnectThread(ctx context.Context) {
 				if err := stream.stream.Close(); err != nil {
 					log.Err(err).Msg("closing stream after reconnect")
 				}
-				newId, grpcStream, err := client.subscribe(ctx, stream.request)
-				if err != nil {
-					log.Err(err).Msg("resubscribe after reconnect")
-					continue
-				}
 				delete(client.streams, id)
-				newStreams[newId] = NewStream(grpcStream, stream.request, newId)
-
-				client.reconnect <- ReconnectMessage{
-					OldId: id,
-					NewId: newId,
-				}
+				client.reconnect <- id
 			}
 			client.streams = newStreams
 		}
