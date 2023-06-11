@@ -299,7 +299,7 @@ func (indexer *Indexer) saveBlocks(ctx context.Context) {
 						if errors.Is(err, context.Canceled) {
 							return
 						}
-						indexer.log.Err(err).Msg("handle block")
+						indexer.log.Err(err).Stack().Msg("handle block")
 						time.Sleep(time.Second * 3)
 					}
 					if next%25 == 0 {
