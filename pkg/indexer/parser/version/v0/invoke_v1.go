@@ -46,21 +46,22 @@ func (parser Parser) ParseInvokeV1(ctx context.Context, raw *data.Invoke, block 
 		}
 	}
 
-	contractAbi, err := parser.Cache.GetAbiByAddress(ctx, tx.Contract.Hash)
-	if err != nil {
-		return tx, nil, err
-	}
-
 	if len(tx.CallData) > 0 {
-		if _, ok := contractAbi.GetFunctionBySelector(encoding.EncodeHex(encoding.ExecuteEntrypointSelector)); ok {
-			parsed, _, err := decode.CalldataBySelector(contractAbi, tx.EntrypointSelector, tx.CallData)
-			if err != nil {
-				if !errors.Is(err, abi.ErrNoLenField) && !errors.Is(err, abi.ErrTooShortCallData) {
-					return tx, nil, err
+		var found bool
+		contractAbi, err := parser.Cache.GetAbiByAddress(ctx, tx.Contract.Hash)
+		if err == nil {
+			if _, found = contractAbi.GetFunctionBySelector(encoding.EncodeHex(encoding.ExecuteEntrypointSelector)); found {
+				parsed, _, err := decode.CalldataBySelector(contractAbi, tx.EntrypointSelector, tx.CallData)
+				if err != nil {
+					if !errors.Is(err, abi.ErrNoLenField) && !errors.Is(err, abi.ErrTooShortCallData) {
+						return tx, nil, err
+					}
 				}
+				tx.ParsedCalldata = parsed
 			}
-			tx.ParsedCalldata = parsed
-		} else {
+		}
+
+		if !found {
 			parsed, err := abi.DecodeExecuteCallData(tx.CallData)
 			if err != nil {
 				if !errors.Is(err, abi.ErrNoLenField) && !errors.Is(err, abi.ErrTooShortCallData) {
@@ -72,8 +73,10 @@ func (parser Parser) ParseInvokeV1(ctx context.Context, raw *data.Invoke, block 
 	}
 
 	var (
-		proxyId uint64
-		class   storage.Class
+		proxyId     uint64
+		class       storage.Class
+		err         error
+		contractAbi abi.Abi
 	)
 
 	if trace.FunctionInvocation != nil && trace.FunctionInvocation.ClassHash.Length() > 0 {
@@ -98,7 +101,10 @@ func (parser Parser) ParseInvokeV1(ctx context.Context, raw *data.Invoke, block 
 
 	if trace.FunctionInvocation != nil {
 		if len(trace.FunctionInvocation.Events) > 0 {
-
+			contractAbi, err = parser.Cache.GetAbiByAddress(ctx, tx.Contract.Hash)
+			if err != nil {
+				return tx, nil, err
+			}
 			tx.Events, err = parseEvents(ctx, parser.EventParser, txCtx, contractAbi, trace.FunctionInvocation.Events)
 			if err != nil {
 				return tx, nil, err
