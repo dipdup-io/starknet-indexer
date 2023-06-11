@@ -9,6 +9,7 @@ import (
 	"github.com/dipdup-io/starknet-go-api/pkg/encoding"
 	"github.com/dipdup-io/starknet-go-api/pkg/sequencer"
 	"github.com/dipdup-io/starknet-indexer/internal/storage"
+	"github.com/dipdup-io/starknet-indexer/pkg/indexer/decode"
 	parserData "github.com/dipdup-io/starknet-indexer/pkg/indexer/parser/data"
 )
 
@@ -45,20 +46,34 @@ func (parser Parser) ParseInvokeV1(ctx context.Context, raw *data.Invoke, block 
 		}
 	}
 
+	contractAbi, err := parser.Cache.GetAbiByAddress(ctx, tx.Contract.Hash)
+	if err != nil {
+		return tx, nil, err
+	}
+
 	if len(tx.CallData) > 0 {
-		parsed, err := abi.DecodeExecuteCallData(tx.CallData)
-		if err != nil {
-			if !errors.Is(err, abi.ErrNoLenField) && !errors.Is(err, abi.ErrTooShortCallData) {
-				return tx, nil, err
+		if _, ok := contractAbi.GetFunctionBySelector(encoding.EncodeHex(encoding.ExecuteEntrypointSelector)); ok {
+			parsed, _, err := decode.CalldataBySelector(contractAbi, tx.EntrypointSelector, tx.CallData)
+			if err != nil {
+				if !errors.Is(err, abi.ErrNoLenField) && !errors.Is(err, abi.ErrTooShortCallData) {
+					return tx, nil, err
+				}
 			}
+			tx.ParsedCalldata = parsed
+		} else {
+			parsed, err := abi.DecodeExecuteCallData(tx.CallData)
+			if err != nil {
+				if !errors.Is(err, abi.ErrNoLenField) && !errors.Is(err, abi.ErrTooShortCallData) {
+					return tx, nil, err
+				}
+			}
+			tx.ParsedCalldata = parsed
 		}
-		tx.ParsedCalldata = parsed
 	}
 
 	var (
 		proxyId uint64
 		class   storage.Class
-		err     error
 	)
 
 	if trace.FunctionInvocation != nil && trace.FunctionInvocation.ClassHash.Length() > 0 {
@@ -83,10 +98,7 @@ func (parser Parser) ParseInvokeV1(ctx context.Context, raw *data.Invoke, block 
 
 	if trace.FunctionInvocation != nil {
 		if len(trace.FunctionInvocation.Events) > 0 {
-			contractAbi, err := parser.Cache.GetAbiByAddress(ctx, tx.Contract.Hash)
-			if err != nil {
-				return tx, nil, err
-			}
+
 			tx.Events, err = parseEvents(ctx, parser.EventParser, txCtx, contractAbi, trace.FunctionInvocation.Events)
 			if err != nil {
 				return tx, nil, err
