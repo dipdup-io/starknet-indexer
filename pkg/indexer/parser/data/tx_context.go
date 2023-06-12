@@ -122,6 +122,7 @@ func NewTxContextFromL1Hadler(tx storage.L1Handler, proxyId uint64) TxContext {
 
 // NewTxContextFromInternal -
 func NewTxContextFromInternal(tx storage.Internal, proxyUpgrades ProxyMap[struct{}], proxyId uint64) TxContext {
+	cloneProxyMap, _ := proxyUpgrades.Clone()
 	return TxContext{
 		InternalID:    &tx.ID,
 		Internal:      &tx,
@@ -131,7 +132,7 @@ func NewTxContextFromInternal(tx storage.Internal, proxyUpgrades ProxyMap[struct
 		Hash:          tx.Hash,
 		ProxyId:       proxyId,
 		ContractId:    tx.ContractID,
-		ProxyUpgrades: proxyUpgrades,
+		ProxyUpgrades: cloneProxyMap,
 	}
 }
 

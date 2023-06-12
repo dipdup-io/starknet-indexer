@@ -131,3 +131,13 @@ func (pm ProxyMap[V]) Delete(key ProxyKey) {
 	delete(pm.m, key)
 	pm.mx.Unlock()
 }
+
+// Clone -
+func (pm ProxyMap[V]) Clone() (ProxyMap[V], error) {
+	newMap := NewProxyMap[V]()
+	err := pm.Range(func(key ProxyKey, value V) (bool, error) {
+		newMap.Add(key, value)
+		return false, nil
+	})
+	return newMap, err
+}
