@@ -7,7 +7,7 @@ go 1.19
 // replace github.com/dipdup-net/indexer-sdk => /usr/local/go/src/github.com/dipdup-net/indexer-sdk
 
 require (
-	github.com/dipdup-io/starknet-go-api v0.0.0-20230611192920-a983aba96406
+	github.com/dipdup-io/starknet-go-api v0.0.0-20230613233415-b3b1a1e88803
 	github.com/dipdup-net/go-lib v0.2.34
 	github.com/dipdup-net/indexer-sdk v0.0.0-20230607120505-500072a4250b
 	github.com/dipdup-net/workerpool v0.0.2
