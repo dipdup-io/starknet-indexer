@@ -6,6 +6,8 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/dipdup-io/starknet-go-api/pkg/sequencer"
+	"github.com/dipdup-io/starknet-indexer/internal/storage/postgres"
 	"github.com/dipdup-io/starknet-indexer/pkg/grpc"
 	"github.com/dipdup-net/go-lib/config"
 	"github.com/rs/zerolog"
@@ -54,17 +56,17 @@ func main() {
 
 	ctx, cancel := context.WithCancel(context.Background())
 
-	// postgres, err := postgres.Create(ctx, cfg.Database)
-	// if err != nil {
-	// 	log.Panic().Err(err).Msg("postgres connection")
-	// 	return
-	// }
+	postgres, err := postgres.Create(ctx, cfg.Database)
+	if err != nil {
+		log.Panic().Err(err).Msg("postgres connection")
+		return
+	}
 
-	// opts := make([]sequencer.ApiOption, 0)
-	// if cfg.Indexer.Sequencer.Rps > 0 {
-	// 	opts = append(opts, sequencer.WithRateLimit(cfg.Indexer.Sequencer.Rps))
-	// }
-	// api := sequencer.NewAPI(cfg.Indexer.Sequencer.Gateway, cfg.Indexer.Sequencer.FeederGateway, opts...)
+	opts := make([]sequencer.ApiOption, 0)
+	if cfg.Indexer.Sequencer.Rps > 0 {
+		opts = append(opts, sequencer.WithRateLimit(cfg.Indexer.Sequencer.Rps))
+	}
+	api := sequencer.NewAPI(cfg.Indexer.Sequencer.Gateway, cfg.Indexer.Sequencer.FeederGateway, opts...)
 
 	client := grpc.NewClient(*cfg.GRPC)
 
@@ -92,7 +94,7 @@ func main() {
 
 	testers := []Tester{
 		NewJsonSchemaTester(client, cfg.GraphQlUrl),
-		// NewTokenBalanceTester(postgres, api),
+		NewTokenBalanceTester(postgres, api),
 	}
 
 	for i := range testers {
