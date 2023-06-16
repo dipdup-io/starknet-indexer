@@ -8,6 +8,7 @@ import (
 
 	"github.com/dipdup-io/starknet-go-api/pkg/sequencer"
 	"github.com/dipdup-io/starknet-indexer/internal/storage/postgres"
+	"github.com/dipdup-io/starknet-indexer/pkg/grpc"
 	"github.com/dipdup-net/go-lib/config"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
@@ -67,6 +68,15 @@ func main() {
 	}
 	api := sequencer.NewAPI(cfg.Indexer.Sequencer.Gateway, cfg.Indexer.Sequencer.FeederGateway, opts...)
 
+	client := grpc.NewClient(*cfg.GRPC)
+
+	if err := client.Connect(ctx); err != nil {
+		log.Panic().Err(err).Msg("grpc connect")
+		return
+	}
+
+	client.Start(ctx)
+
 	signals := make(chan os.Signal, 1)
 	signal.Notify(signals, os.Interrupt, syscall.SIGTERM, syscall.SIGINT)
 
@@ -83,7 +93,7 @@ func main() {
 	}()
 
 	testers := []Tester{
-		NewJsonSchemaTester(postgres),
+		NewJsonSchemaTester(client, cfg.GraphQlUrl),
 		NewTokenBalanceTester(postgres, api),
 	}
 

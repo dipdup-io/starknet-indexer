@@ -22,7 +22,6 @@ require (
 
 require (
 	github.com/goccy/go-json v0.10.2
-	github.com/tfkhsr/jsonschema v0.0.0-20180218143334-273afdd5a88c
 	golang.org/x/exp v0.0.0-20230206171751-46f607a40771
 	google.golang.org/grpc v1.54.0
 	google.golang.org/protobuf v1.30.0
