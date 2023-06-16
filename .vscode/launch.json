@@ -23,7 +23,7 @@
             "program": "${workspaceFolder}/cmd/tester",
             "args": [
                 "-c",
-                "${workspaceFolder}/build/dipdup.yml"
+                "${workspaceFolder}/cmd/tester/dipdup.yml"
             ],
             "envFile": "${workspaceFolder}/.env"
         }, {

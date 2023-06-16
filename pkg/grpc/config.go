@@ -11,7 +11,7 @@ import (
 // ClientConfig -
 type ClientConfig struct {
 	ServerAddress string                  `yaml:"server_address" validate:"required"`
-	Subscriptions map[string]Subscription `yaml:"subscriptions" validate:"required"`
+	Subscriptions map[string]Subscription `yaml:"subscriptions" validate:"omitempty"`
 }
 
 // Subscription -

@@ -5,7 +5,7 @@ indexer:
 	cd cmd/indexer && go run . -c ../../build/dipdup.yml
 
 tester:
-	cd cmd/tester && go run . -c ../../build/dipdup.yml
+	cd cmd/tester && go run . -c dipdup.yml
 
 starknet_id:
 	cd cmd/rpc_tester && go run . -c ../../cmd/rpc_tester/starknet_id.yml

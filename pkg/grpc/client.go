@@ -224,3 +224,13 @@ func (client *Client) Unsubscribe(ctx context.Context, id uint64) error {
 
 	return nil
 }
+
+// JsonSchemaForClass -
+func (client *Client) JsonSchemaForClass(ctx context.Context, req *pb.Bytes) (*pb.Bytes, error) {
+	return client.service.JSONSchemaForClass(ctx, req)
+}
+
+// JsonSchemaForContract -
+func (client *Client) JsonSchemaForContract(ctx context.Context, req *pb.Bytes) (*pb.Bytes, error) {
+	return client.service.JSONSchemaForContract(ctx, req)
+}
