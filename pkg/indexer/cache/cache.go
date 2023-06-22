@@ -56,9 +56,12 @@ func (cache *Cache) GetAbiByAddress(ctx context.Context, hash []byte) (abi.Abi, 
 		return abi.Abi{}, err
 	}
 
+	bytes := item.Value().(storage.Bytes)
 	var a abi.Abi
-	err = json.Unmarshal(item.Value().(storage.Bytes), &a)
-	return a, err
+	if err = json.Unmarshal(bytes, &a); err != nil {
+		return a, errors.Wrap(err, "GetAbiByAddress: "+string(bytes))
+	}
+	return a, nil
 }
 
 // SetAbiByAddress -
@@ -75,8 +78,10 @@ func (cache *Cache) GetAbiByClassHash(ctx context.Context, hash []byte) (abi.Abi
 		}
 
 		var a abi.Abi
-		err = json.Unmarshal(class.Abi, &a)
-		return a, err
+		if err = json.Unmarshal(class.Abi, &a); err != nil {
+			return a, errors.Wrap(err, "GetAbiByClassHash: "+string(class.Abi))
+		}
+		return a, nil
 	})
 	if err != nil {
 		return abi.Abi{}, err
