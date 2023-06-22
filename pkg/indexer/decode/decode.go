@@ -39,7 +39,7 @@ func CalldataForConstructor(classAbi abi.Abi, calldata []string) (map[string]any
 func CalldataForL1Handler(contractAbi abi.Abi, selector []byte, calldata []string) (map[string]any, string, error) {
 	function, ok := contractAbi.GetL1HandlerBySelector(encoding.EncodeHex(selector))
 	if !ok {
-		return nil, "", errors.Errorf("unknown selector: %x", selector)
+		return CalldataBySelector(contractAbi, selector, calldata)
 	}
 
 	if len(calldata) == 0 {
