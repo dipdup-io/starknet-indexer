@@ -114,10 +114,12 @@ func (cache *Cache) SetClassByHash(class storage.Class) {
 
 // GetAddress -
 func (cache *Cache) GetAddress(ctx context.Context, hash []byte) (storage.Address, error) {
-	item, err := cache.Fetch(fmt.Sprintf("address:hash:%x", hash), ttl, func() (interface{}, error) {
+	key := fmt.Sprintf("address:hash:%x", hash)
+	item, err := cache.Fetch(key, ttl, func() (interface{}, error) {
 		return cache.address.GetByHash(ctx, hash)
 	})
 	if err != nil {
+		cache.Delete(key)
 		return storage.Address{}, err
 	}
 
@@ -127,10 +129,16 @@ func (cache *Cache) GetAddress(ctx context.Context, hash []byte) (storage.Addres
 		if err != nil {
 			return address, err
 		}
-		cache.Set(fmt.Sprintf("address:hash:%x", hash), address, ttl)
+		cache.Set(key, address, ttl)
 	}
 
 	return address, nil
+}
+
+// SetAddress -
+func (cache *Cache) SetAddress(ctx context.Context, address storage.Address) {
+	key := fmt.Sprintf("address:hash:%x", address.Hash)
+	cache.Set(key, address, ttl)
 }
 
 // GetAbiByAddressId -
