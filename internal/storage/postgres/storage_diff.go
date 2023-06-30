@@ -9,6 +9,7 @@ import (
 	"github.com/dipdup-io/starknet-indexer/internal/storage"
 	"github.com/dipdup-net/go-lib/database"
 	"github.com/dipdup-net/indexer-sdk/pkg/storage/postgres"
+	"github.com/go-pg/pg/v10"
 	"github.com/go-pg/pg/v10/orm"
 )
 
@@ -100,4 +101,15 @@ func (sd *StorageDiff) Filter(ctx context.Context, fltr []storage.StorageDiffFil
 	var result []storage.StorageDiff
 	err := query.Select(&result)
 	return result, err
+}
+
+// GetForKeys -
+func (sd *StorageDiff) GetForKeys(ctx context.Context, keys [][]byte, heightFilter uint64) ([]storage.StorageDiff, error) {
+	var response []storage.StorageDiff
+	err := sd.DB().ModelContext(ctx, (*storage.StorageDiff)(nil)).
+		Where("height > ?", heightFilter).
+		Where("key IN (?)", pg.In(keys)).
+		Order("id desc").
+		Select(&response)
+	return response, err
 }

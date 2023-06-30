@@ -72,7 +72,7 @@ func Create(ctx context.Context, cfg config.Database) (Storage, error) {
 		PartitionManager: NewPartitionManager(strg.Connection()),
 	}
 
-	s.RollbackManager = NewRollbackManager(s.Transactable, s.State, s.Blocks)
+	s.RollbackManager = NewRollbackManager(s.Transactable, s.State, s.Blocks, s.StorageDiff, s.Transfer)
 
 	return s, nil
 }

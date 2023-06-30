@@ -1,12 +1,14 @@
 package indexer
 
 import (
+	"bytes"
 	"context"
 	"runtime"
 	"sync"
 	"time"
 
 	"github.com/dipdup-io/starknet-go-api/pkg/data"
+	"github.com/dipdup-io/starknet-go-api/pkg/sequencer"
 	"github.com/dipdup-io/starknet-indexer/internal/starknet"
 	models "github.com/dipdup-io/starknet-indexer/internal/storage"
 	"github.com/dipdup-io/starknet-indexer/internal/storage/postgres"
@@ -210,6 +212,16 @@ func (indexer *Indexer) getNewBlocks(ctx context.Context) error {
 		return err
 	}
 
+	if head < indexer.state.Height() {
+		log.Warn().
+			Uint64("indexer_height", indexer.state.Height()).
+			Uint64("node_height", head).
+			Msg("rollback detected")
+		if err := indexer.Rollback(ctx, head); err != nil {
+			return errors.Wrap(err, "rollback")
+		}
+	}
+
 	for head > indexer.state.Height() {
 		indexer.log.Info().
 			Uint64("indexer_block", indexer.state.Height()).
@@ -306,6 +318,14 @@ func (indexer *Indexer) saveBlocks(ctx context.Context) {
 
 			for {
 				if data, ok := indexer.queue[next]; ok {
+					if err := indexer.handleReorg(ctx, data.Block); err != nil {
+						if errors.Is(err, context.Canceled) {
+							return
+						}
+						indexer.log.Err(err).Stack().Msg("handle reorg")
+						time.Sleep(time.Second * 3)
+
+					}
 					if err := indexer.handleBlock(ctx, data); err != nil {
 						if errors.Is(err, context.Canceled) {
 							return
@@ -324,6 +344,31 @@ func (indexer *Indexer) saveBlocks(ctx context.Context) {
 			}
 		}
 	}
+}
+
+func (indexer *Indexer) handleReorg(ctx context.Context, newBlock sequencer.Block) error {
+	lastBlock, err := indexer.blocks.Last(ctx)
+	if err != nil {
+		if indexer.blocks.IsNoRows(err) {
+			return nil
+		}
+		return err
+	}
+
+	if bytes.Equal(lastBlock.Hash, data.Felt(newBlock.ParentHash).Bytes()) {
+		return nil
+	}
+
+	log.Warn().
+		Str("parent_hash_of_new_block", newBlock.ParentHash).
+		Bytes("indexer_head_block_hash", lastBlock.Hash).
+		Msg("rollback detected by parent hash")
+
+	if err := indexer.Rollback(ctx, newBlock.BlockNumber-1); err != nil {
+		return errors.Wrap(err, "rollback")
+	}
+
+	return indexer.init(ctx)
 }
 
 func (indexer *Indexer) handleBlock(ctx context.Context, result receiver.Result) error {
