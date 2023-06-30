@@ -103,7 +103,7 @@ func (parser Parser) ParseInvokeV1(ctx context.Context, raw *data.Invoke, block 
 		if len(trace.FunctionInvocation.Events) > 0 {
 			contractAbi, err = parser.Cache.GetAbiByAddress(ctx, tx.Contract.Hash)
 			if err != nil {
-				return tx, nil, errors.Wrap(err, "get abi")
+				return tx, nil, errors.Wrapf(err, "get abi: %x", tx.Contract.Hash)
 			}
 			tx.Events, err = parseEvents(ctx, parser.EventParser, txCtx, contractAbi, trace.FunctionInvocation.Events)
 			if err != nil {
