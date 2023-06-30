@@ -71,6 +71,7 @@ func (resolver *Resolver) parseDeployedContracts(ctx context.Context, block *sto
 			if err := resolver.FindAddress(ctx, &address); err != nil {
 				return err
 			}
+			resolver.cache.SetAddress(ctx, address)
 		}
 	}
 
