@@ -11,6 +11,7 @@ type IClass interface {
 	storage.Table[*Class]
 
 	GetByHash(ctx context.Context, hash []byte) (Class, error)
+	GetUnresolved(ctx context.Context) ([]Class, error)
 }
 
 // Class -
