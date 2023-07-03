@@ -57,6 +57,8 @@ func (resolver *Resolver) UpgradeProxy(ctx context.Context, contract storage.Add
 		contextProxies := resolver.blockContext.CurrentProxies()
 
 		key := data.NewProxyKey(contract.Hash, upgrades[i].Selector)
+
+		log.Info().Fields(upgrades[i].Loggable()).Msg("proxy upgrade")
 		contextProxies.Add(key, withAction)
 
 		if upgrades[i].IsModule {
@@ -102,48 +104,21 @@ func (resolver *Resolver) resolveHash(ctx context.Context, txCtx data.TxContext,
 }
 
 func (resolver *Resolver) findProxy(ctx context.Context, txCtx data.TxContext, address, selector []byte) (storage.Proxy, error) {
-
-	log.Info().
-		Bytes("address", address).
-		Bytes("selector", selector).
-		Msg("find proxy")
-
 	key := data.NewProxyKey(address, selector)
 	if _, ok := txCtx.ProxyUpgrades.Get(key); !ok {
-		log.Info().
-			Bytes("address", address).
-			Bytes("selector", selector).
-			Msg("not found proxy")
 		contextProxies := resolver.blockContext.CurrentProxies()
 		if proxy, ok := contextProxies.Get(key); ok {
-			log.Info().
-				Bytes("address", address).
-				Bytes("selector", selector).
-				Msg("found in block context")
 			return proxy.Proxy, nil
 		}
-	} else {
-		log.Info().
-			Bytes("address", address).
-			Bytes("selector", selector).
-			Msg("found proxy upgrade")
 	}
 
 	proxy, err := resolver.cache.GetProxy(ctx, address, selector)
 	switch {
 	case err == nil:
-		log.Info().
-			Bytes("address", address).
-			Bytes("selector", selector).
-			Msg("found in database")
 		return proxy, err
 	case resolver.blocks.IsNoRows(err):
 		endBlockProxies := resolver.blockContext.Proxies()
 		if proxy, ok := endBlockProxies.Get(key); ok {
-			log.Info().
-				Bytes("address", address).
-				Bytes("selector", selector).
-				Msg("found in end block context")
 			return proxy.Proxy, nil
 		}
 		return storage.Proxy{}, errors.Wrapf(ErrUnknownProxy, "%x", address)
