@@ -9,6 +9,7 @@ import (
 	"github.com/dipdup-io/starknet-indexer/internal/storage"
 	"github.com/dipdup-io/starknet-indexer/pkg/indexer/parser/data"
 	"github.com/pkg/errors"
+	"github.com/rs/zerolog/log"
 )
 
 // Proxy -
@@ -56,6 +57,8 @@ func (resolver *Resolver) UpgradeProxy(ctx context.Context, contract storage.Add
 		contextProxies := resolver.blockContext.CurrentProxies()
 
 		key := data.NewProxyKey(contract.Hash, upgrades[i].Selector)
+
+		log.Debug().Fields(upgrades[i].Loggable()).Msg("proxy upgrade")
 		contextProxies.Add(key, withAction)
 
 		if upgrades[i].IsModule {

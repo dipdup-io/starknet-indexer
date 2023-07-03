@@ -114,6 +114,23 @@ func accountUpgraded(params map[string]any) ([]data.ProxyUpgrade, error) {
 	}, nil
 }
 
+func implementationUpgraded(params map[string]any) ([]data.ProxyUpgrade, error) {
+	value, ok := params["implementation_hash"]
+	if !ok {
+		return nil, nil
+	}
+	implementation, ok := value.(string)
+	if !ok {
+		return nil, nil
+	}
+	return []data.ProxyUpgrade{
+		{
+			Address: starknetData.Felt(implementation).Bytes(),
+			Action:  data.ProxyActionUpdate,
+		},
+	}, nil
+}
+
 func moduleFunctionChange(params map[string]any) ([]data.ProxyUpgrade, error) {
 	upgrade := new(data.ProxyUpgrade)
 	actionsValue, ok := params["actions"]

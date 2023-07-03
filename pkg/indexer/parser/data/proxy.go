@@ -1,6 +1,7 @@
 package data
 
 import (
+	"encoding/hex"
 	"sync"
 
 	"github.com/dipdup-io/starknet-go-api/pkg/encoding"
@@ -34,6 +35,16 @@ type ProxyUpgrade struct {
 	Selector []byte
 	Action   ProxyAction
 	IsModule bool
+}
+
+// Loggable -
+func (upg ProxyUpgrade) Loggable() map[string]any {
+	return map[string]any{
+		"address":   hex.EncodeToString(upg.Address),
+		"selector":  hex.EncodeToString(upg.Selector),
+		"is_module": upg.IsModule,
+		"action":    upg.Action,
+	}
 }
 
 // ProxyKey -
