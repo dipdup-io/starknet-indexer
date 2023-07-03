@@ -6,6 +6,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/dipdup-io/starknet-go-api/pkg/data"
 	"github.com/dipdup-io/starknet-indexer/internal/starknet"
 	models "github.com/dipdup-io/starknet-indexer/internal/storage"
 	"github.com/dipdup-io/starknet-indexer/internal/storage/postgres"
@@ -16,6 +17,7 @@ import (
 	"github.com/dipdup-io/starknet-indexer/pkg/indexer/receiver"
 	"github.com/dipdup-io/starknet-indexer/pkg/indexer/store"
 	"github.com/dipdup-net/indexer-sdk/pkg/modules"
+	sdk "github.com/dipdup-net/indexer-sdk/pkg/storage"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
@@ -43,6 +45,7 @@ type Indexer struct {
 	storageDiffs   models.IStorageDiff
 	proxy          models.IProxy
 	stateRepo      models.IState
+	transactable   sdk.Transactable
 	store          *store.Store
 	cache          *cache.Cache
 
@@ -79,6 +82,7 @@ func New(
 		l1Handlers:      storage.L1Handler,
 		classes:         storage.Class,
 		storageDiffs:    storage.StorageDiff,
+		transactable:    storage.Transactable,
 		proxy:           storage.Proxy,
 		state:           newState(nil),
 		cache:           cache.New(storage.Address, storage.Class, storage.Proxy),
@@ -130,6 +134,11 @@ func (indexer *Indexer) Start(ctx context.Context) {
 	indexer.receiver.Start(ctx)
 
 	indexer.statusChecker.Start(ctx)
+
+	if err := indexer.fixClassAbi(ctx); err != nil {
+		indexer.log.Err(err).Msg("recovering class abi error")
+		return
+	}
 
 	indexer.wg.Add(1)
 	go indexer.saveBlocks(ctx)
@@ -378,4 +387,36 @@ func (indexer *Indexer) Rollback(ctx context.Context, height uint64) error {
 
 	indexer.log.Info().Uint64("new_height", height).Msg("rollback starting...")
 	return indexer.rollbackManager.Rollback(ctx, indexer.Name(), height)
+}
+
+func (indexer *Indexer) fixClassAbi(ctx context.Context) error {
+	tx, err := indexer.transactable.BeginTransaction(ctx)
+	if err != nil {
+		return err
+	}
+	defer tx.Close(ctx)
+
+	classes, err := indexer.classes.GetUnresolved(ctx)
+	if err != nil {
+		return tx.HandleError(ctx, err)
+	}
+
+	log.Info().Msgf("found %d unresolved classes", len(classes))
+
+	for i := range classes {
+		hash := data.NewFeltFromBytes(classes[i].Hash)
+		class, err := indexer.receiver.GetClass(ctx, hash.String())
+		if err != nil {
+			return tx.HandleError(ctx, err)
+		}
+		classes[i].Abi = models.Bytes(class.RawAbi)
+		if err := tx.Update(ctx, &classes[i]); err != nil {
+			return tx.HandleError(ctx, err)
+		}
+	}
+
+	if err := tx.Flush(ctx); err != nil {
+		return tx.HandleError(ctx, err)
+	}
+	return nil
 }

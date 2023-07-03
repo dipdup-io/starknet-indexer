@@ -22,8 +22,14 @@ func NewClass(db *database.PgGo) *Class {
 
 // GetByHash -
 func (c *Class) GetByHash(ctx context.Context, hash []byte) (class storage.Class, err error) {
-	err = c.DB().Model(&class).
+	err = c.DB().ModelContext(ctx, &class).
 		Where("hash = ?", hash).
 		Select(&class)
+	return
+}
+
+// GetUnresolved -
+func (c *Class) GetUnresolved(ctx context.Context) (classes []storage.Class, err error) {
+	err = c.DB().ModelContext(ctx, &classes).Where("abi is null").Select(&classes)
 	return
 }
