@@ -58,7 +58,7 @@ func (resolver *Resolver) UpgradeProxy(ctx context.Context, contract storage.Add
 
 		key := data.NewProxyKey(contract.Hash, upgrades[i].Selector)
 
-		log.Info().Fields(upgrades[i].Loggable()).Msg("proxy upgrade")
+		log.Debug().Fields(upgrades[i].Loggable()).Msg("proxy upgrade")
 		contextProxies.Add(key, withAction)
 
 		if upgrades[i].IsModule {
