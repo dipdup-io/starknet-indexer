@@ -9,6 +9,7 @@ import (
 	"github.com/dipdup-io/starknet-indexer/internal/storage"
 	"github.com/dipdup-io/starknet-indexer/pkg/indexer/parser/data"
 	"github.com/pkg/errors"
+	"github.com/rs/zerolog/log"
 )
 
 // Proxy -
@@ -107,6 +108,11 @@ func (resolver *Resolver) findProxy(ctx context.Context, txCtx data.TxContext, a
 		if proxy, ok := contextProxies.Get(key); ok {
 			return proxy.Proxy, nil
 		}
+	} else {
+		log.Info().
+			Bytes("address", address).
+			Bytes("selector", selector).
+			Msg("found proxy upgrade")
 	}
 
 	proxy, err := resolver.cache.GetProxy(ctx, address, selector)
