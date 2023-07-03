@@ -45,6 +45,8 @@ func (parser ProxyUpgrader) parseEvents(ctx context.Context, txCtx data.TxContex
 			handler = accountUpgraded
 		case "ModuleFunctionChange":
 			handler = moduleFunctionChange
+		case "implementation_upgraded":
+			handler = implementationUpgraded
 		default:
 			continue
 		}
