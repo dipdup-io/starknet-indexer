@@ -157,7 +157,9 @@ func (parser InternalTxParser) Parse(ctx context.Context, txCtx parserData.TxCon
 					}
 					log.Warn().Hex("contract", tx.Contract.Hash).Msg("unknown proxy")
 				}
-				proxyId = tx.ContractID
+				if tx.Class.Type.Is(storage.ClassTypeProxy) {
+					proxyId = tx.ContractID
+				}
 			}
 		}
 
