@@ -236,13 +236,14 @@ func (indexer *Indexer) getNewBlocks(ctx context.Context) error {
 			}
 		}
 
+		time.Sleep(15 * time.Second)
+
 		for head, err = indexer.receiver.Head(ctx); err != nil; {
 			select {
 			case <-ctx.Done():
 				return nil
 			default:
 				log.Err(err).Msg("receive head error")
-				time.Sleep(time.Second * 30)
 			}
 		}
 	}
