@@ -35,7 +35,7 @@ func (resolver *Resolver) ResolveStateUpdates(ctx context.Context, block *storag
 func (resolver *Resolver) parseDeclaredClasses(ctx context.Context, block *storage.Block, declared []data.DeclaredClass) error {
 	for i := range declared {
 		if _, err := resolver.parseClassFromFelt(ctx, declared[i].ClassHash, block.Height); err != nil {
-			return err
+			return errors.Wrap(err, declared[i].ClassHash.String())
 		}
 	}
 	return nil
@@ -44,7 +44,7 @@ func (resolver *Resolver) parseDeclaredClasses(ctx context.Context, block *stora
 func (resolver *Resolver) parseDeclaredContracts(ctx context.Context, block *storage.Block, declared []data.Felt) error {
 	for i := range declared {
 		if _, err := resolver.parseClassFromFelt(ctx, declared[i], block.Height); err != nil {
-			return err
+			return errors.Wrap(err, declared[i].String())
 		}
 	}
 	return nil
@@ -54,7 +54,7 @@ func (resolver *Resolver) parseDeployedContracts(ctx context.Context, block *sto
 	for i := range contracts {
 		class, err := resolver.parseClassFromFelt(ctx, contracts[i].ClassHash, block.Height)
 		if err != nil {
-			return err
+			return errors.Wrap(err, contracts[i].ClassHash.String())
 		}
 
 		hash := contracts[i].Address.Bytes()
