@@ -120,5 +120,6 @@ var Models = []storage.Model{
 	&Fee{},
 	&Token{},
 	&TokenBalance{},
+	&ProxyUpgrade{},
 	&Proxy{},
 }

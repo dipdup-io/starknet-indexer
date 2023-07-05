@@ -6,7 +6,6 @@ import (
 	"github.com/dipdup-io/starknet-go-api/pkg/data"
 	"github.com/dipdup-io/starknet-indexer/internal/starknet"
 	"github.com/dipdup-io/starknet-indexer/internal/storage"
-	parserData "github.com/dipdup-io/starknet-indexer/pkg/indexer/parser/data"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
 )
@@ -100,11 +99,12 @@ func (resolver *Resolver) parseStorageDiffs(ctx context.Context, block *storage.
 
 			sKey := updates[i].Key.String()
 			if _, ok := starknet.ProxyStorageVars[sKey]; ok {
-				proxy := storage.Proxy{
+				proxyUpgrade := storage.ProxyUpgrade{
 					Hash:       address.Hash,
 					ContractID: address.ID,
-					Contract:   address,
 					EntityHash: diff.Value,
+					Action:     storage.ProxyActionUpdate,
+					Height:     block.Height,
 				}
 				id, typ, err := resolver.findProxyEntity(ctx, diff.Value, block.Height)
 				if err != nil {
@@ -114,9 +114,9 @@ func (resolver *Resolver) parseStorageDiffs(ctx context.Context, block *storage.
 					}
 					return errors.Wrap(err, "find proxy entity")
 				}
-				proxy.EntityID = id
-				proxy.EntityType = typ
-				endBlockProxies.AddByHash(address.Hash, nil, parserData.NewProxyWithAction(proxy, parserData.ProxyActionUpdate))
+				proxyUpgrade.EntityID = id
+				proxyUpgrade.EntityType = typ
+				endBlockProxies.AddByHash(address.Hash, nil, &proxyUpgrade)
 			}
 		}
 	}

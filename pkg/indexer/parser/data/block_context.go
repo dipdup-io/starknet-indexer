@@ -8,8 +8,8 @@ type BlockContext struct {
 
 	addresses       map[string]*storage.Address
 	classes         map[string]*storage.Class
-	endBlockProxies ProxyMap[*ProxyWithAction]
-	contextProxies  ProxyMap[*ProxyWithAction]
+	endBlockProxies ProxyMap[*storage.ProxyUpgrade]
+	contextProxies  ProxyMap[*storage.ProxyUpgrade]
 }
 
 // NewBlockContext -
@@ -18,8 +18,8 @@ func NewBlockContext(block storage.Block) *BlockContext {
 		block:           block,
 		addresses:       make(map[string]*storage.Address),
 		classes:         make(map[string]*storage.Class),
-		endBlockProxies: NewProxyMap[*ProxyWithAction](),
-		contextProxies:  NewProxyMap[*ProxyWithAction](),
+		endBlockProxies: NewProxyMap[*storage.ProxyUpgrade](),
+		contextProxies:  NewProxyMap[*storage.ProxyUpgrade](),
 	}
 }
 
@@ -39,11 +39,11 @@ func (blockCtx *BlockContext) Classes() map[string]*storage.Class {
 }
 
 // Proxies -
-func (blockCtx *BlockContext) Proxies() ProxyMap[*ProxyWithAction] {
+func (blockCtx *BlockContext) Proxies() ProxyMap[*storage.ProxyUpgrade] {
 	return blockCtx.endBlockProxies
 }
 
 // CurrentProxies -
-func (blockCtx *BlockContext) CurrentProxies() ProxyMap[*ProxyWithAction] {
+func (blockCtx *BlockContext) CurrentProxies() ProxyMap[*storage.ProxyUpgrade] {
 	return blockCtx.contextProxies
 }

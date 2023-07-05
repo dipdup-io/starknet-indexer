@@ -10,7 +10,6 @@ require (
 	github.com/dipdup-io/starknet-go-api v0.0.0-20230704215048-e75244146134
 	github.com/dipdup-net/go-lib v0.2.38
 	github.com/dipdup-net/indexer-sdk v0.0.0-20230614153224-11cee5bf9248
-	github.com/dipdup-net/workerpool v0.0.2
 	github.com/go-pg/pg/v10 v10.11.0
 	github.com/karlseguin/ccache/v2 v2.0.8
 	github.com/pkg/errors v0.9.1
@@ -21,6 +20,7 @@ require (
 )
 
 require (
+	github.com/dipdup-io/workerpool v0.0.3
 	github.com/goccy/go-json v0.10.2
 	golang.org/x/exp v0.0.0-20230206171751-46f607a40771
 	google.golang.org/grpc v1.54.0

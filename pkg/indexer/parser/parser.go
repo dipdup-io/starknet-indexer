@@ -4,6 +4,7 @@ import (
 	"context"
 	"time"
 
+	"github.com/dipdup-io/starknet-go-api/pkg/data"
 	starknetData "github.com/dipdup-io/starknet-go-api/pkg/data"
 	"github.com/dipdup-io/starknet-go-api/pkg/encoding"
 	"github.com/dipdup-io/starknet-indexer/internal/storage"
@@ -49,8 +50,8 @@ func Parse(
 		ID:               result.Block.BlockNumber + 1,
 		Height:           result.Block.BlockNumber,
 		Time:             time.Unix(result.Block.Timestamp, 0).UTC(),
-		Hash:             encoding.MustDecodeHex(result.Block.BlockHash),
-		ParentHash:       encoding.MustDecodeHex(result.Block.ParentHash),
+		Hash:             data.Felt(result.Block.BlockHash).Bytes(),
+		ParentHash:       data.Felt(result.Block.ParentHash).Bytes(),
 		NewRoot:          encoding.MustDecodeHex(result.Block.NewRoot),
 		SequencerAddress: encoding.MustDecodeHex(result.Block.SequencerAddress),
 		Version:          result.Block.StarknetVersion,

@@ -8,32 +8,12 @@ import (
 	"github.com/dipdup-io/starknet-indexer/internal/storage"
 )
 
-// ProxyAction -
-type ProxyAction int
-
-// default proxy actions
-const (
-	ProxyActionAdd ProxyAction = iota
-	ProxyActionUpdate
-	ProxyActionDelete
-)
-
-// ProxyWithAction -
-type ProxyWithAction struct {
-	storage.Proxy
-	Action ProxyAction
-}
-
-// NewProxyWithAction -
-func NewProxyWithAction(proxy storage.Proxy, action ProxyAction) *ProxyWithAction {
-	return &ProxyWithAction{proxy, action}
-}
-
 // ProxyUpgrade -
 type ProxyUpgrade struct {
 	Address  []byte
 	Selector []byte
-	Action   ProxyAction
+	Action   storage.ProxyAction
+	Height   uint64
 	IsModule bool
 }
 
@@ -44,6 +24,7 @@ func (upg ProxyUpgrade) Loggable() map[string]any {
 		"selector":  hex.EncodeToString(upg.Selector),
 		"is_module": upg.IsModule,
 		"action":    upg.Action,
+		"height":    upg.Height,
 	}
 }
 

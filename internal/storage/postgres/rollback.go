@@ -5,21 +5,21 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/dipdup-io/starknet-indexer/internal/starknet"
 	models "github.com/dipdup-io/starknet-indexer/internal/storage"
 	"github.com/dipdup-net/indexer-sdk/pkg/storage"
 	"github.com/go-pg/pg/v10"
+	"github.com/rs/zerolog/log"
 )
 
 const rollbackQuery = `WITH deleted AS (DELETE FROM ? WHERE height > ? RETURNING *) SELECT count(*) FROM deleted;`
 
 // RollbackManager -
 type RollbackManager struct {
-	state        models.IState
-	blocks       models.IBlock
-	storageDiffs models.IStorageDiff
-	transfers    models.ITransfer
-	transactable storage.Transactable
+	state         models.IState
+	blocks        models.IBlock
+	proxyUpgrades models.IProxyUpgrade
+	transfers     models.ITransfer
+	transactable  storage.Transactable
 }
 
 // NewRollbackManager -
@@ -27,20 +27,21 @@ func NewRollbackManager(
 	transactable storage.Transactable,
 	state models.IState,
 	blocks models.IBlock,
-	storageDiffs models.IStorageDiff,
+	proxyUpgrades models.IProxyUpgrade,
 	transfers models.ITransfer,
 ) RollbackManager {
 	return RollbackManager{
-		transactable: transactable,
-		state:        state,
-		blocks:       blocks,
-		storageDiffs: storageDiffs,
-		transfers:    transfers,
+		transactable:  transactable,
+		state:         state,
+		blocks:        blocks,
+		proxyUpgrades: proxyUpgrades,
+		transfers:     transfers,
 	}
 }
 
 // Rollback - rollback database to height
 func (rm RollbackManager) Rollback(ctx context.Context, indexerName string, height uint64) error {
+	log.Info().Uint64("new_height", height).Str("indexer", indexerName).Msg("rollback starting...")
 	tx, err := rm.transactable.BeginTransaction(ctx)
 	if err != nil {
 		return err
@@ -75,6 +76,7 @@ func (rm RollbackManager) Rollback(ctx context.Context, indexerName string, heig
 		&models.Message{},
 		&models.Fee{},
 		&models.Transfer{},
+		&models.ProxyUpgrade{},
 	} {
 		deletedCount, err := tx.Exec(ctx, rollbackQuery, pg.Ident(model.TableName()), height)
 		if err != nil {
@@ -114,19 +116,60 @@ func (rm RollbackManager) Rollback(ctx context.Context, indexerName string, heig
 	if err := tx.Flush(ctx); err != nil {
 		return tx.HandleError(ctx, err)
 	}
+	log.Info().Uint64("new_height", height).Str("indexer", indexerName).Msg("rollback is finished")
 	return nil
 }
 
 func (rm RollbackManager) rollbackProxy(ctx context.Context, height uint64, tx storage.Transaction) error {
-	keys := make([][]byte, 0)
-	for _, value := range starknet.ProxyStorageVars {
-		keys = append(keys, value)
+	var (
+		offset = 0
+		limit  = 100
+		end    = false
+	)
+
+	for !end {
+		upgrades, err := rm.proxyUpgrades.ListWithHeight(ctx, height, limit, offset)
+		if err != nil {
+			return err
+		}
+
+		offset += len(upgrades)
+		end = len(upgrades) != limit
+
+		for i := range upgrades {
+			switch upgrades[i].Action {
+			case models.ProxyActionAdd:
+				if _, err = tx.Exec(ctx, `delete from proxy where selector = ? and hash = ?`, upgrades[i].Selector, upgrades[i].Hash); err != nil {
+					return err
+				}
+			case models.ProxyActionUpdate:
+				last, err := rm.proxyUpgrades.LastBefore(ctx, upgrades[i].Height)
+				if err != nil {
+					if rm.proxyUpgrades.IsNoRows(err) {
+						if _, err = tx.Exec(ctx, `delete from proxy where selector = ? and hash = ?`, upgrades[i].Selector, upgrades[i].Hash); err != nil {
+							return err
+						}
+						continue
+					}
+					return err
+				}
+
+				if _, err := tx.Exec(ctx,
+					`update proxy set entity_type = ?, entity_id = ?, entity_hash = ? where selector = ? and hash = ?`,
+					last.EntityType, last.EntityID, last.EntityHash, last.Selector, last.Hash,
+				); err != nil {
+					return err
+				}
+			case models.ProxyActionDelete:
+				if _, err = tx.Exec(ctx,
+					`insert into proxy (contract_id, hash, selector, entity_type, entity_id, entity_hash) values (?,?,?,?,?,?)`,
+					upgrades[i].ContractID, upgrades[i].Hash, upgrades[i].Selector, upgrades[i].EntityType, upgrades[i].EntityID, upgrades[i].EntityHash,
+				); err != nil {
+					return err
+				}
+			}
+		}
 	}
-	_, err := rm.storageDiffs.GetForKeys(ctx, keys, height)
-	if err != nil {
-		return err
-	}
-	// TODO: rollback proxy by diffs
 	return nil
 }
 
@@ -175,13 +218,16 @@ func (rm RollbackManager) rollbackTokenBalances(ctx context.Context, height uint
 				upd.Balance = upd.Balance.Sub(transfers[i].Amount)
 			} else {
 				updates[toKey] = &models.TokenBalance{
-					OwnerID:    transfers[i].FromID,
+					OwnerID:    transfers[i].ToID,
 					ContractID: transfers[i].ContractID,
 					TokenID:    transfers[i].TokenID,
 					Balance:    transfers[i].Amount.Copy().Neg(),
 				}
 			}
 		}
+	}
+	if len(updates) == 0 {
+		return nil
 	}
 
 	values := make([]string, 0)
@@ -195,6 +241,7 @@ func (rm RollbackManager) rollbackTokenBalances(ctx context.Context, height uint
 		)
 		values = append(values, value)
 	}
+
 	_, err := tx.Exec(ctx,
 		`INSERT INTO token_balance (owner_id, contract_id, token_id, balance)
 		VALUES ? 

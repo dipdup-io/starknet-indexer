@@ -21,7 +21,7 @@ func NewProxyUpgrader(resolver resolver.Resolver) ProxyUpgrader {
 	}
 }
 
-type upgradeHandler func(data map[string]any) ([]data.ProxyUpgrade, error)
+type upgradeHandler func(data map[string]any, height uint64) ([]data.ProxyUpgrade, error)
 
 // Parse -
 func (parser ProxyUpgrader) Parse(ctx context.Context, txCtx data.TxContext, contract storage.Address, events []storage.Event, entrypoint string, data map[string]any) error {
@@ -51,7 +51,7 @@ func (parser ProxyUpgrader) parseEvents(ctx context.Context, txCtx data.TxContex
 			continue
 		}
 
-		upgrades, err := handler(events[i].ParsedData)
+		upgrades, err := handler(events[i].ParsedData, events[i].Height)
 		if err != nil {
 			return false, err
 		}
@@ -86,7 +86,7 @@ func (parser ProxyUpgrader) parseParams(ctx context.Context, txCtx data.TxContex
 		return nil
 	}
 
-	upgrades, err := handler(params)
+	upgrades, err := handler(params, txCtx.Height)
 	if err != nil {
 		return err
 	}

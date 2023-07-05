@@ -13,7 +13,6 @@ type IStorageDiff interface {
 	Filterable[StorageDiff, StorageDiffFilter]
 
 	GetOnBlock(ctx context.Context, height, contractId uint64, key []byte) (StorageDiff, error)
-	GetForKeys(ctx context.Context, keys [][]byte, heightFilter uint64) ([]StorageDiff, error)
 }
 
 // StorageDiffFilter -
