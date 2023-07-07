@@ -9,6 +9,7 @@ import (
 	"github.com/dipdup-net/indexer-sdk/pkg/storage/postgres"
 	"github.com/go-pg/pg/v10"
 	"github.com/go-pg/pg/v10/orm"
+	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
 )
 
@@ -88,8 +89,12 @@ func initDatabase(ctx context.Context, conn *database.PgGo) error {
 		}
 	}
 
-	if err := makeComments(ctx, conn); err != nil {
-		return err
+	data := make([]any, len(models.Models))
+	for i := range models.Models {
+		data[i] = models.Models[i]
+	}
+	if err := database.MakeComments(ctx, conn, data...); err != nil {
+		return errors.Wrap(err, "make comments")
 	}
 
 	return createIndices(ctx, conn)

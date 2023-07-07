@@ -28,27 +28,27 @@ type EventFilter struct {
 // Event -
 type Event struct {
 	// nolint
-	tableName struct{} `pg:"event,partition_by:RANGE(time),comment:Table with events"`
+	tableName struct{} `pg:"event,partition_by:RANGE(time)" comment:"Table with events"`
 
-	ID     uint64    `pg:"id,type:bigint,pk,notnull,comment:Unique internal identity"`
-	Height uint64    `pg:",use_zero,comment:Block height"`
-	Time   time.Time `pg:",pk,comment:Time of block"`
+	ID     uint64    `pg:"id,type:bigint,pk,notnull" comment:"Unique internal identity"`
+	Height uint64    `pg:",use_zero" comment:"Block height"`
+	Time   time.Time `pg:",pk" comment:"Time of block"`
 
-	InvokeID        *uint64 `pg:",comment:Parent invoke id"`
-	DeclareID       *uint64 `pg:",comment:Parent declare id"`
-	DeployID        *uint64 `pg:",comment:Parent deploy id"`
-	DeployAccountID *uint64 `pg:",comment:Parent deploy account id"`
-	L1HandlerID     *uint64 `pg:",comment:Parent l1 handler id"`
-	FeeID           *uint64 `pg:",comment:Parent fee invocation id"`
-	InternalID      *uint64 `pg:",comment:Parent internal transaction id"`
+	InvokeID        *uint64 `comment:"Parent invoke id"`
+	DeclareID       *uint64 `comment:"Parent declare id"`
+	DeployID        *uint64 `comment:"Parent deploy id"`
+	DeployAccountID *uint64 `comment:"Parent deploy account id"`
+	L1HandlerID     *uint64 `comment:"Parent l1 handler id"`
+	FeeID           *uint64 `comment:"Parent fee invocation id"`
+	InternalID      *uint64 `comment:"Parent internal transaction id"`
 
-	Order      uint64         `pg:",comment:Order in block"`
-	ContractID uint64         `pg:",comment:Contract address id"`
-	FromID     uint64         `pg:",comment:From address id"`
-	Keys       []string       `pg:",array,comment:Raw event keys"`
-	Data       []string       `pg:",array,comment:Raw event data"`
-	Name       string         `pg:",comment:Event name"`
-	ParsedData map[string]any `pg:",comment:Event data parsed according to contract ABI"`
+	Order      uint64         `comment:"Order in block"`
+	ContractID uint64         `comment:"Contract address id"`
+	FromID     uint64         `comment:"From address id"`
+	Keys       []string       `pg:",array" comment:"Raw event keys"`
+	Data       []string       `pg:",array" comment:"Raw event data"`
+	Name       string         `comment:"Event name"`
+	ParsedData map[string]any `comment:"Event data parsed according to contract ABI"`
 
 	From     Address `pg:"rel:has-one" hasura:"table:address,field:from_id,remote_field:id,type:oto,name:from"`
 	Contract Address `pg:"rel:has-one" hasura:"table:address,field:contract_id,remote_field:id,type:oto,name:contract"`

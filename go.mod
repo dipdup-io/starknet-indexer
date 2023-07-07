@@ -8,7 +8,7 @@ go 1.19
 
 require (
 	github.com/dipdup-io/starknet-go-api v0.0.0-20230704215048-e75244146134
-	github.com/dipdup-net/go-lib v0.2.34
+	github.com/dipdup-net/go-lib v0.2.38
 	github.com/dipdup-net/indexer-sdk v0.0.0-20230614153224-11cee5bf9248
 	github.com/dipdup-net/workerpool v0.0.2
 	github.com/go-pg/pg/v10 v10.11.0
