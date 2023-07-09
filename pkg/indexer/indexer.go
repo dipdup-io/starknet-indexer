@@ -244,6 +244,7 @@ func (indexer *Indexer) getNewBlocks(ctx context.Context) error {
 				return nil
 			default:
 				log.Err(err).Msg("receive head error")
+				time.Sleep(15 * time.Second)
 			}
 		}
 	}
