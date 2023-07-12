@@ -51,9 +51,12 @@ func (resolver *Resolver) parseDeclaredContracts(ctx context.Context, block *sto
 
 func (resolver *Resolver) parseDeployedContracts(ctx context.Context, block *storage.Block, contracts []data.DeployedContract) error {
 	for i := range contracts {
-		class, err := resolver.parseClassFromFelt(ctx, contracts[i].ClassHash, block.Height)
+		class, err := resolver.cache.GetClassByHash(ctx, contracts[i].ClassHash.Bytes())
 		if err != nil {
-			return errors.Wrap(err, contracts[i].ClassHash.String())
+			class, err = resolver.parseClassFromFelt(ctx, contracts[i].ClassHash, block.Height)
+			if err != nil {
+				return errors.Wrap(err, contracts[i].ClassHash.String())
+			}
 		}
 
 		hash := contracts[i].Address.Bytes()
