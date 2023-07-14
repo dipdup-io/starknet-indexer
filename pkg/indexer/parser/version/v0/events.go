@@ -80,7 +80,7 @@ func (parser EventParser) Parse(ctx context.Context, txCtx data.TxContext, contr
 	return model, nil
 }
 
-func upgraded(params map[string]any) ([]data.ProxyUpgrade, error) {
+func upgraded(params map[string]any, height uint64) ([]data.ProxyUpgrade, error) {
 	value, ok := params["implementation"]
 	if !ok {
 		return nil, nil
@@ -92,12 +92,13 @@ func upgraded(params map[string]any) ([]data.ProxyUpgrade, error) {
 	return []data.ProxyUpgrade{
 		{
 			Address: starknetData.Felt(implementation).Bytes(),
-			Action:  data.ProxyActionUpdate,
+			Action:  storage.ProxyActionUpdate,
+			Height:  height,
 		},
 	}, nil
 }
 
-func accountUpgraded(params map[string]any) ([]data.ProxyUpgrade, error) {
+func accountUpgraded(params map[string]any, height uint64) ([]data.ProxyUpgrade, error) {
 	value, ok := params["new_implementation"]
 	if !ok {
 		return nil, nil
@@ -109,12 +110,13 @@ func accountUpgraded(params map[string]any) ([]data.ProxyUpgrade, error) {
 	return []data.ProxyUpgrade{
 		{
 			Address: starknetData.Felt(implementation).Bytes(),
-			Action:  data.ProxyActionUpdate,
+			Action:  storage.ProxyActionUpdate,
+			Height:  height,
 		},
 	}, nil
 }
 
-func implementationUpgraded(params map[string]any) ([]data.ProxyUpgrade, error) {
+func implementationUpgraded(params map[string]any, height uint64) ([]data.ProxyUpgrade, error) {
 	value, ok := params["implementation_hash"]
 	if !ok {
 		return nil, nil
@@ -126,12 +128,13 @@ func implementationUpgraded(params map[string]any) ([]data.ProxyUpgrade, error) 
 	return []data.ProxyUpgrade{
 		{
 			Address: starknetData.Felt(implementation).Bytes(),
-			Action:  data.ProxyActionUpdate,
+			Action:  storage.ProxyActionUpdate,
+			Height:  height,
 		},
 	}, nil
 }
 
-func moduleFunctionChange(params map[string]any) ([]data.ProxyUpgrade, error) {
+func moduleFunctionChange(params map[string]any, height uint64) ([]data.ProxyUpgrade, error) {
 	upgrade := new(data.ProxyUpgrade)
 	actionsValue, ok := params["actions"]
 	if !ok {
@@ -181,8 +184,9 @@ func moduleFunctionChange(params map[string]any) ([]data.ProxyUpgrade, error) {
 		if err != nil {
 			return nil, err
 		}
-		upgrade.Action = data.ProxyAction(iAction)
+		upgrade.Action = storage.ProxyAction(iAction)
 		upgrade.IsModule = true
+		upgrade.Height = height
 		upgrades = append(upgrades, *upgrade)
 	}
 

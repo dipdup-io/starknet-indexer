@@ -11,7 +11,7 @@ import (
 	starknet "github.com/dipdup-io/starknet-go-api/pkg/sequencer"
 	"github.com/dipdup-io/starknet-indexer/internal/storage"
 	"github.com/dipdup-io/starknet-indexer/pkg/indexer/config"
-	"github.com/dipdup-net/workerpool"
+	"github.com/dipdup-io/workerpool"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 )
@@ -271,4 +271,15 @@ func (r *Receiver) getStateUpdate(ctx context.Context, blockId starknetData.Bloc
 	}
 
 	return r.api.GetStateUpdate(requestCtx, blockId)
+}
+
+func (r *Receiver) Clear() {
+	r.pool.Clear()
+
+	r.processingMx.Lock()
+	defer r.processingMx.Unlock()
+
+	for key := range r.processing {
+		delete(r.processing, key)
+	}
 }

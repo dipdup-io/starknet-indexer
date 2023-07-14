@@ -53,17 +53,20 @@ func (resolver *Resolver) UpgradeProxy(ctx context.Context, contract storage.Add
 			EntityType: typ,
 		}
 
-		withAction := data.NewProxyWithAction(proxy, upgrades[i].Action)
+		proxyUpgrade := storage.NewUpgradeFromProxy(proxy)
+		proxyUpgrade.Action = upgrades[i].Action
+		proxyUpgrade.Height = upgrades[i].Height
+
 		contextProxies := resolver.blockContext.CurrentProxies()
 
 		key := data.NewProxyKey(contract.Hash, upgrades[i].Selector)
 
 		log.Debug().Fields(upgrades[i].Loggable()).Msg("proxy upgrade")
-		contextProxies.Add(key, withAction)
+		contextProxies.Add(key, &proxyUpgrade)
 
 		if upgrades[i].IsModule {
 			endBlockProxies := resolver.blockContext.Proxies()
-			endBlockProxies.Add(key, withAction)
+			endBlockProxies.Add(key, &proxyUpgrade)
 		}
 	}
 	return nil
@@ -107,8 +110,8 @@ func (resolver *Resolver) findProxy(ctx context.Context, txCtx data.TxContext, a
 	key := data.NewProxyKey(address, selector)
 	if _, ok := txCtx.ProxyUpgrades.Get(key); !ok {
 		contextProxies := resolver.blockContext.CurrentProxies()
-		if proxy, ok := contextProxies.Get(key); ok {
-			return proxy.Proxy, nil
+		if upgrade, ok := contextProxies.Get(key); ok {
+			return upgrade.ToProxy(), nil
 		}
 	}
 
@@ -118,8 +121,8 @@ func (resolver *Resolver) findProxy(ctx context.Context, txCtx data.TxContext, a
 		return proxy, err
 	case resolver.blocks.IsNoRows(err):
 		endBlockProxies := resolver.blockContext.Proxies()
-		if proxy, ok := endBlockProxies.Get(key); ok {
-			return proxy.Proxy, nil
+		if upgrade, ok := endBlockProxies.Get(key); ok {
+			return upgrade.ToProxy(), nil
 		}
 		return storage.Proxy{}, errors.Wrapf(ErrUnknownProxy, "%x", address)
 	default:

@@ -6,7 +6,6 @@ import (
 	"github.com/dipdup-io/starknet-go-api/pkg/data"
 	"github.com/dipdup-io/starknet-indexer/internal/starknet"
 	"github.com/dipdup-io/starknet-indexer/internal/storage"
-	parserData "github.com/dipdup-io/starknet-indexer/pkg/indexer/parser/data"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
 )
@@ -52,9 +51,12 @@ func (resolver *Resolver) parseDeclaredContracts(ctx context.Context, block *sto
 
 func (resolver *Resolver) parseDeployedContracts(ctx context.Context, block *storage.Block, contracts []data.DeployedContract) error {
 	for i := range contracts {
-		class, err := resolver.parseClassFromFelt(ctx, contracts[i].ClassHash, block.Height)
+		class, err := resolver.cache.GetClassByHash(ctx, contracts[i].ClassHash.Bytes())
 		if err != nil {
-			return errors.Wrap(err, contracts[i].ClassHash.String())
+			class, err = resolver.parseClassFromFelt(ctx, contracts[i].ClassHash, block.Height)
+			if err != nil {
+				return errors.Wrap(err, contracts[i].ClassHash.String())
+			}
 		}
 
 		hash := contracts[i].Address.Bytes()
@@ -100,11 +102,12 @@ func (resolver *Resolver) parseStorageDiffs(ctx context.Context, block *storage.
 
 			sKey := updates[i].Key.String()
 			if _, ok := starknet.ProxyStorageVars[sKey]; ok {
-				proxy := storage.Proxy{
+				proxyUpgrade := storage.ProxyUpgrade{
 					Hash:       address.Hash,
 					ContractID: address.ID,
-					Contract:   address,
 					EntityHash: diff.Value,
+					Action:     storage.ProxyActionUpdate,
+					Height:     block.Height,
 				}
 				id, typ, err := resolver.findProxyEntity(ctx, diff.Value, block.Height)
 				if err != nil {
@@ -114,9 +117,9 @@ func (resolver *Resolver) parseStorageDiffs(ctx context.Context, block *storage.
 					}
 					return errors.Wrap(err, "find proxy entity")
 				}
-				proxy.EntityID = id
-				proxy.EntityType = typ
-				endBlockProxies.AddByHash(address.Hash, nil, parserData.NewProxyWithAction(proxy, parserData.ProxyActionUpdate))
+				proxyUpgrade.EntityID = id
+				proxyUpgrade.EntityType = typ
+				endBlockProxies.AddByHash(address.Hash, nil, &proxyUpgrade)
 			}
 		}
 	}

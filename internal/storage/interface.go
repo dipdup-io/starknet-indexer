@@ -79,6 +79,14 @@ func WithAscSortByIdFilter() FilterOption {
 	}
 }
 
+// WithDescSortByIdFilter -
+func WithDescSortByIdFilter() FilterOption {
+	return func(opt *FilterOptions) {
+		opt.SortField = "id"
+		opt.SortOrder = storage.SortOrderDesc
+	}
+}
+
 // WithMaxHeight -
 func WithMaxHeight(height uint64) FilterOption {
 	return func(opt *FilterOptions) {
@@ -112,5 +120,6 @@ var Models = []storage.Model{
 	&Fee{},
 	&Token{},
 	&TokenBalance{},
+	&ProxyUpgrade{},
 	&Proxy{},
 }

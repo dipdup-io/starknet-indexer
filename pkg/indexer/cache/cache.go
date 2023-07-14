@@ -97,10 +97,12 @@ func (cache *Cache) SetAbiByClassHash(class storage.Class, a abi.Abi) {
 
 // GetClassByHash -
 func (cache *Cache) GetClassByHash(ctx context.Context, hash []byte) (storage.Class, error) {
-	item, err := cache.Fetch(fmt.Sprintf("class:hash:%x", hash), ttl, func() (interface{}, error) {
+	key := fmt.Sprintf("class:hash:%x", hash)
+	item, err := cache.Fetch(key, ttl, func() (interface{}, error) {
 		return cache.class.GetByHash(ctx, hash)
 	})
 	if err != nil {
+		cache.Delete(key)
 		return storage.Class{}, err
 	}
 

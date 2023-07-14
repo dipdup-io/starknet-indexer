@@ -1,12 +1,14 @@
 package indexer
 
 import (
+	"bytes"
 	"context"
 	"runtime"
 	"sync"
 	"time"
 
 	"github.com/dipdup-io/starknet-go-api/pkg/data"
+	"github.com/dipdup-io/starknet-go-api/pkg/sequencer"
 	"github.com/dipdup-io/starknet-indexer/internal/starknet"
 	models "github.com/dipdup-io/starknet-indexer/internal/storage"
 	"github.com/dipdup-io/starknet-indexer/internal/storage/postgres"
@@ -55,6 +57,10 @@ type Indexer struct {
 	statusChecker   *statusChecker
 	rollbackManager models.Rollback
 
+	rollback      chan struct{}
+	rollbackRerun chan struct{}
+	rollbackWait  *sync.WaitGroup
+
 	log zerolog.Logger
 
 	txWriteMutex *sync.Mutex
@@ -89,7 +95,10 @@ func New(
 		receiver:        receiver.NewReceiver(cfg),
 		rollbackManager: storage.RollbackManager,
 		log:             log.With().Str("module", "indexer").Logger(),
+		rollback:        make(chan struct{}, 1),
+		rollbackRerun:   make(chan struct{}, 1),
 		txWriteMutex:    new(sync.Mutex),
+		rollbackWait:    new(sync.WaitGroup),
 		wg:              new(sync.WaitGroup),
 	}
 
@@ -168,6 +177,8 @@ func (indexer *Indexer) Close() error {
 		return err
 	}
 
+	close(indexer.rollback)
+	close(indexer.rollbackRerun)
 	return nil
 }
 
@@ -210,6 +221,16 @@ func (indexer *Indexer) getNewBlocks(ctx context.Context) error {
 		return err
 	}
 
+	if head < indexer.state.Height() {
+		log.Warn().
+			Uint64("indexer_height", indexer.state.Height()).
+			Uint64("node_height", head).
+			Msg("rollback detected by block height")
+		if err := indexer.makeRollback(ctx, head); err != nil {
+			return errors.Wrap(err, "makeRollback")
+		}
+	}
+
 	for head > indexer.state.Height() {
 		indexer.log.Info().
 			Uint64("indexer_block", indexer.state.Height()).
@@ -228,6 +249,9 @@ func (indexer *Indexer) getNewBlocks(ctx context.Context) error {
 			select {
 			case <-ctx.Done():
 				return nil
+			case <-indexer.rollback:
+				log.Info().Msg("stop receiving blocks")
+				return nil
 			default:
 				if indexer.checkQueue(ctx) {
 					return nil
@@ -241,6 +265,9 @@ func (indexer *Indexer) getNewBlocks(ctx context.Context) error {
 		for head, err = indexer.receiver.Head(ctx); err != nil; {
 			select {
 			case <-ctx.Done():
+				return nil
+			case <-indexer.rollback:
+				log.Info().Msg("stop receiving blocks")
 				return nil
 			default:
 				log.Err(err).Msg("receive head error")
@@ -264,10 +291,16 @@ func (indexer *Indexer) sync(ctx context.Context) {
 	defer ticker.Stop()
 
 	for {
+		indexer.rollbackWait.Wait()
+
 		select {
 		case <-ctx.Done():
 			return
 		case <-ticker.C:
+			if err := indexer.getNewBlocks(ctx); err != nil {
+				indexer.log.Err(err).Msg("getNewBlocks")
+			}
+		case <-indexer.rollbackRerun:
 			if err := indexer.getNewBlocks(ctx); err != nil {
 				indexer.log.Err(err).Msg("getNewBlocks")
 			}
@@ -306,6 +339,19 @@ func (indexer *Indexer) saveBlocks(ctx context.Context) {
 
 			for {
 				if data, ok := indexer.queue[next]; ok {
+					reorgDetected, err := indexer.handleReorg(ctx, data.Block)
+					if err != nil {
+						if errors.Is(err, context.Canceled) {
+							return
+						}
+						indexer.log.Err(err).Stack().Msg("handle reorg")
+						time.Sleep(time.Second * 3)
+					}
+
+					if reorgDetected {
+						break
+					}
+
 					if err := indexer.handleBlock(ctx, data); err != nil {
 						if errors.Is(err, context.Canceled) {
 							return
@@ -324,6 +370,48 @@ func (indexer *Indexer) saveBlocks(ctx context.Context) {
 			}
 		}
 	}
+}
+
+func (indexer *Indexer) handleReorg(ctx context.Context, newBlock sequencer.Block) (bool, error) {
+	lastBlock, err := indexer.blocks.Last(ctx)
+	if err != nil {
+		if indexer.blocks.IsNoRows(err) {
+			return false, nil
+		}
+		return false, err
+	}
+
+	parentHash := data.Felt(newBlock.ParentHash).Bytes()
+	if bytes.Equal(lastBlock.Hash, parentHash) {
+		return false, nil
+	}
+
+	log.Warn().
+		Str("parent_hash_of_new_block", newBlock.ParentHash).
+		Hex("indexer_head_block_hash", lastBlock.Hash).
+		Msg("rollback detected by parent hash")
+
+	err = indexer.makeRollback(ctx, lastBlock.Height-1)
+	return true, err
+}
+
+func (indexer *Indexer) makeRollback(ctx context.Context, height uint64) error {
+	for key := range indexer.queue {
+		delete(indexer.queue, key)
+	}
+
+	indexer.receiver.Clear()
+
+	if err := indexer.Rollback(ctx, height-1); err != nil {
+		return errors.Wrap(err, "rollback")
+	}
+
+	if err := indexer.init(ctx); err != nil {
+		return err
+	}
+
+	indexer.rollbackRerun <- struct{}{}
+	return nil
 }
 
 func (indexer *Indexer) handleBlock(ctx context.Context, result receiver.Result) error {
@@ -384,10 +472,14 @@ func (indexer *Indexer) updateState(ctx context.Context, block models.Block, cla
 
 // Rollback -
 func (indexer *Indexer) Rollback(ctx context.Context, height uint64) error {
+	indexer.rollbackWait.Add(1)
+	defer indexer.rollbackWait.Done()
+
 	indexer.txWriteMutex.Lock()
 	defer indexer.txWriteMutex.Unlock()
 
-	indexer.log.Info().Uint64("new_height", height).Msg("rollback starting...")
+	indexer.rollback <- struct{}{}
+
 	return indexer.rollbackManager.Rollback(ctx, indexer.Name(), height)
 }
 

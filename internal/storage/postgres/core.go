@@ -31,6 +31,7 @@ type Storage struct {
 	Class         models.IClass
 	StorageDiff   models.IStorageDiff
 	Proxy         models.IProxy
+	ProxyUpgrade  models.IProxyUpgrade
 	Transfer      models.ITransfer
 	Fee           models.IFee
 	Token         models.IToken
@@ -63,6 +64,7 @@ func Create(ctx context.Context, cfg config.Database) (Storage, error) {
 		Class:         NewClass(strg.Connection()),
 		StorageDiff:   NewStorageDiff(strg.Connection()),
 		Proxy:         NewProxy(strg.Connection()),
+		ProxyUpgrade:  NewProxyUpgrade(strg.Connection()),
 		Transfer:      NewTransfer(strg.Connection()),
 		Fee:           NewFee(strg.Connection()),
 		Token:         NewToken(strg.Connection()),
@@ -72,7 +74,7 @@ func Create(ctx context.Context, cfg config.Database) (Storage, error) {
 		PartitionManager: NewPartitionManager(strg.Connection()),
 	}
 
-	s.RollbackManager = NewRollbackManager(s.Transactable, s.State, s.Blocks)
+	s.RollbackManager = NewRollbackManager(s.Transactable, s.State, s.Blocks, s.ProxyUpgrade, s.Transfer)
 
 	return s, nil
 }
@@ -116,6 +118,14 @@ func createIndices(ctx context.Context, conn *database.PgGo) error {
 
 		// Proxy
 		if _, err := tx.ExecContext(ctx, `CREATE UNIQUE INDEX IF NOT EXISTS proxy_hash_selector_idx ON proxy (hash, selector) NULLS NOT DISTINCT`); err != nil {
+			return err
+		}
+
+		// ProxyUpgrade
+		if _, err := tx.ExecContext(ctx, `CREATE INDEX IF NOT EXISTS proxy_upgrade_hash_selector_idx ON proxy_upgrade (hash, selector) NULLS NOT DISTINCT`); err != nil {
+			return err
+		}
+		if _, err := tx.ExecContext(ctx, `CREATE INDEX IF NOT EXISTS proxy_upgrade_height_idx ON proxy_upgrade USING BRIN (height)`); err != nil {
 			return err
 		}
 

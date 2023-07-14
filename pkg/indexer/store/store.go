@@ -212,16 +212,19 @@ func (store *Store) saveInternals(
 	return nil
 }
 
-func (store *Store) saveProxies(ctx context.Context, tx storage.Transaction, proxies data.ProxyMap[*data.ProxyWithAction]) error {
-	return proxies.Range(func(_ parserData.ProxyKey, value *parserData.ProxyWithAction) (bool, error) {
-		store.cache.SetProxy(value.Hash, value.Selector, value.Proxy)
+func (store *Store) saveProxies(ctx context.Context, tx storage.Transaction, proxies data.ProxyMap[*models.ProxyUpgrade]) error {
+	return proxies.Range(func(_ parserData.ProxyKey, value *models.ProxyUpgrade) (bool, error) {
+		store.cache.SetProxy(value.Hash, value.Selector, value.ToProxy())
+		if err := tx.Add(ctx, value); err != nil {
+			return true, err
+		}
 		return saveProxy(ctx, tx, value)
 	})
 }
 
-func saveProxy(ctx context.Context, tx storage.Transaction, proxy *data.ProxyWithAction) (bool, error) {
+func saveProxy(ctx context.Context, tx storage.Transaction, proxy *models.ProxyUpgrade) (bool, error) {
 	switch proxy.Action {
-	case parserData.ProxyActionAdd, parserData.ProxyActionUpdate:
+	case models.ProxyActionAdd, models.ProxyActionUpdate:
 		if _, err := tx.Exec(ctx, `
 			INSERT INTO proxy (contract_id, hash, selector, entity_type, entity_id, entity_hash)
 			VALUES(?,?,?,?,?,?) 
@@ -231,7 +234,7 @@ func saveProxy(ctx context.Context, tx storage.Transaction, proxy *data.ProxyWit
 			proxy.ContractID, proxy.Hash, proxy.Selector, proxy.EntityType, proxy.EntityID, proxy.EntityHash); err != nil {
 			return true, err
 		}
-	case parserData.ProxyActionDelete:
+	case models.ProxyActionDelete:
 		if _, err := tx.Exec(ctx, `DELETE FROM proxy WHERE hash = ? AND selector = ?`,
 			proxy.Hash, proxy.Selector); err != nil {
 			return true, err
