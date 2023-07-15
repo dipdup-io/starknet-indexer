@@ -63,6 +63,7 @@ func (resolver *Resolver) parseDeployedContracts(ctx context.Context, block *sto
 		if address, err := resolver.cache.GetAddress(ctx, hash); err == nil {
 			address.ClassID = &class.ID
 			resolver.addAddress(&address)
+			resolver.cache.SetAbiByAddress(class, hash)
 		} else {
 			address := storage.Address{
 				Hash:    hash,
