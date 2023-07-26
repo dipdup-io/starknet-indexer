@@ -463,7 +463,7 @@ func Token(model *storage.Token) *pb.Token {
 		DeployHeight: model.DeployHeight,
 		DeployTime:   uint64(model.DeployTime.Unix()),
 		Contract:     Address(&model.Contract),
-		Owner:        model.Owner.Hash,
+		Owner:        Address(&model.Owner),
 		Type:         int32(model.Type),
 	}
 	if model.Metadata != nil {

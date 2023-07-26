@@ -7,6 +7,7 @@ import (
 	"github.com/dipdup-net/go-lib/database"
 	sdk "github.com/dipdup-net/indexer-sdk/pkg/storage"
 	"github.com/dipdup-net/indexer-sdk/pkg/storage/postgres"
+	"github.com/go-pg/pg/v10/orm"
 )
 
 // Token -
@@ -46,4 +47,24 @@ func (tokens *Token) ListByType(ctx context.Context, typ storage.TokenType, limi
 	return result, err
 }
 
-// TODO: implement Filterable
+// Filter -
+func (token *Token) Filter(ctx context.Context, fltr []storage.TokenFilter, opts ...storage.FilterOption) ([]storage.Token, error) {
+	query := token.DB().ModelContext(ctx, (*storage.TokenBalance)(nil))
+	query = query.WhereGroup(func(q1 *orm.Query) (*orm.Query, error) {
+		for i := range fltr {
+			q1 = q1.WhereOrGroup(func(q *orm.Query) (*orm.Query, error) {
+				q = integerFilter(q, "token.id", fltr[i].ID)
+				q = addressFilter(q, "token.contract_id", fltr[i].Contract, "Contract")
+				q = addressFilter(q, "token.owner_id", fltr[i].Owner, "Owner")
+				q = enumFilter(q, "token.type", fltr[i].Type)
+				return q, nil
+			})
+		}
+		return q1, nil
+	})
+	query = optionsFilter(query, "token", opts...)
+
+	var result []storage.Token
+	err := query.Select(&result)
+	return result, err
+}

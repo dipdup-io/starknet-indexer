@@ -7,11 +7,15 @@ import (
 	"github.com/pkg/errors"
 )
 
+var (
+	ErrUnknownSelector = errors.New("unknown selector")
+)
+
 // CalldataBySelector -
 func CalldataBySelector(contractAbi abi.Abi, selector []byte, calldata []string) (map[string]any, string, error) {
 	function, ok := contractAbi.GetFunctionBySelector(encoding.EncodeHex(selector))
 	if !ok {
-		return nil, "", errors.Errorf("unknown selector: %x", selector)
+		return nil, "", errors.Wrapf(ErrUnknownSelector, "function %x", selector)
 	}
 
 	if len(calldata) == 0 {
@@ -72,7 +76,7 @@ func ResultForFunction(contractAbi abi.Abi, data []string, selector []byte) (map
 
 	function, ok := contractAbi.GetFunctionBySelector(encoding.EncodeHex(selector))
 	if !ok {
-		return nil, errors.Errorf("unknown selector: %x", selector)
+		return nil, errors.Wrapf(ErrUnknownSelector, "function %x", selector)
 	}
 
 	return abi.DecodeFunctionResult(data, *function, contractAbi.Structs)
@@ -86,7 +90,7 @@ func ResultForL1Handler(contractAbi abi.Abi, data []string, selector []byte) (ma
 
 	function, ok := contractAbi.GetL1HandlerBySelector(encoding.EncodeHex(selector))
 	if !ok {
-		return nil, errors.Errorf("unknown selector: %x", selector)
+		return nil, errors.Wrapf(ErrUnknownSelector, "l1_handler %x", selector)
 	}
 
 	return abi.DecodeFunctionResult(data, *function, contractAbi.Structs)
@@ -100,7 +104,7 @@ func ResultForConstructor(contractAbi abi.Abi, data []string, selector []byte) (
 
 	function, ok := contractAbi.GetConstructorBySelector(encoding.EncodeHex(selector))
 	if !ok {
-		return nil, errors.Errorf("unknown selector: %x", selector)
+		return nil, errors.Wrapf(ErrUnknownSelector, "constructor %x", selector)
 	}
 
 	return abi.DecodeFunctionResult(data, *function, contractAbi.Structs)

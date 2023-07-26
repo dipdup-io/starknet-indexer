@@ -455,6 +455,7 @@
 | contract | [BytesFilter](#proto-BytesFilter) |  |  |
 | owner | [BytesFilter](#proto-BytesFilter) |  |  |
 | type | [EnumFilter](#proto-EnumFilter) |  |  |
+| id | [IntegerFilter](#proto-IntegerFilter) |  |  |
 
 
 
@@ -1230,7 +1231,7 @@ Desription of server interface
 | deploy_height | [uint64](#uint64) |  |  |
 | deploy_time | [uint64](#uint64) |  |  |
 | contract | [Address](#proto-Address) |  |  |
-| owner | [bytes](#bytes) |  |  |
+| owner | [Address](#proto-Address) |  |  |
 | type | [int32](#int32) |  |  |
 | metadata | [bytes](#bytes) |  |  |
 

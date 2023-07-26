@@ -30,6 +30,7 @@ type Subscription struct {
 	StorageDiffFilter    []*StorageDiffFilter    `yaml:"storage_diffs" validate:"omitempty"`
 	TokenBalanceFilter   []*TokenBalanceFilter   `yaml:"token_balances" validate:"omitempty"`
 	AddressFilter        []*AddressFilter        `yaml:"addresses" validate:"omitempty"`
+	TokenFilter          []*TokenFilter          `yaml:"tokens" validate:"omitempty"`
 }
 
 // ToGrpcFilter -
@@ -113,6 +114,12 @@ func (f Subscription) ToGrpcFilter() *pb.SubscribeRequest {
 		req.TokenBalances = make([]*pb.TokenBalanceFilter, len(f.TokenBalanceFilter))
 		for i := range f.TokenBalanceFilter {
 			req.TokenBalances[i] = f.TokenBalanceFilter[i].ToGrpcFilter()
+		}
+	}
+	if len(f.TokenFilter) > 0 {
+		req.Tokens = make([]*pb.TokenFilter, len(f.TokenFilter))
+		for i := range f.TokenBalanceFilter {
+			req.Tokens[i] = f.TokenFilter[i].ToGrpcFilter()
 		}
 	}
 
@@ -612,6 +619,33 @@ func (f TokenBalanceFilter) ToGrpcFilter() *pb.TokenBalanceFilter {
 	}
 	if f.TokenId != nil {
 		fltr.TokenId = f.TokenId.ToGrpcFilter()
+	}
+	return fltr
+}
+
+// TokenFilter -
+type TokenFilter struct {
+	Owner    *BytesFilter   `yaml:"owner" validate:"omitempty"`
+	Contract *BytesFilter   `yaml:"contract" validate:"omitempty"`
+	Id       *IntegerFilter `yaml:"id" validate:"omitempty"`
+	Type     *EnumFilter    `yaml:"type" validate:"omitempty"`
+}
+
+// ToGrpcFilter -
+func (f TokenFilter) ToGrpcFilter() *pb.TokenFilter {
+	fltr := new(pb.TokenFilter)
+
+	if f.Owner != nil {
+		fltr.Owner = f.Owner.ToGrpcFilter()
+	}
+	if f.Contract != nil {
+		fltr.Contract = f.Contract.ToGrpcFilter()
+	}
+	if f.Id != nil {
+		fltr.Id = f.Id.ToGrpcFilter()
+	}
+	if f.Type != nil {
+		fltr.Type = f.Type.ToGrpcFilter()
 	}
 	return fltr
 }

@@ -176,7 +176,11 @@ func (parser InternalTxParser) Parse(ctx context.Context, txCtx parserData.TxCon
 			}
 
 			if err != nil {
-				if !(errors.Is(err, abi.ErrNoLenField) || errors.Is(err, abi.ErrTooShortCallData)) {
+				switch {
+				case (errors.Is(err, abi.ErrNoLenField) || errors.Is(err, abi.ErrTooShortCallData)):
+				case errors.Is(err, decode.ErrUnknownSelector):
+					log.Err(err).Hex("tx_hash", tx.Hash).Msg("can't decode calldata")
+				default:
 					return tx, err
 				}
 			}
@@ -191,7 +195,11 @@ func (parser InternalTxParser) Parse(ctx context.Context, txCtx parserData.TxCon
 				tx.ParsedResult, err = decode.Result(contractAbi, internal.Result, tx.Selector, tx.EntrypointType)
 			}
 			if err != nil {
-				if !(errors.Is(err, abi.ErrNoLenField) || errors.Is(err, abi.ErrTooShortCallData)) {
+				switch {
+				case (errors.Is(err, abi.ErrNoLenField) || errors.Is(err, abi.ErrTooShortCallData)):
+				case errors.Is(err, decode.ErrUnknownSelector):
+					log.Err(err).Hex("tx_hash", tx.Hash).Msg("can't decode result")
+				default:
 					return tx, err
 				}
 			}

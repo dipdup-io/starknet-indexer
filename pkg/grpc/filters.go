@@ -22,6 +22,7 @@ type subscriptionFilters struct {
 	tokenBalance  []storage.TokenBalanceFilter
 	transfer      []storage.TransferFilter
 	address       []storage.AddressFilter
+	tokens        []storage.TokenFilter
 }
 
 func newSubscriptionFilters(ctx context.Context, req *pb.SubscribeRequest, db postgres.Storage) (subscriptionFilters, error) {
@@ -43,6 +44,7 @@ func newSubscriptionFilters(ctx context.Context, req *pb.SubscribeRequest, db po
 		tokenBalance:  tokenBalanceFilter(req.GetTokenBalances()),
 		transfer:      transferFilter(req.GetTransfers()),
 		address:       addressFilter(req.GetAddresses()),
+		tokens:        tokenFilter(req.GetTokens()),
 	}, nil
 }
 
@@ -268,6 +270,23 @@ func storageDiffFilter(fltr []*pb.StorageDiffFilter) []storage.StorageDiffFilter
 			Height:   integerFilter(fltr[i].Height),
 			Contract: bytesFilter(fltr[i].Contract),
 			Key:      equalityFilter(fltr[i].Key),
+		}
+	}
+	return result
+}
+
+func tokenFilter(fltr []*pb.TokenFilter) []storage.TokenFilter {
+	if len(fltr) == 0 {
+		return nil
+	}
+
+	result := make([]storage.TokenFilter, len(fltr))
+	for i := range fltr {
+		result[i] = storage.TokenFilter{
+			ID:       integerFilter(fltr[i].Id),
+			Type:     enumFilter(fltr[i].Type),
+			Owner:    bytesFilter(fltr[i].Owner),
+			Contract: bytesFilter(fltr[i].Contract),
 		}
 	}
 	return result

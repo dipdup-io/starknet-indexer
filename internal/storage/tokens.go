@@ -17,9 +17,18 @@ const (
 	TokenTypeERC1155
 )
 
+// TokenFilter -
+type TokenFilter struct {
+	ID       IntegerFilter
+	Contract BytesFilter
+	Owner    BytesFilter
+	Type     EnumFilter
+}
+
 // IToken -
 type IToken interface {
 	storage.Table[*Token]
+	Filterable[Token, TokenFilter]
 
 	ListByType(ctx context.Context, typ TokenType, limit uint64, offset uint64, order storage.SortOrder) ([]Token, error)
 }

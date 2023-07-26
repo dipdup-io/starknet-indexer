@@ -133,6 +133,7 @@ message TokenFilter {
     BytesFilter contract = 1;
     BytesFilter owner = 2;
     EnumFilter type = 3;
+    IntegerFilter id = 4;
 }
 
 message AddressFilter {
