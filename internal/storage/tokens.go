@@ -54,3 +54,13 @@ type Token struct {
 func (Token) TableName() string {
 	return "token"
 }
+
+// GetHeight -
+func (t Token) GetHeight() uint64 {
+	return t.DeployHeight
+}
+
+// GetId -
+func (t Token) GetId() uint64 {
+	return t.ID
+}

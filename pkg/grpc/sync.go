@@ -12,9 +12,10 @@ import (
 )
 
 const (
-	priorityTokenBalance  = 21
-	priorityStorageDiff   = 22
-	priorityTransfer      = 23
+	priorityTokenBalance  = 20
+	priorityStorageDiff   = 21
+	priorityTransfer      = 22
+	priorityToken         = 23
 	priorityMessage       = 24
 	priorityEvent         = 25
 	priorityInternal      = 26
@@ -203,6 +204,9 @@ func (module *Server) sync(ctx context.Context, subscriptionID uint64, req *pb.S
 	}
 	if sf.storageDiff != nil {
 		syncTables = append(syncTables, newTable[storage.StorageDiff, storage.StorageDiffFilter](module.db.StorageDiff, sf.storageDiff, priorityStorageDiff))
+	}
+	if sf.tokens != nil {
+		syncTables = append(syncTables, newTable[storage.Token, storage.TokenFilter](module.db.Token, sf.tokens, priorityToken))
 	}
 
 	var height uint64
