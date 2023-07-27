@@ -63,6 +63,7 @@ func (token *Token) Filter(ctx context.Context, fltr []storage.TokenFilter, opts
 		return q1, nil
 	})
 	query = optionsFilter(query, "token", opts...)
+	query = query.Relation("Contract").Relation("Owner")
 
 	var result []storage.Token
 	err := query.Select(&result)

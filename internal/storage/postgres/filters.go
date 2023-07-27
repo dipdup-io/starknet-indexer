@@ -188,7 +188,7 @@ func optionsFilter(q *orm.Query, tableName string, opts ...storage.FilterOption)
 	q = addSort(q, opt.SortField, opt.SortOrder)
 
 	if opt.MaxHeight > 0 {
-		q = q.Where("?.height <= ?", pg.Ident(tableName), opt.MaxHeight)
+		q = q.Where("?.? <= ?", pg.Ident(tableName), pg.Safe(opt.HeightColumnName), opt.MaxHeight)
 	}
 	if opt.Cursor > 0 {
 		q = q.Where("?.id > ?", pg.Ident(tableName), opt.Cursor)

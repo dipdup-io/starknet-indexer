@@ -38,8 +38,9 @@ type FilterOptions struct {
 	SortField string
 	SortOrder storage.SortOrder
 
-	MaxHeight uint64
-	Cursor    uint64
+	MaxHeight        uint64
+	HeightColumnName string
+	Cursor           uint64
 }
 
 // FilterOption -
@@ -88,9 +89,10 @@ func WithDescSortByIdFilter() FilterOption {
 }
 
 // WithMaxHeight -
-func WithMaxHeight(height uint64) FilterOption {
+func WithMaxHeight(height uint64, columnName string) FilterOption {
 	return func(opt *FilterOptions) {
 		opt.MaxHeight = height
+		opt.HeightColumnName = columnName
 	}
 }
 

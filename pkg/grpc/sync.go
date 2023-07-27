@@ -29,26 +29,32 @@ const (
 )
 
 type table[T storage.Heightable, F any] struct {
-	Data         []T
-	store        storage.Filterable[T, F]
-	fltr         []F
-	priority     int
-	offset       int
-	limit        int
-	targetHeight uint64
-	cursor       uint64
+	Data             []T
+	store            storage.Filterable[T, F]
+	fltr             []F
+	priority         int
+	offset           int
+	limit            int
+	targetHeight     uint64
+	cursor           uint64
+	heightColumnName string
 
 	end bool
 }
 
 func newTable[T storage.Heightable, F any](store storage.Filterable[T, F], fltr []F, priority int) *table[T, F] {
 	return &table[T, F]{
-		Data:     make([]T, 0),
-		store:    store,
-		fltr:     fltr,
-		priority: priority,
-		limit:    1000,
+		Data:             make([]T, 0),
+		store:            store,
+		fltr:             fltr,
+		priority:         priority,
+		limit:            1000,
+		heightColumnName: "height",
 	}
+}
+
+func (t *table[T, F]) setHeightColumnName(val string) {
+	t.heightColumnName = val
 }
 
 func (t *table[T, F]) getFirst() (T, bool) {
@@ -123,7 +129,7 @@ func (t *table[T, F]) Receive(ctx context.Context) error {
 		t.fltr,
 		storage.WithAscSortByIdFilter(),
 		storage.WithLimitFilter(t.limit),
-		storage.WithMaxHeight(t.targetHeight),
+		storage.WithMaxHeight(t.targetHeight, t.heightColumnName),
 		storage.WithCursor(t.cursor),
 	)
 	if err != nil {
@@ -206,7 +212,9 @@ func (module *Server) sync(ctx context.Context, subscriptionID uint64, req *pb.S
 		syncTables = append(syncTables, newTable[storage.StorageDiff, storage.StorageDiffFilter](module.db.StorageDiff, sf.storageDiff, priorityStorageDiff))
 	}
 	if sf.tokens != nil {
-		syncTables = append(syncTables, newTable[storage.Token, storage.TokenFilter](module.db.Token, sf.tokens, priorityToken))
+		t := newTable[storage.Token, storage.TokenFilter](module.db.Token, sf.tokens, priorityToken)
+		t.setHeightColumnName("deploy_height")
+		syncTables = append(syncTables, t)
 	}
 
 	var height uint64
