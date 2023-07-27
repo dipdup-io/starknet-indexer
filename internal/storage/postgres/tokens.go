@@ -49,7 +49,7 @@ func (tokens *Token) ListByType(ctx context.Context, typ storage.TokenType, limi
 
 // Filter -
 func (token *Token) Filter(ctx context.Context, fltr []storage.TokenFilter, opts ...storage.FilterOption) ([]storage.Token, error) {
-	query := token.DB().ModelContext(ctx, (*storage.TokenBalance)(nil))
+	query := token.DB().ModelContext(ctx, (*storage.Token)(nil))
 	query = query.WhereGroup(func(q1 *orm.Query) (*orm.Query, error) {
 		for i := range fltr {
 			q1 = q1.WhereOrGroup(func(q *orm.Query) (*orm.Query, error) {
