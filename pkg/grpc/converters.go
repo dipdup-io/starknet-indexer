@@ -452,26 +452,18 @@ func SubscriptionToken(id uint64, msg *subscriptions.Message) *pb.Subscription {
 		Response: &generalPB.SubscribeResponse{
 			Id: id,
 		},
-		Transfer: Transfer(msg.Transfer),
+		Token: Token(msg.Token),
 	}
 }
 
 // Token -
 func Token(model *storage.Token) *pb.Token {
 	pbModel := &pb.Token{
-		Id:           model.ID,
-		DeployHeight: model.DeployHeight,
-		DeployTime:   uint64(model.DeployTime.Unix()),
-		Contract:     Address(&model.Contract),
-		Owner:        Address(&model.Owner),
-		Type:         int32(model.Type),
-	}
-	if model.Metadata != nil {
-		metadata, err := json.Marshal(model.Metadata)
-		if err != nil {
-			return pbModel
-		}
-		pbModel.Metadata = metadata
+		Id:          model.ID,
+		FirstHeight: model.FirstHeight,
+		Contract:    Address(&model.Contract),
+		Type:        string(model.Type),
+		TokenId:     model.TokenId.String(),
 	}
 	return pbModel
 }

@@ -41,11 +41,6 @@ type FeeParser interface {
 	ParseActualFee(ctx context.Context, txCtx data.TxContext, actualFee starknetData.Felt) (*storage.Transfer, error)
 }
 
-// TokenParser -
-type TokenParser interface {
-	Parse(ctx context.Context, txCtx data.TxContext, contract storage.Address, classType storage.ClassType, constructorData map[string]any) (*storage.Token, error)
-}
-
 // TransferParser -
 type TransferParser interface {
 	ParseEvents(ctx context.Context, txCtx data.TxContext, contract storage.Address, events []storage.Event) ([]storage.Transfer, error)

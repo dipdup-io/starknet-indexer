@@ -84,7 +84,7 @@ func (module *Server) listen(ctx context.Context) {
 				return
 			}
 			if message, ok := msg.(*indexer.IndexerMessage); ok {
-				module.blockHandler(message)
+				module.blockHandler(ctx, message)
 			} else {
 				module.log.Warn().Msgf("unknown message type: %T", msg)
 			}
@@ -92,7 +92,7 @@ func (module *Server) listen(ctx context.Context) {
 	}
 }
 
-func (module *Server) blockHandler(message *indexer.IndexerMessage) {
+func (module *Server) blockHandler(ctx context.Context, message *indexer.IndexerMessage) {
 	for _, address := range message.Addresses {
 		module.notifyAboutAddress(address)
 	}
@@ -101,6 +101,12 @@ func (module *Server) blockHandler(message *indexer.IndexerMessage) {
 		subscriptions.NewBlockMessage(message.Block),
 		SubscriptionBlock,
 	)
+
+	for _, token := range message.Tokens {
+		if err := module.notifyAboutToken(ctx, token); err != nil {
+			log.Err(err).Msg("can't notify about token")
+		}
+	}
 
 	for i := range message.Block.Declare {
 		module.subscriptions.NotifyAll(
@@ -124,11 +130,6 @@ func (module *Server) blockHandler(message *indexer.IndexerMessage) {
 		module.notifyAboutInternals(message.Block.Deploy[i].Internals)
 		module.notifyAboutEvents(message.Block.Deploy[i].Events)
 		module.notifyAboutMessages(message.Block.Deploy[i].Messages)
-
-		if message.Block.Deploy[i].Token != nil {
-			module.notifyAboutToken(message.Block.Deploy[i].Token)
-		}
-
 		module.notifyAboutTransfers(message.Block.Deploy[i].Transfers)
 
 	}
@@ -188,10 +189,6 @@ func (module *Server) notifyAboutInternals(txs []storage.Internal) {
 			subscriptions.NewInternalMessage(&txs[j]),
 			SubscriptionInternal,
 		)
-
-		if txs[j].Token != nil {
-			module.notifyAboutToken(txs[j].Token)
-		}
 	}
 }
 
@@ -247,15 +244,23 @@ func (module *Server) notifyAboutFee(fee *storage.Fee) {
 	module.notifyAboutTransfers(fee.Transfers)
 }
 
-func (module *Server) notifyAboutToken(token *storage.Token) {
+func (module *Server) notifyAboutToken(ctx context.Context, token *storage.Token) error {
 	if token == nil {
-		return
+		return nil
 	}
+
+	contract, err := module.db.Address.GetByID(ctx, token.ContractId)
+	if err != nil {
+		return err
+	}
+	token.Contract = *contract
 
 	module.subscriptions.NotifyAll(
 		subscriptions.NewTokenMessage(token),
 		SubscriptionToken,
 	)
+
+	return nil
 }
 
 func (module *Server) notifyAboutAddress(address *storage.Address) {

@@ -24,7 +24,6 @@ type Parser struct {
 	EventParser      interfaces.EventParser
 	MessageParser    interfaces.MessageParser
 	FeeParser        interfaces.FeeParser
-	TokenParser      interfaces.TokenParser
 	TransferParser   interfaces.TransferParser
 	ProxyUpgrader    interfaces.ProxyUpgrader
 }
@@ -38,7 +37,6 @@ func NewWithParsers(
 	internalTxParser interfaces.InternalTxParser,
 	eventParser interfaces.EventParser,
 	messageParser interfaces.MessageParser,
-	tokenParser interfaces.TokenParser,
 	transferParser interfaces.TransferParser,
 	proxyUpgrader interfaces.ProxyUpgrader,
 ) Parser {
@@ -49,7 +47,6 @@ func NewWithParsers(
 		InternalTxParser: internalTxParser,
 		EventParser:      eventParser,
 		MessageParser:    messageParser,
-		TokenParser:      tokenParser,
 		TransferParser:   transferParser,
 		ProxyUpgrader:    proxyUpgrader,
 	}
@@ -65,8 +62,7 @@ func New(
 	message := NewMessageParser(cache, resolver)
 	transferParser := NewTransferParser(resolver)
 	proxyUpgrader := NewProxyUpgrader(resolver)
-	tokenParser := NewTokenParser(cache, resolver)
-	internal := NewInternalTxParser(resolver, cache, blocks, event, message, transferParser, tokenParser, proxyUpgrader)
+	internal := NewInternalTxParser(resolver, cache, blocks, event, message, transferParser, proxyUpgrader)
 	fee := NewFeeParser(cache, resolver, blocks, event, message, transferParser, internal)
 
 	return Parser{
@@ -76,7 +72,6 @@ func New(
 		EventParser:      event,
 		MessageParser:    message,
 		FeeParser:        fee,
-		TokenParser:      tokenParser,
 		TransferParser:   transferParser,
 		ProxyUpgrader:    proxyUpgrader,
 	}

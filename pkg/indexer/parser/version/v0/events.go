@@ -218,6 +218,13 @@ func depositHandled(ctx context.Context, resolver resolver.Resolver, txCtx data.
 		}
 	}
 
+	transfer.Token = storage.Token{
+		FirstHeight: event.Height,
+		ContractId:  transfer.ContractID,
+		Type:        storage.TokenTypeERC20,
+		TokenId:     decimal.Zero,
+	}
+
 	var err error
 
 	transfer.ToID, err = parseTransferAddress(ctx, resolver, event.Height, event.ParsedData, "account")
@@ -262,6 +269,13 @@ func withdrawInitiated(ctx context.Context, resolver resolver.Resolver, txCtx da
 		}
 	}
 
+	transfer.Token = storage.Token{
+		FirstHeight: event.Height,
+		ContractId:  transfer.ContractID,
+		Type:        storage.TokenTypeERC20,
+		TokenId:     decimal.Zero,
+	}
+
 	var err error
 
 	transfer.FromID, err = parseTransferAddress(ctx, resolver, event.Height, event.ParsedData, "caller_address")
@@ -293,6 +307,12 @@ func transfer(ctx context.Context, resolver resolver.Resolver, txCtx data.TxCont
 		L1HandlerID:     txCtx.L1HandlerID,
 		FeeID:           txCtx.FeeID,
 		InternalID:      txCtx.InternalID,
+		Token: storage.Token{
+			FirstHeight: event.Height,
+			ContractId:  contractId,
+			Type:        storage.TokenTypeERC20,
+			TokenId:     decimal.Zero,
+		},
 	}
 
 	var err error
@@ -381,6 +401,13 @@ func transferERC721(ctx context.Context, resolver resolver.Resolver, txCtx data.
 		return nil, err
 	}
 
+	transfer.Token = storage.Token{
+		FirstHeight: txCtx.Height,
+		ContractId:  contractId,
+		TokenId:     transfer.TokenID,
+		Type:        storage.TokenTypeERC721,
+	}
+
 	return []storage.Transfer{transfer}, nil
 }
 
@@ -443,6 +470,13 @@ func transferSingle(ctx context.Context, resolver resolver.Resolver, txCtx data.
 		}
 	}
 
+	transfer.Token = storage.Token{
+		FirstHeight: txCtx.Height,
+		ContractId:  contractId,
+		TokenId:     transfer.TokenID,
+		Type:        storage.TokenTypeERC1155,
+	}
+
 	return []storage.Transfer{transfer}, nil
 }
 
@@ -491,6 +525,12 @@ func transferBatch(ctx context.Context, resolver resolver.Resolver, txCtx data.T
 			ToID:            toId,
 			Amount:          values[i],
 			TokenID:         ids[i],
+			Token: storage.Token{
+				FirstHeight: txCtx.Height,
+				ContractId:  contractId,
+				TokenId:     ids[i],
+				Type:        storage.TokenTypeERC1155,
+			},
 		}
 	}
 	return transfers, nil

@@ -115,6 +115,7 @@ func New(
 		storage.Deploy,
 		storage.L1Handler,
 		storage.Fee,
+		storage.Token,
 		storage.Transactable,
 		storage.PartitionManager)
 
@@ -451,7 +452,11 @@ func (indexer *Indexer) handleBlock(ctx context.Context, result receiver.Result)
 	}
 	l.Msg("indexed")
 
-	indexer.notifyAllAboutBlock(parseResult.Block, parseResult.Context.Addresses())
+	indexer.notifyAllAboutBlock(
+		parseResult.Block,
+		parseResult.Context.Addresses(),
+		parseResult.Context.Tokens(),
+	)
 	return nil
 }
 

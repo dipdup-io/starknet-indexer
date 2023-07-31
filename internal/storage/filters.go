@@ -34,6 +34,14 @@ type EnumFilter struct {
 	Notin []uint64
 }
 
+// EnumStringFilter -
+type EnumStringFilter struct {
+	Eq    string
+	Neq   string
+	In    []string
+	Notin []string
+}
+
 // StringFilter -
 type StringFilter struct {
 	Eq string

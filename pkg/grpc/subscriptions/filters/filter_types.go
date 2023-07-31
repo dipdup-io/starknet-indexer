@@ -166,6 +166,33 @@ func validEnum(f *pb.EnumFilter, val uint64) bool {
 	return false
 }
 
+func validEnumString(f *pb.EnumStringFilter, val string) bool {
+	if f == nil {
+		return true
+	}
+
+	switch typ := f.Filter.(type) {
+	case *pb.EnumStringFilter_Eq:
+		return typ.Eq == val
+	case *pb.EnumStringFilter_Neq:
+		return typ.Neq != val
+	case *pb.EnumStringFilter_In:
+		for i := range typ.In.Arr {
+			if typ.In.Arr[i] == val {
+				return true
+			}
+		}
+	case *pb.EnumStringFilter_Notin:
+		for i := range typ.Notin.Arr {
+			if typ.Notin.Arr[i] == val {
+				return false
+			}
+		}
+	}
+
+	return false
+}
+
 type ids map[uint64]struct{}
 
 // In -

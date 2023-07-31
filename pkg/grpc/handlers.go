@@ -59,7 +59,7 @@ func (module *Server) JSONSchemaForClass(ctx context.Context, req *pb.Bytes) (*p
 	}
 
 	hash := req.GetData()
-	module.log.Info().Bytes("hash", hash).Msg("json schema for class request")
+	module.log.Info().Hex("hash", hash).Msg("json schema for class request")
 
 	if !starknet.HashValidator(hash) {
 		return nil, errors.Errorf("invalid starknet hash (length must be 32): %x", hash)
@@ -95,7 +95,7 @@ func (module *Server) JSONSchemaForContract(ctx context.Context, req *pb.Bytes) 
 	}
 
 	hash := req.GetData()
-	module.log.Info().Bytes("hash", hash).Msg("json schema for contract request")
+	module.log.Info().Hex("hash", hash).Msg("json schema for contract request")
 
 	if !starknet.HashValidator(hash) {
 		return nil, errors.Errorf("invalid starknet hash (length must be 32): %x", hash)

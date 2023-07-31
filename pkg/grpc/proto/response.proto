@@ -189,12 +189,10 @@ message Transfer {
 
 message Token {
     uint64 id = 1;
-    uint64 deploy_height = 2;
-    uint64 deploy_time = 3;
-    Address contract = 4;
-    Address owner = 5;
-    int32 type = 6;
-    bytes metadata = 7;
+    uint64 first_height = 2;
+    Address contract = 3;
+    string token_id = 4;
+    string type = 5;
 }
 
 message Address {

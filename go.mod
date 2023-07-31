@@ -1,13 +1,13 @@
 module github.com/dipdup-io/starknet-indexer
 
-go 1.19
+go 1.20
 
 // replace github.com/dipdup-io/starknet-go-api => /usr/local/go/src/github.com/dipdup-io/starknet-go-api
 
 // replace github.com/dipdup-net/indexer-sdk => /usr/local/go/src/github.com/dipdup-net/indexer-sdk
 
 require (
-	github.com/dipdup-io/starknet-go-api v0.0.0-20230704215048-e75244146134
+	github.com/dipdup-io/starknet-go-api v0.0.0-20230730152023-b1c1bf40b85f
 	github.com/dipdup-net/go-lib v0.2.38
 	github.com/dipdup-net/indexer-sdk v0.0.0-20230614153224-11cee5bf9248
 	github.com/go-pg/pg/v10 v10.11.0

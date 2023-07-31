@@ -36,6 +36,7 @@
     - [BytesArray](#proto-BytesArray)
     - [BytesFilter](#proto-BytesFilter)
     - [EnumFilter](#proto-EnumFilter)
+    - [EnumStringFilter](#proto-EnumStringFilter)
     - [EqualityFilter](#proto-EqualityFilter)
     - [EqualityIntegerFilter](#proto-EqualityIntegerFilter)
     - [IntegerArray](#proto-IntegerArray)
@@ -453,8 +454,8 @@
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | contract | [BytesFilter](#proto-BytesFilter) |  |  |
-| owner | [BytesFilter](#proto-BytesFilter) |  |  |
-| type | [EnumFilter](#proto-EnumFilter) |  |  |
+| token_id | [StringFilter](#proto-StringFilter) |  |  |
+| type | [EnumStringFilter](#proto-EnumStringFilter) |  |  |
 | id | [IntegerFilter](#proto-IntegerFilter) |  |  |
 
 
@@ -621,6 +622,24 @@ Set of filters for enumerations
 | neq | [uint64](#uint64) |  | not equals |
 | in | [IntegerArray](#proto-IntegerArray) |  | check the value is in array `x IN (1,2,3,4)` |
 | notin | [IntegerArray](#proto-IntegerArray) |  | check the value is not in array `x NOT IN (1,2,3,4)` |
+
+
+
+
+
+
+<a name="proto-EnumStringFilter"></a>
+
+### EnumStringFilter
+Set of filters for string enumerations
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| eq | [string](#string) |  | equals |
+| neq | [string](#string) |  | not equals |
+| in | [StringArray](#proto-StringArray) |  | check the value is in array `x IN (a, abc)` |
+| notin | [StringArray](#proto-StringArray) |  | check the value is not in array `x NOT IN (a, abc)` |
 
 
 
@@ -1228,12 +1247,10 @@ Desription of server interface
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | id | [uint64](#uint64) |  |  |
-| deploy_height | [uint64](#uint64) |  |  |
-| deploy_time | [uint64](#uint64) |  |  |
+| first_height | [uint64](#uint64) |  |  |
 | contract | [Address](#proto-Address) |  |  |
-| owner | [Address](#proto-Address) |  |  |
-| type | [int32](#int32) |  |  |
-| metadata | [bytes](#bytes) |  |  |
+| token_id | [string](#string) |  |  |
+| type | [string](#string) |  |  |
 
 
 

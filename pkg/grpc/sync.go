@@ -213,7 +213,7 @@ func (module *Server) sync(ctx context.Context, subscriptionID uint64, req *pb.S
 	}
 	if sf.tokens != nil {
 		t := newTable[storage.Token, storage.TokenFilter](module.db.Token, sf.tokens, priorityToken)
-		t.setHeightColumnName("deploy_height")
+		t.setHeightColumnName("first_height")
 		syncTables = append(syncTables, t)
 	}
 

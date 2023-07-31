@@ -284,8 +284,8 @@ func tokenFilter(fltr []*pb.TokenFilter) []storage.TokenFilter {
 	for i := range fltr {
 		result[i] = storage.TokenFilter{
 			ID:       integerFilter(fltr[i].Id),
-			Type:     enumFilter(fltr[i].Type),
-			Owner:    bytesFilter(fltr[i].Owner),
+			Type:     enumStringFilter(fltr[i].Type),
+			TokenId:  stringFilter(fltr[i].TokenId),
 			Contract: bytesFilter(fltr[i].Contract),
 		}
 	}
@@ -369,6 +369,23 @@ func timeFilter(fltr *pb.TimeFilter) (result storage.TimeFilter) {
 }
 
 func enumFilter(fltr *pb.EnumFilter) (result storage.EnumFilter) {
+	if fltr == nil {
+		return
+	}
+
+	result.Eq = fltr.GetEq()
+	result.Neq = fltr.GetNeq()
+	if arr := fltr.GetIn(); arr != nil {
+		result.In = arr.GetArr()
+	}
+	if arr := fltr.GetNotin(); arr != nil {
+		result.Notin = arr.GetArr()
+	}
+
+	return
+}
+
+func enumStringFilter(fltr *pb.EnumStringFilter) (result storage.EnumStringFilter) {
 	if fltr == nil {
 		return
 	}
