@@ -157,6 +157,10 @@ func (parser TransferParser) parseTransferCalldata(ctx context.Context, txCtx da
 	}
 	transfer.Amount = amount
 
+	if transfer.Amount.IsZero() && transfer.ToID == 0 {
+		return nil, nil
+	}
+
 	return []storage.Transfer{transfer}, nil
 }
 
