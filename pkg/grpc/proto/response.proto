@@ -205,3 +205,9 @@ message Address {
 message EndOfBlock {
     uint64 height = 1;
 }
+
+message Proxy {
+    uint64 id = 1;
+    bytes hash = 2;
+    uint32 type = 3;
+}

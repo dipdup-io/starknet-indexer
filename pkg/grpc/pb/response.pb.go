@@ -1876,6 +1876,69 @@ func (x *EndOfBlock) GetHeight() uint64 {
 	return 0
 }
 
+type Proxy struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Id   uint64 `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
+	Hash []byte `protobuf:"bytes,2,opt,name=hash,proto3" json:"hash,omitempty"`
+	Type uint32 `protobuf:"varint,3,opt,name=type,proto3" json:"type,omitempty"`
+}
+
+func (x *Proxy) Reset() {
+	*x = Proxy{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_github_com_dipdup_io_starknet_indexer_pkg_grpc_proto_response_proto_msgTypes[16]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *Proxy) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Proxy) ProtoMessage() {}
+
+func (x *Proxy) ProtoReflect() protoreflect.Message {
+	mi := &file_github_com_dipdup_io_starknet_indexer_pkg_grpc_proto_response_proto_msgTypes[16]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Proxy.ProtoReflect.Descriptor instead.
+func (*Proxy) Descriptor() ([]byte, []int) {
+	return file_github_com_dipdup_io_starknet_indexer_pkg_grpc_proto_response_proto_rawDescGZIP(), []int{16}
+}
+
+func (x *Proxy) GetId() uint64 {
+	if x != nil {
+		return x.Id
+	}
+	return 0
+}
+
+func (x *Proxy) GetHash() []byte {
+	if x != nil {
+		return x.Hash
+	}
+	return nil
+}
+
+func (x *Proxy) GetType() uint32 {
+	if x != nil {
+		return x.Type
+	}
+	return 0
+}
+
 var File_github_com_dipdup_io_starknet_indexer_pkg_grpc_proto_response_proto protoreflect.FileDescriptor
 
 var file_github_com_dipdup_io_starknet_indexer_pkg_grpc_proto_response_proto_rawDesc = []byte{
@@ -2167,11 +2230,15 @@ var file_github_com_dipdup_io_starknet_indexer_pkg_grpc_proto_response_proto_raw
 	0x74, 0x42, 0x0b, 0x0a, 0x09, 0x5f, 0x63, 0x6c, 0x61, 0x73, 0x73, 0x5f, 0x69, 0x64, 0x22, 0x24,
 	0x0a, 0x0a, 0x45, 0x6e, 0x64, 0x4f, 0x66, 0x42, 0x6c, 0x6f, 0x63, 0x6b, 0x12, 0x16, 0x0a, 0x06,
 	0x68, 0x65, 0x69, 0x67, 0x68, 0x74, 0x18, 0x01, 0x20, 0x01, 0x28, 0x04, 0x52, 0x06, 0x68, 0x65,
-	0x69, 0x67, 0x68, 0x74, 0x42, 0x33, 0x5a, 0x31, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63,
-	0x6f, 0x6d, 0x2f, 0x64, 0x69, 0x70, 0x64, 0x75, 0x70, 0x2d, 0x69, 0x6f, 0x2f, 0x73, 0x74, 0x61,
-	0x72, 0x6b, 0x6e, 0x65, 0x74, 0x2d, 0x69, 0x6e, 0x64, 0x65, 0x78, 0x65, 0x72, 0x2f, 0x70, 0x6b,
-	0x67, 0x2f, 0x67, 0x72, 0x70, 0x63, 0x2f, 0x70, 0x62, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f,
-	0x33,
+	0x69, 0x67, 0x68, 0x74, 0x22, 0x3f, 0x0a, 0x05, 0x50, 0x72, 0x6f, 0x78, 0x79, 0x12, 0x0e, 0x0a,
+	0x02, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x04, 0x52, 0x02, 0x69, 0x64, 0x12, 0x12, 0x0a,
+	0x04, 0x68, 0x61, 0x73, 0x68, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x04, 0x68, 0x61, 0x73,
+	0x68, 0x12, 0x12, 0x0a, 0x04, 0x74, 0x79, 0x70, 0x65, 0x18, 0x03, 0x20, 0x01, 0x28, 0x0d, 0x52,
+	0x04, 0x74, 0x79, 0x70, 0x65, 0x42, 0x33, 0x5a, 0x31, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e,
+	0x63, 0x6f, 0x6d, 0x2f, 0x64, 0x69, 0x70, 0x64, 0x75, 0x70, 0x2d, 0x69, 0x6f, 0x2f, 0x73, 0x74,
+	0x61, 0x72, 0x6b, 0x6e, 0x65, 0x74, 0x2d, 0x69, 0x6e, 0x64, 0x65, 0x78, 0x65, 0x72, 0x2f, 0x70,
+	0x6b, 0x67, 0x2f, 0x67, 0x72, 0x70, 0x63, 0x2f, 0x70, 0x62, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74,
+	0x6f, 0x33,
 }
 
 var (
@@ -2186,7 +2253,7 @@ func file_github_com_dipdup_io_starknet_indexer_pkg_grpc_proto_response_proto_ra
 	return file_github_com_dipdup_io_starknet_indexer_pkg_grpc_proto_response_proto_rawDescData
 }
 
-var file_github_com_dipdup_io_starknet_indexer_pkg_grpc_proto_response_proto_msgTypes = make([]protoimpl.MessageInfo, 16)
+var file_github_com_dipdup_io_starknet_indexer_pkg_grpc_proto_response_proto_msgTypes = make([]protoimpl.MessageInfo, 17)
 var file_github_com_dipdup_io_starknet_indexer_pkg_grpc_proto_response_proto_goTypes = []interface{}{
 	(*Block)(nil),           // 0: proto.Block
 	(*Declare)(nil),         // 1: proto.Declare
@@ -2204,6 +2271,7 @@ var file_github_com_dipdup_io_starknet_indexer_pkg_grpc_proto_response_proto_goT
 	(*Token)(nil),           // 13: proto.Token
 	(*Address)(nil),         // 14: proto.Address
 	(*EndOfBlock)(nil),      // 15: proto.EndOfBlock
+	(*Proxy)(nil),           // 16: proto.Proxy
 }
 var file_github_com_dipdup_io_starknet_indexer_pkg_grpc_proto_response_proto_depIdxs = []int32{
 	14, // 0: proto.Declare.sender:type_name -> proto.Address
@@ -2433,6 +2501,18 @@ func file_github_com_dipdup_io_starknet_indexer_pkg_grpc_proto_response_proto_in
 				return nil
 			}
 		}
+		file_github_com_dipdup_io_starknet_indexer_pkg_grpc_proto_response_proto_msgTypes[16].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*Proxy); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
 	}
 	file_github_com_dipdup_io_starknet_indexer_pkg_grpc_proto_response_proto_msgTypes[1].OneofWrappers = []interface{}{}
 	file_github_com_dipdup_io_starknet_indexer_pkg_grpc_proto_response_proto_msgTypes[14].OneofWrappers = []interface{}{}
@@ -2442,7 +2522,7 @@ func file_github_com_dipdup_io_starknet_indexer_pkg_grpc_proto_response_proto_in
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_github_com_dipdup_io_starknet_indexer_pkg_grpc_proto_response_proto_rawDesc,
 			NumEnums:      0,
-			NumMessages:   16,
+			NumMessages:   17,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

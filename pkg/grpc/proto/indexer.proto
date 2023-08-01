@@ -21,6 +21,8 @@ service IndexerService {
     rpc JSONSchemaForClass(Bytes) returns(Bytes);
     // Receives JSON schema of class ABI by contract hash
     rpc JSONSchemaForContract(Bytes) returns(Bytes);
+    // Receives entity under proxy if it exists
+    rpc GetProxy(ProxyRequest) returns(Proxy);
 }
 
 /**
@@ -91,4 +93,12 @@ message JsonSchema {
 message JsonSchemaItem {
     string name = 1; // name of json schema item
     bytes schema = 2; // json schema
+}
+
+/**
+* Request message for GetProxy method
+**/
+message ProxyRequest {
+    Bytes hash = 1;
+    Bytes selector = 2;
 }

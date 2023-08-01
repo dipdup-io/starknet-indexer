@@ -49,6 +49,7 @@
     - [Bytes](#proto-Bytes)
     - [JsonSchema](#proto-JsonSchema)
     - [JsonSchemaItem](#proto-JsonSchemaItem)
+    - [ProxyRequest](#proto-ProxyRequest)
     - [SubscribeRequest](#proto-SubscribeRequest)
     - [Subscription](#proto-Subscription)
   
@@ -66,6 +67,7 @@
     - [Internal](#proto-Internal)
     - [Invoke](#proto-Invoke)
     - [L1Handler](#proto-L1Handler)
+    - [Proxy](#proto-Proxy)
     - [StarknetMessage](#proto-StarknetMessage)
     - [StorageDiff](#proto-StorageDiff)
     - [Token](#proto-Token)
@@ -830,6 +832,22 @@ Json schema item
 
 
 
+<a name="proto-ProxyRequest"></a>
+
+### ProxyRequest
+Request message for GetProxy method
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| hash | [Bytes](#proto-Bytes) |  |  |
+| selector | [Bytes](#proto-Bytes) |  |  |
+
+
+
+
+
+
 <a name="proto-SubscribeRequest"></a>
 
 ### SubscribeRequest
@@ -907,6 +925,7 @@ Desription of server interface
 | Unsubscribe | [UnsubscribeRequest](#proto-UnsubscribeRequest) | [UnsubscribeResponse](#proto-UnsubscribeResponse) | Unsubscribe from live notification from indexer |
 | JSONSchemaForClass | [Bytes](#proto-Bytes) | [Bytes](#proto-Bytes) | Receives JSON schema of class ABI by class hash |
 | JSONSchemaForContract | [Bytes](#proto-Bytes) | [Bytes](#proto-Bytes) | Receives JSON schema of class ABI by contract hash |
+| GetProxy | [ProxyRequest](#proto-ProxyRequest) | [Proxy](#proto-Proxy) | Receives entity under proxy if it exists |
 
  
 
@@ -1190,6 +1209,23 @@ Desription of server interface
 | calldata | [string](#string) | repeated |  |
 | entrypoint | [string](#string) |  |  |
 | parsed_calldata | [bytes](#bytes) |  |  |
+
+
+
+
+
+
+<a name="proto-Proxy"></a>
+
+### Proxy
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| id | [uint64](#uint64) |  |  |
+| hash | [bytes](#bytes) |  |  |
+| type | [uint32](#uint32) |  |  |
 
 
 
