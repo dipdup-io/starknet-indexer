@@ -94,7 +94,7 @@ func (module *Server) listen(ctx context.Context) {
 
 func (module *Server) blockHandler(ctx context.Context, message *indexer.IndexerMessage) {
 	for _, address := range message.Addresses {
-		module.notifyAboutAddress(address, message.Block.Height)
+		module.notifyAboutAddress(address)
 	}
 
 	module.subscriptions.NotifyAll(
@@ -267,8 +267,8 @@ func (module *Server) notifyAboutToken(ctx context.Context, token *storage.Token
 	return nil
 }
 
-func (module *Server) notifyAboutAddress(address *storage.Address, height uint64) {
-	if address == nil || height > address.Height {
+func (module *Server) notifyAboutAddress(address *storage.Address) {
+	if address == nil {
 		return
 	}
 

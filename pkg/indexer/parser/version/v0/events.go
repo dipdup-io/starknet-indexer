@@ -49,6 +49,7 @@ func (parser EventParser) Parse(ctx context.Context, txCtx data.TxContext, contr
 		Data:            event.Data,
 		Keys:            event.Keys,
 		ContractID:      txCtx.ContractId,
+		Contract:        txCtx.Contract,
 		DeclareID:       txCtx.DeclareID,
 		DeployID:        txCtx.DeployID,
 		DeployAccountID: txCtx.DeployAccountID,
@@ -56,9 +57,6 @@ func (parser EventParser) Parse(ctx context.Context, txCtx data.TxContext, contr
 		L1HandlerID:     txCtx.L1HandlerID,
 		FeeID:           txCtx.FeeID,
 		InternalID:      txCtx.InternalID,
-	}
-	if txCtx.ProxyId > 0 {
-		model.ContractID = txCtx.ContractId
 	}
 
 	if address, err := parser.resolver.FindAddressByHash(ctx, starknetData.Felt(event.FromAddress)); err != nil {
