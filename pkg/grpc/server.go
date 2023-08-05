@@ -189,6 +189,10 @@ func (module *Server) notifyAboutInternals(txs []storage.Internal) {
 			subscriptions.NewInternalMessage(&txs[j]),
 			SubscriptionInternal,
 		)
+		module.notifyAboutInternals(txs[j].Internals)
+		module.notifyAboutEvents(txs[j].Events)
+		module.notifyAboutMessages(txs[j].Messages)
+		module.notifyAboutTransfers(txs[j].Transfers)
 	}
 }
 
