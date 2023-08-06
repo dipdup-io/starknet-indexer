@@ -27,6 +27,7 @@ type Store struct {
 	deploys          models.IDeploy
 	l1Handlers       models.IL1Handler
 	fees             models.IFee
+	tokens           models.IToken
 	cache            *cache.Cache
 	transactable     storage.Transactable
 	partitionManager postgres.PartitionManager
@@ -45,6 +46,7 @@ func New(
 	deploys models.IDeploy,
 	l1Handlers models.IL1Handler,
 	fees models.IFee,
+	tokens models.IToken,
 	transactable storage.Transactable,
 	partitionManager postgres.PartitionManager,
 ) *Store {
@@ -60,6 +62,7 @@ func New(
 		deploys:          deploys,
 		l1Handlers:       l1Handlers,
 		fees:             fees,
+		tokens:           tokens,
 		transactable:     transactable,
 		partitionManager: partitionManager,
 	}
@@ -103,6 +106,10 @@ func (store *Store) Save(
 	}
 
 	if err := saveStorageDiff(ctx, tx, store.diffs, result); err != nil {
+		return tx.HandleError(ctx, err)
+	}
+
+	if err := saveTokens(ctx, tx, store.tokens, result.Context.Tokens()); err != nil {
 		return tx.HandleError(ctx, err)
 	}
 
@@ -241,4 +248,23 @@ func saveProxy(ctx context.Context, tx storage.Transaction, proxy *models.ProxyU
 		}
 	}
 	return false, nil
+}
+
+func saveTokens(ctx context.Context, tx storage.Transaction, storage models.IToken, tokens map[string]*models.Token) error {
+	if len(tokens) == 0 {
+		return nil
+	}
+
+	for _, token := range tokens {
+		if _, err := storage.Find(ctx, token.ContractId, token.TokenId.String()); err != nil {
+			if storage.IsNoRows(err) {
+				if err := tx.Add(ctx, token); err != nil {
+					return err
+				}
+				continue
+			}
+			return err
+		}
+	}
+	return nil
 }

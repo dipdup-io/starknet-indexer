@@ -36,6 +36,7 @@
     - [BytesArray](#proto-BytesArray)
     - [BytesFilter](#proto-BytesFilter)
     - [EnumFilter](#proto-EnumFilter)
+    - [EnumStringFilter](#proto-EnumStringFilter)
     - [EqualityFilter](#proto-EqualityFilter)
     - [EqualityIntegerFilter](#proto-EqualityIntegerFilter)
     - [IntegerArray](#proto-IntegerArray)
@@ -48,6 +49,7 @@
     - [Bytes](#proto-Bytes)
     - [JsonSchema](#proto-JsonSchema)
     - [JsonSchemaItem](#proto-JsonSchemaItem)
+    - [ProxyRequest](#proto-ProxyRequest)
     - [SubscribeRequest](#proto-SubscribeRequest)
     - [Subscription](#proto-Subscription)
   
@@ -56,6 +58,7 @@
 - [github.com/dipdup-io/starknet-indexer/pkg/grpc/proto/response.proto](#github-com_dipdup-io_starknet-indexer_pkg_grpc_proto_response-proto)
     - [Address](#proto-Address)
     - [Block](#proto-Block)
+    - [Class](#proto-Class)
     - [Declare](#proto-Declare)
     - [Deploy](#proto-Deploy)
     - [DeployAccount](#proto-DeployAccount)
@@ -65,6 +68,7 @@
     - [Internal](#proto-Internal)
     - [Invoke](#proto-Invoke)
     - [L1Handler](#proto-L1Handler)
+    - [Proxy](#proto-Proxy)
     - [StarknetMessage](#proto-StarknetMessage)
     - [StorageDiff](#proto-StorageDiff)
     - [Token](#proto-Token)
@@ -453,8 +457,8 @@
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | contract | [BytesFilter](#proto-BytesFilter) |  |  |
-| owner | [BytesFilter](#proto-BytesFilter) |  |  |
-| type | [EnumFilter](#proto-EnumFilter) |  |  |
+| token_id | [StringFilter](#proto-StringFilter) |  |  |
+| type | [EnumStringFilter](#proto-EnumStringFilter) |  |  |
 | id | [IntegerFilter](#proto-IntegerFilter) |  |  |
 
 
@@ -621,6 +625,24 @@ Set of filters for enumerations
 | neq | [uint64](#uint64) |  | not equals |
 | in | [IntegerArray](#proto-IntegerArray) |  | check the value is in array `x IN (1,2,3,4)` |
 | notin | [IntegerArray](#proto-IntegerArray) |  | check the value is not in array `x NOT IN (1,2,3,4)` |
+
+
+
+
+
+
+<a name="proto-EnumStringFilter"></a>
+
+### EnumStringFilter
+Set of filters for string enumerations
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| eq | [string](#string) |  | equals |
+| neq | [string](#string) |  | not equals |
+| in | [StringArray](#proto-StringArray) |  | check the value is in array `x IN (a, abc)` |
+| notin | [StringArray](#proto-StringArray) |  | check the value is not in array `x NOT IN (a, abc)` |
 
 
 
@@ -811,6 +833,22 @@ Json schema item
 
 
 
+<a name="proto-ProxyRequest"></a>
+
+### ProxyRequest
+Request message for GetProxy method
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| hash | [Bytes](#proto-Bytes) |  |  |
+| selector | [Bytes](#proto-Bytes) |  |  |
+
+
+
+
+
+
 <a name="proto-SubscribeRequest"></a>
 
 ### SubscribeRequest
@@ -888,6 +926,7 @@ Desription of server interface
 | Unsubscribe | [UnsubscribeRequest](#proto-UnsubscribeRequest) | [UnsubscribeResponse](#proto-UnsubscribeResponse) | Unsubscribe from live notification from indexer |
 | JSONSchemaForClass | [Bytes](#proto-Bytes) | [Bytes](#proto-Bytes) | Receives JSON schema of class ABI by class hash |
 | JSONSchemaForContract | [Bytes](#proto-Bytes) | [Bytes](#proto-Bytes) | Receives JSON schema of class ABI by contract hash |
+| GetProxy | [ProxyRequest](#proto-ProxyRequest) | [Proxy](#proto-Proxy) | Receives entity under proxy if it exists |
 
  
 
@@ -948,6 +987,22 @@ Desription of server interface
 
 
 
+<a name="proto-Class"></a>
+
+### Class
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| id | [uint64](#uint64) |  |  |
+| hash | [bytes](#bytes) |  |  |
+
+
+
+
+
+
 <a name="proto-Declare"></a>
 
 ### Declare
@@ -964,7 +1019,7 @@ Desription of server interface
 | sender | [Address](#proto-Address) | optional |  |
 | contract | [Address](#proto-Address) | optional |  |
 | status | [uint64](#uint64) |  |  |
-| class | [bytes](#bytes) |  |  |
+| class | [Class](#proto-Class) |  |  |
 | hash | [bytes](#bytes) |  |  |
 | max_fee | [string](#string) |  |  |
 | nonce | [string](#string) |  |  |
@@ -988,7 +1043,7 @@ Desription of server interface
 | position | [uint64](#uint64) |  |  |
 | contract | [Address](#proto-Address) |  |  |
 | status | [uint64](#uint64) |  |  |
-| class | [bytes](#bytes) |  |  |
+| class | [Class](#proto-Class) |  |  |
 | hash | [bytes](#bytes) |  |  |
 | salt | [bytes](#bytes) |  |  |
 | calldata | [string](#string) | repeated |  |
@@ -1013,7 +1068,7 @@ Desription of server interface
 | position | [uint64](#uint64) |  |  |
 | contract | [Address](#proto-Address) |  |  |
 | status | [uint64](#uint64) |  |  |
-| class | [bytes](#bytes) |  |  |
+| class | [Class](#proto-Class) |  |  |
 | hash | [bytes](#bytes) |  |  |
 | salt | [bytes](#bytes) |  |  |
 | max_fee | [string](#string) |  |  |
@@ -1078,7 +1133,7 @@ Desription of server interface
 | time | [uint64](#uint64) |  |  |
 | contract | [Address](#proto-Address) |  |  |
 | caller | [Address](#proto-Address) |  |  |
-| class | [bytes](#bytes) |  |  |
+| class | [Class](#proto-Class) |  |  |
 | selector | [bytes](#bytes) |  |  |
 | entrypoint_type | [uint64](#uint64) |  |  |
 | call_type | [uint64](#uint64) |  |  |
@@ -1107,7 +1162,7 @@ Desription of server interface
 | hash | [bytes](#bytes) |  |  |
 | contract | [Address](#proto-Address) |  |  |
 | caller | [Address](#proto-Address) |  |  |
-| class | [bytes](#bytes) |  |  |
+| class | [Class](#proto-Class) |  |  |
 | selector | [bytes](#bytes) |  |  |
 | entrypoint_type | [uint64](#uint64) |  |  |
 | call_type | [uint64](#uint64) |  |  |
@@ -1177,6 +1232,23 @@ Desription of server interface
 
 
 
+<a name="proto-Proxy"></a>
+
+### Proxy
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| id | [uint64](#uint64) |  |  |
+| hash | [bytes](#bytes) |  |  |
+| type | [uint32](#uint32) |  |  |
+
+
+
+
+
+
 <a name="proto-StarknetMessage"></a>
 
 ### StarknetMessage
@@ -1228,12 +1300,10 @@ Desription of server interface
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | id | [uint64](#uint64) |  |  |
-| deploy_height | [uint64](#uint64) |  |  |
-| deploy_time | [uint64](#uint64) |  |  |
+| first_height | [uint64](#uint64) |  |  |
 | contract | [Address](#proto-Address) |  |  |
-| owner | [Address](#proto-Address) |  |  |
-| type | [int32](#int32) |  |  |
-| metadata | [bytes](#bytes) |  |  |
+| token_id | [string](#string) |  |  |
+| type | [string](#string) |  |  |
 
 
 

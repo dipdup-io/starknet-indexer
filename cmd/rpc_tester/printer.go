@@ -75,6 +75,45 @@ func (p *Printer) listen(ctx context.Context) {
 					log.Info().
 						Uint64("height", typ.Block.Height).
 						Msg("new block")
+				case typ.Declare != nil:
+					l := log.Info().
+						Uint64("height", typ.Declare.Height).
+						Uint64("time", typ.Declare.Time)
+
+					if typ.Declare.Contract != nil {
+						l.Hex("contract", typ.Declare.Contract.Hash)
+					}
+					if typ.Declare.Sender != nil {
+						l.Hex("sender", typ.Declare.Sender.Hash)
+					}
+					if typ.Declare.Class != nil {
+						l.Hex("class", typ.Declare.Class.Hash)
+					}
+					l.Msg("new declare")
+				case typ.DeployAccount != nil:
+					l := log.Info().
+						Uint64("height", typ.DeployAccount.Height).
+						Uint64("time", typ.DeployAccount.Time)
+
+					if typ.DeployAccount.Contract != nil {
+						l.Hex("contract", typ.DeployAccount.Contract.Hash)
+					}
+					if typ.DeployAccount.Class != nil {
+						l.Hex("class", typ.DeployAccount.Class.Hash)
+					}
+					l.Msg("new deploy account")
+				case typ.Deploy != nil:
+					l := log.Info().
+						Uint64("height", typ.Deploy.Height).
+						Uint64("time", typ.Deploy.Time)
+
+					if typ.Deploy.Contract != nil {
+						l.Hex("contract", typ.Deploy.Contract.Hash)
+					}
+					if typ.Deploy.Class != nil {
+						l.Hex("class", typ.Deploy.Class.Hash)
+					}
+					l.Msg("new deploy")
 				}
 			default:
 				log.Info().Msgf("unknown message: %T", typ)

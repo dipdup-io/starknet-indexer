@@ -71,6 +71,20 @@ func enumFilter(q *orm.Query, name string, fltr storage.EnumFilter) *orm.Query {
 	return q
 }
 
+func enumStringFilter(q *orm.Query, name string, fltr storage.EnumStringFilter) *orm.Query {
+	switch {
+	case fltr.Eq != "":
+		q.Where("? = ?", pg.Safe(name), fltr.Eq)
+	case fltr.Neq != "":
+		q.Where("? != ?", pg.Safe(name), fltr.Neq)
+	case len(fltr.In) > 0:
+		q.Where("? IN (?)", pg.Safe(name), pg.In(fltr.In))
+	case len(fltr.Notin) > 0:
+		q.Where("? NOT IN (?)", pg.Safe(name), pg.In(fltr.Notin))
+	}
+	return q
+}
+
 func stringFilter(q *orm.Query, name string, fltr storage.StringFilter) *orm.Query {
 	switch {
 	case fltr.Eq != "":

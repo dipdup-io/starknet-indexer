@@ -59,7 +59,7 @@ func (module *Server) JSONSchemaForClass(ctx context.Context, req *pb.Bytes) (*p
 	}
 
 	hash := req.GetData()
-	module.log.Info().Bytes("hash", hash).Msg("json schema for class request")
+	module.log.Info().Hex("hash", hash).Msg("json schema for class request")
 
 	if !starknet.HashValidator(hash) {
 		return nil, errors.Errorf("invalid starknet hash (length must be 32): %x", hash)
@@ -95,7 +95,7 @@ func (module *Server) JSONSchemaForContract(ctx context.Context, req *pb.Bytes) 
 	}
 
 	hash := req.GetData()
-	module.log.Info().Bytes("hash", hash).Msg("json schema for contract request")
+	module.log.Info().Hex("hash", hash).Msg("json schema for contract request")
 
 	if !starknet.HashValidator(hash) {
 		return nil, errors.Errorf("invalid starknet hash (length must be 32): %x", hash)
@@ -124,5 +124,29 @@ func (module *Server) JSONSchemaForContract(ctx context.Context, req *pb.Bytes) 
 	}
 	return &pb.Bytes{
 		Data: b,
+	}, nil
+}
+
+// GetProxy -
+func (module *Server) GetProxy(ctx context.Context, req *pb.ProxyRequest) (*pb.Proxy, error) {
+	if req == nil {
+		return nil, errors.Errorf("empty proxy request")
+	}
+
+	hash := req.GetHash().GetData()
+	selector := req.GetSelector().GetData()
+	module.log.Info().Hex("hash", hash).Msg("get proxy request")
+
+	if !starknet.HashValidator(hash) {
+		return nil, errors.Errorf("invalid starknet hash (length must be 32): %x", hash)
+	}
+	proxy, err := module.db.Proxy.GetByHash(ctx, hash, selector)
+	if err != nil {
+		return nil, errors.Wrapf(err, "receiving proxy error %x", hash)
+	}
+	return &pb.Proxy{
+		Id:   proxy.EntityID,
+		Hash: proxy.EntityHash,
+		Type: uint32(proxy.EntityType),
 	}, nil
 }

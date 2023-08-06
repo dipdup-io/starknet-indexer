@@ -177,6 +177,7 @@ func (fee *Fee) Filter(ctx context.Context, fltr []storage.FeeFilter, opts ...st
 		return q1, nil
 	})
 	query = optionsFilter(query, "fee", opts...)
+	query.Relation("Contract").Relation("Caller").Relation("Class")
 
 	var result []storage.Fee
 	err := query.Select(&result)

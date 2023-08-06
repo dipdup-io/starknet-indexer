@@ -53,6 +53,18 @@ message EnumFilter {
 }
 
 /**
+* Set of filters for string enumerations
+**/
+message EnumStringFilter {
+    oneof filter {
+        string eq = 1; // equals
+        string neq = 2; // not equals
+        StringArray in = 3; // check the value is in array `x IN (a, abc)`
+        StringArray notin = 4; // check the value is not in array `x NOT IN (a, abc)`
+    }
+}
+
+/**
 * Set of string filters 
 **/
 message StringFilter {

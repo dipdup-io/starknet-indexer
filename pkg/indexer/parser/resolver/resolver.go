@@ -52,3 +52,15 @@ func (resolver *Resolver) NextTxId() uint64 {
 func (resolver *Resolver) NextEventId() uint64 {
 	return resolver.idGenerator.NextEventId()
 }
+
+// AddTokenToBlockContext -
+func (resolver *Resolver) AddTokenToBlockContext(token *storage.Token) {
+	if token == nil {
+		return
+	}
+	key := token.String()
+	tokens := resolver.blockContext.Tokens()
+	if _, ok := tokens[key]; !ok {
+		tokens[key] = token
+	}
+}

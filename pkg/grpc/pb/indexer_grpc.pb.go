@@ -31,6 +31,8 @@ type IndexerServiceClient interface {
 	JSONSchemaForClass(ctx context.Context, in *Bytes, opts ...grpc.CallOption) (*Bytes, error)
 	// Receives JSON schema of class ABI by contract hash
 	JSONSchemaForContract(ctx context.Context, in *Bytes, opts ...grpc.CallOption) (*Bytes, error)
+	// Receives entity under proxy if it exists
+	GetProxy(ctx context.Context, in *ProxyRequest, opts ...grpc.CallOption) (*Proxy, error)
 }
 
 type indexerServiceClient struct {
@@ -100,6 +102,15 @@ func (c *indexerServiceClient) JSONSchemaForContract(ctx context.Context, in *By
 	return out, nil
 }
 
+func (c *indexerServiceClient) GetProxy(ctx context.Context, in *ProxyRequest, opts ...grpc.CallOption) (*Proxy, error) {
+	out := new(Proxy)
+	err := c.cc.Invoke(ctx, "/proto.IndexerService/GetProxy", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // IndexerServiceServer is the server API for IndexerService service.
 // All implementations must embed UnimplementedIndexerServiceServer
 // for forward compatibility
@@ -112,6 +123,8 @@ type IndexerServiceServer interface {
 	JSONSchemaForClass(context.Context, *Bytes) (*Bytes, error)
 	// Receives JSON schema of class ABI by contract hash
 	JSONSchemaForContract(context.Context, *Bytes) (*Bytes, error)
+	// Receives entity under proxy if it exists
+	GetProxy(context.Context, *ProxyRequest) (*Proxy, error)
 	mustEmbedUnimplementedIndexerServiceServer()
 }
 
@@ -130,6 +143,9 @@ func (UnimplementedIndexerServiceServer) JSONSchemaForClass(context.Context, *By
 }
 func (UnimplementedIndexerServiceServer) JSONSchemaForContract(context.Context, *Bytes) (*Bytes, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method JSONSchemaForContract not implemented")
+}
+func (UnimplementedIndexerServiceServer) GetProxy(context.Context, *ProxyRequest) (*Proxy, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetProxy not implemented")
 }
 func (UnimplementedIndexerServiceServer) mustEmbedUnimplementedIndexerServiceServer() {}
 
@@ -219,6 +235,24 @@ func _IndexerService_JSONSchemaForContract_Handler(srv interface{}, ctx context.
 	return interceptor(ctx, in, info, handler)
 }
 
+func _IndexerService_GetProxy_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ProxyRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(IndexerServiceServer).GetProxy(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/proto.IndexerService/GetProxy",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(IndexerServiceServer).GetProxy(ctx, req.(*ProxyRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // IndexerService_ServiceDesc is the grpc.ServiceDesc for IndexerService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -237,6 +271,10 @@ var IndexerService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "JSONSchemaForContract",
 			Handler:    _IndexerService_JSONSchemaForContract_Handler,
+		},
+		{
+			MethodName: "GetProxy",
+			Handler:    _IndexerService_GetProxy_Handler,
 		},
 	},
 	Streams: []grpc.StreamDesc{

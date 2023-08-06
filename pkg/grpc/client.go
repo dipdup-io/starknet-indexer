@@ -234,3 +234,15 @@ func (client *Client) JsonSchemaForClass(ctx context.Context, req *pb.Bytes) (*p
 func (client *Client) JsonSchemaForContract(ctx context.Context, req *pb.Bytes) (*pb.Bytes, error) {
 	return client.service.JSONSchemaForContract(ctx, req)
 }
+
+// GetProxy -
+func (client *Client) GetProxy(ctx context.Context, hash, selector []byte) (*pb.Proxy, error) {
+	return client.service.GetProxy(ctx, &pb.ProxyRequest{
+		Hash: &pb.Bytes{
+			Data: hash,
+		},
+		Selector: &pb.Bytes{
+			Data: selector,
+		},
+	})
+}

@@ -38,6 +38,7 @@ func (d *Declare) Filter(ctx context.Context, fltr []storage.DeclareFilter, opts
 		return q1, nil
 	})
 	query = optionsFilter(query, "declare", opts...)
+	query.Relation("Contract").Relation("Sender").Relation("Class")
 
 	var declares []storage.Declare
 	err := query.Select(&declares)

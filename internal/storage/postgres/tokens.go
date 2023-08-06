@@ -55,17 +55,27 @@ func (token *Token) Filter(ctx context.Context, fltr []storage.TokenFilter, opts
 			q1 = q1.WhereOrGroup(func(q *orm.Query) (*orm.Query, error) {
 				q = integerFilter(q, "token.id", fltr[i].ID)
 				q = addressFilter(q, "token.contract_id", fltr[i].Contract, "Contract")
-				q = addressFilter(q, "token.owner_id", fltr[i].Owner, "Owner")
-				q = enumFilter(q, "token.type", fltr[i].Type)
+				q = stringFilter(q, "token.token_id", fltr[i].TokenId)
+				q = enumStringFilter(q, "token.type", fltr[i].Type)
 				return q, nil
 			})
 		}
 		return q1, nil
 	})
 	query = optionsFilter(query, "token", opts...)
-	query = query.Relation("Contract").Relation("Owner")
+	query = query.Relation("Contract")
 
 	var result []storage.Token
 	err := query.Select(&result)
 	return result, err
+}
+
+// Find -
+func (token *Token) Find(ctx context.Context, contractId uint64, tokenId string) (t storage.Token, err error) {
+	err = token.DB().ModelContext(ctx, &t).
+		Where("contract_id = ?", contractId).
+		Where("token_id = ?", tokenId).
+		Limit(1).
+		Select(&t)
+	return
 }

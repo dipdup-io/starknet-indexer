@@ -26,25 +26,27 @@ func (parser TransferParser) ParseCalldata(
 	txCtx data.TxContext,
 	entrypoint string,
 	calldata map[string]any,
-) ([]storage.Transfer, error) {
-
+) (t []storage.Transfer, err error) {
 	switch entrypoint {
 	case "transfer":
-		return parser.parseTransferCalldata(ctx, txCtx, calldata)
+		t, err = parser.parseTransferCalldata(ctx, txCtx, calldata)
 	case "transferFrom":
 		if _, ok := calldata["from_"]; ok {
-			return parser.parseTransferFromERC721Calldata(ctx, txCtx, calldata)
+			t, err = parser.parseTransferFromERC721Calldata(ctx, txCtx, calldata)
+		} else {
+			t, err = parser.parseTransferFromCalldata(ctx, txCtx, calldata)
 		}
-		return parser.parseTransferFromCalldata(ctx, txCtx, calldata)
 	case "safeTransferFrom":
-		return parser.parseTransferFromERC721Calldata(ctx, txCtx, calldata)
+		t, err = parser.parseTransferFromERC721Calldata(ctx, txCtx, calldata)
 	case "mint":
 		if _, ok := calldata["amount"]; ok {
-			return parser.parseMintErc20(ctx, txCtx, calldata)
+			t, err = parser.parseMintErc20(ctx, txCtx, calldata)
 		}
 	}
-
-	return nil, nil
+	for i := range t {
+		parser.resolver.AddTokenToBlockContext(&t[i].Token)
+	}
+	return
 }
 
 // ParseEvents -
@@ -106,6 +108,9 @@ func (parser TransferParser) ParseEvents(
 		}
 		if len(t) > 0 {
 			transfers = append(transfers, t...)
+			for i := range t {
+				parser.resolver.AddTokenToBlockContext(&t[i].Token)
+			}
 		}
 	}
 	return transfers, nil
@@ -123,6 +128,12 @@ func (parser TransferParser) parseTransferCalldata(ctx context.Context, txCtx da
 		InternalID:      txCtx.InternalID,
 		FeeID:           txCtx.FeeID,
 		ContractID:      txCtx.ContractId,
+		Token: storage.Token{
+			FirstHeight: txCtx.Height,
+			ContractId:  txCtx.ContractId,
+			Type:        storage.TokenTypeERC20,
+			TokenId:     decimal.Zero,
+		},
 	}
 
 	switch {
@@ -146,6 +157,10 @@ func (parser TransferParser) parseTransferCalldata(ctx context.Context, txCtx da
 	}
 	transfer.Amount = amount
 
+	if transfer.Amount.IsZero() && transfer.ToID == 0 {
+		return nil, nil
+	}
+
 	return []storage.Transfer{transfer}, nil
 }
 
@@ -161,6 +176,12 @@ func (parser TransferParser) parseTransferFromCalldata(ctx context.Context, txCt
 		InternalID:      txCtx.InternalID,
 		FeeID:           txCtx.FeeID,
 		ContractID:      txCtx.ContractId,
+		Token: storage.Token{
+			FirstHeight: txCtx.Height,
+			ContractId:  txCtx.ContractId,
+			Type:        storage.TokenTypeERC20,
+			TokenId:     decimal.Zero,
+		},
 	}
 
 	recipientId, err := parseTransferAddress(ctx, parser.resolver, transfer.Height, calldata, "recipient")
@@ -215,6 +236,13 @@ func (parser TransferParser) parseTransferFromERC721Calldata(ctx context.Context
 		return nil, err
 	}
 
+	transfer.Token = storage.Token{
+		FirstHeight: transfer.Height,
+		ContractId:  transfer.ContractID,
+		TokenId:     transfer.TokenID,
+		Type:        storage.TokenTypeERC721,
+	}
+
 	return []storage.Transfer{transfer}, nil
 }
 
@@ -230,6 +258,12 @@ func (parser TransferParser) parseMintErc20(ctx context.Context, txCtx data.TxCo
 		InternalID:      txCtx.InternalID,
 		FeeID:           txCtx.FeeID,
 		ContractID:      txCtx.ContractId,
+		Token: storage.Token{
+			FirstHeight: txCtx.Height,
+			ContractId:  txCtx.ContractId,
+			Type:        storage.TokenTypeERC20,
+			TokenId:     decimal.Zero,
+		},
 	}
 
 	amount, err := parseTransferDecimal(calldata, "amount")

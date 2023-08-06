@@ -8,27 +8,27 @@ grpc:
     straknet_id:
       head: true
       events:
-        contract:
-          eq: 0x05dbdedc203e92749e2e746e2d40a768d966bd243df04a6b712e222bc040a9af
-        name:
-          in:
-            - Transfer
-            - VerifierDataUpdate
-            - on_inft_equipped
+        - contract:
+            eq: 0x05dbdedc203e92749e2e746e2d40a768d966bd243df04a6b712e222bc040a9af
+          name:
+            in:
+              - Transfer
+              - VerifierDataUpdate
+              - on_inft_equipped
     naming:
       events:
-        contract:
-          eq: 0x06ac597f8116f886fa1c97a23fa4e08299975ecaf6b598873ca6792b9bbfb678
-        name:
-          in:
-            - domain_to_addr_update
-            - addr_to_domain_update
-            - starknet_id_update
-            - domain_transfer
-            - reset_subdomains_update
+        - contract:
+            eq: 0x06ac597f8116f886fa1c97a23fa4e08299975ecaf6b598873ca6792b9bbfb678
+          name:
+            in:
+              - domain_to_addr_update
+              - addr_to_domain_update
+              - starknet_id_update
+              - domain_transfer
+              - reset_subdomains_update
     braavos:
       events:
-        contract:
-          eq: 0x03448896d4a0df143f98c9eeccc7e279bf3c2008bda2ad2759f5b20ed263585f
-        name:
-          eq: domain_to_addr_update
+        - contract:
+            eq: 0x03448896d4a0df143f98c9eeccc7e279bf3c2008bda2ad2759f5b20ed263585f
+          name:
+            eq: domain_to_addr_update

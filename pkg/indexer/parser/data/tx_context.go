@@ -30,6 +30,7 @@ type TxContext struct {
 	Hash       []byte
 	ProxyId    uint64
 	ContractId uint64
+	Contract   storage.Address
 
 	ProxyUpgrades ProxyMap[struct{}]
 }
@@ -52,6 +53,7 @@ func NewTxContextFromInvoke(tx storage.Invoke, proxyId uint64) TxContext {
 		Hash:          tx.Hash,
 		ProxyId:       proxyId,
 		ContractId:    tx.ContractID,
+		Contract:      tx.Contract,
 		ProxyUpgrades: NewProxyMap[struct{}](),
 	}
 }
@@ -71,6 +73,7 @@ func NewTxContextFromDeclare(tx storage.Declare, proxyId uint64) TxContext {
 		Hash:          tx.Hash,
 		ProxyId:       proxyId,
 		ContractId:    contractId,
+		Contract:      tx.Contract,
 		ProxyUpgrades: NewProxyMap[struct{}](),
 	}
 }
@@ -86,6 +89,7 @@ func NewTxContextFromDeploy(tx storage.Deploy, proxyId uint64) TxContext {
 		Hash:          tx.Hash,
 		ProxyId:       proxyId,
 		ContractId:    tx.ContractID,
+		Contract:      tx.Contract,
 		ProxyUpgrades: NewProxyMap[struct{}](),
 	}
 }
@@ -101,6 +105,7 @@ func NewTxContextFromDeployAccount(tx storage.DeployAccount, proxyId uint64) TxC
 		Hash:            tx.Hash,
 		ProxyId:         proxyId,
 		ContractId:      tx.ContractID,
+		Contract:        tx.Contract,
 		ProxyUpgrades:   NewProxyMap[struct{}](),
 	}
 }
@@ -116,6 +121,7 @@ func NewTxContextFromL1Hadler(tx storage.L1Handler, proxyId uint64) TxContext {
 		Hash:          tx.Hash,
 		ProxyId:       proxyId,
 		ContractId:    tx.ContractID,
+		Contract:      tx.Contract,
 		ProxyUpgrades: NewProxyMap[struct{}](),
 	}
 }
@@ -132,6 +138,7 @@ func NewTxContextFromInternal(tx storage.Internal, proxyUpgrades ProxyMap[struct
 		Hash:          tx.Hash,
 		ProxyId:       proxyId,
 		ContractId:    tx.ContractID,
+		Contract:      tx.Contract,
 		ProxyUpgrades: cloneProxyMap,
 	}
 }
@@ -146,6 +153,7 @@ func NewTxContextFromFee(tx storage.Fee, proxyId uint64) TxContext {
 		Status:        tx.Status,
 		ProxyId:       proxyId,
 		ContractId:    tx.ContractID,
+		Contract:      tx.Contract,
 		ProxyUpgrades: NewProxyMap[struct{}](),
 	}
 }

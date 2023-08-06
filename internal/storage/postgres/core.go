@@ -80,6 +80,10 @@ func Create(ctx context.Context, cfg config.Database) (Storage, error) {
 }
 
 func initDatabase(ctx context.Context, conn *database.PgGo) error {
+	if err := createTypes(ctx, conn); err != nil {
+		return errors.Wrap(err, "creating custom types")
+	}
+
 	for _, data := range models.Models {
 		if err := conn.DB().WithContext(ctx).Model(data).CreateTable(&orm.CreateTableOptions{
 			IfNotExists: true,
@@ -198,10 +202,28 @@ func createIndices(ctx context.Context, conn *database.PgGo) error {
 		if _, err := tx.ExecContext(ctx, `CREATE INDEX IF NOT EXISTS token_contract_idx ON token (contract_id)`); err != nil {
 			return err
 		}
-		if _, err := tx.ExecContext(ctx, `CREATE INDEX IF NOT EXISTS token_owner_idx ON token (owner_id)`); err != nil {
+		if _, err := tx.ExecContext(ctx, `CREATE INDEX IF NOT EXISTS token_identity_idx ON token (contract_id, token_id)`); err != nil {
 			return err
 		}
 
+		return nil
+	})
+}
+
+func createTypes(ctx context.Context, conn *database.PgGo) error {
+	log.Info().Msg("creating custom types...")
+	return conn.DB().RunInTransaction(ctx, func(tx *pg.Tx) error {
+		if _, err := tx.ExecContext(
+			ctx,
+			`DO $$
+			BEGIN
+				IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'token_type') THEN
+					CREATE TYPE token_type AS ENUM ('erc20', 'erc721', 'erc1155');
+				END IF;
+			END$$;`,
+		); err != nil {
+			return err
+		}
 		return nil
 	})
 }

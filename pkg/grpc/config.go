@@ -18,7 +18,7 @@ type ClientConfig struct {
 type Subscription struct {
 	Head                 bool                    `yaml:"head" validate:"omitempty"`
 	InvokeFilters        []*InvokeFilters        `yaml:"invokes" validate:"omitempty"`
-	DeclareFilters       []*DeclareFilters       `yaml:"filters" validate:"omitempty"`
+	DeclareFilters       []*DeclareFilters       `yaml:"declares" validate:"omitempty"`
 	DeployFilters        []*DeployFilters        `yaml:"deploys" validate:"omitempty"`
 	DeployAccountFilters []*DeployAccountFilters `yaml:"deploy_accounts" validate:"omitempty"`
 	L1HandlerFilter      []*L1HandlerFilters     `yaml:"l1_handlers" validate:"omitempty"`
@@ -118,7 +118,7 @@ func (f Subscription) ToGrpcFilter() *pb.SubscribeRequest {
 	}
 	if len(f.TokenFilter) > 0 {
 		req.Tokens = make([]*pb.TokenFilter, len(f.TokenFilter))
-		for i := range f.TokenBalanceFilter {
+		for i := range f.TokenFilter {
 			req.Tokens[i] = f.TokenFilter[i].ToGrpcFilter()
 		}
 	}
@@ -625,18 +625,18 @@ func (f TokenBalanceFilter) ToGrpcFilter() *pb.TokenBalanceFilter {
 
 // TokenFilter -
 type TokenFilter struct {
-	Owner    *BytesFilter   `yaml:"owner" validate:"omitempty"`
-	Contract *BytesFilter   `yaml:"contract" validate:"omitempty"`
-	Id       *IntegerFilter `yaml:"id" validate:"omitempty"`
-	Type     *EnumFilter    `yaml:"type" validate:"omitempty"`
+	TokenId  *StringFilter     `yaml:"token_id" validate:"omitempty"`
+	Contract *BytesFilter      `yaml:"contract" validate:"omitempty"`
+	Id       *IntegerFilter    `yaml:"id" validate:"omitempty"`
+	Type     *EnumStringFilter `yaml:"type" validate:"omitempty"`
 }
 
 // ToGrpcFilter -
 func (f TokenFilter) ToGrpcFilter() *pb.TokenFilter {
 	fltr := new(pb.TokenFilter)
 
-	if f.Owner != nil {
-		fltr.Owner = f.Owner.ToGrpcFilter()
+	if f.TokenId != nil {
+		fltr.TokenId = f.TokenId.ToGrpcFilter()
 	}
 	if f.Contract != nil {
 		fltr.Contract = f.Contract.ToGrpcFilter()
@@ -855,6 +855,42 @@ func (f EnumFilter) ToGrpcFilter() *pb.EnumFilter {
 	case len(f.Notin) > 0:
 		fltr.Filter = &pb.EnumFilter_Notin{
 			Notin: &pb.IntegerArray{
+				Arr: f.Notin,
+			},
+		}
+	}
+	return fltr
+}
+
+// EnumStringFilter -
+type EnumStringFilter struct {
+	Eq    string   `yaml:"eq" validate:"omitempty"`
+	Neq   string   `yaml:"neq" validate:"omitempty"`
+	In    []string `yaml:"in" validate:"omitempty"`
+	Notin []string `yaml:"notin" validate:"omitempty"`
+}
+
+// ToGrpcFilter -
+func (f EnumStringFilter) ToGrpcFilter() *pb.EnumStringFilter {
+	fltr := new(pb.EnumStringFilter)
+	switch {
+	case f.Eq != "":
+		fltr.Filter = &pb.EnumStringFilter_Eq{
+			Eq: f.Eq,
+		}
+	case f.Neq != "":
+		fltr.Filter = &pb.EnumStringFilter_Neq{
+			Neq: f.Neq,
+		}
+	case len(f.In) > 0:
+		fltr.Filter = &pb.EnumStringFilter_In{
+			In: &pb.StringArray{
+				Arr: f.In,
+			},
+		}
+	case len(f.Notin) > 0:
+		fltr.Filter = &pb.EnumStringFilter_Notin{
+			Notin: &pb.StringArray{
 				Arr: f.Notin,
 			},
 		}

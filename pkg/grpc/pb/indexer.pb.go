@@ -546,6 +546,63 @@ func (x *JsonSchemaItem) GetSchema() []byte {
 	return nil
 }
 
+// *
+// Request message for GetProxy method
+type ProxyRequest struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Hash     *Bytes `protobuf:"bytes,1,opt,name=hash,proto3" json:"hash,omitempty"`
+	Selector *Bytes `protobuf:"bytes,2,opt,name=selector,proto3" json:"selector,omitempty"`
+}
+
+func (x *ProxyRequest) Reset() {
+	*x = ProxyRequest{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_github_com_dipdup_io_starknet_indexer_pkg_grpc_proto_indexer_proto_msgTypes[5]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *ProxyRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ProxyRequest) ProtoMessage() {}
+
+func (x *ProxyRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_github_com_dipdup_io_starknet_indexer_pkg_grpc_proto_indexer_proto_msgTypes[5]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ProxyRequest.ProtoReflect.Descriptor instead.
+func (*ProxyRequest) Descriptor() ([]byte, []int) {
+	return file_github_com_dipdup_io_starknet_indexer_pkg_grpc_proto_indexer_proto_rawDescGZIP(), []int{5}
+}
+
+func (x *ProxyRequest) GetHash() *Bytes {
+	if x != nil {
+		return x.Hash
+	}
+	return nil
+}
+
+func (x *ProxyRequest) GetSelector() *Bytes {
+	if x != nil {
+		return x.Selector
+	}
+	return nil
+}
+
 var File_github_com_dipdup_io_starknet_indexer_pkg_grpc_proto_indexer_proto protoreflect.FileDescriptor
 
 var file_github_com_dipdup_io_starknet_indexer_pkg_grpc_proto_indexer_proto_rawDesc = []byte{
@@ -687,27 +744,35 @@ var file_github_com_dipdup_io_starknet_indexer_pkg_grpc_proto_indexer_proto_rawD
 	0x73, 0x6f, 0x6e, 0x53, 0x63, 0x68, 0x65, 0x6d, 0x61, 0x49, 0x74, 0x65, 0x6d, 0x12, 0x12, 0x0a,
 	0x04, 0x6e, 0x61, 0x6d, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x04, 0x6e, 0x61, 0x6d,
 	0x65, 0x12, 0x16, 0x0a, 0x06, 0x73, 0x63, 0x68, 0x65, 0x6d, 0x61, 0x18, 0x02, 0x20, 0x01, 0x28,
-	0x0c, 0x52, 0x06, 0x73, 0x63, 0x68, 0x65, 0x6d, 0x61, 0x32, 0xfa, 0x01, 0x0a, 0x0e, 0x49, 0x6e,
-	0x64, 0x65, 0x78, 0x65, 0x72, 0x53, 0x65, 0x72, 0x76, 0x69, 0x63, 0x65, 0x12, 0x3b, 0x0a, 0x09,
-	0x53, 0x75, 0x62, 0x73, 0x63, 0x72, 0x69, 0x62, 0x65, 0x12, 0x17, 0x2e, 0x70, 0x72, 0x6f, 0x74,
-	0x6f, 0x2e, 0x53, 0x75, 0x62, 0x73, 0x63, 0x72, 0x69, 0x62, 0x65, 0x52, 0x65, 0x71, 0x75, 0x65,
-	0x73, 0x74, 0x1a, 0x13, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2e, 0x53, 0x75, 0x62, 0x73, 0x63,
-	0x72, 0x69, 0x70, 0x74, 0x69, 0x6f, 0x6e, 0x30, 0x01, 0x12, 0x44, 0x0a, 0x0b, 0x55, 0x6e, 0x73,
-	0x75, 0x62, 0x73, 0x63, 0x72, 0x69, 0x62, 0x65, 0x12, 0x19, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f,
-	0x2e, 0x55, 0x6e, 0x73, 0x75, 0x62, 0x73, 0x63, 0x72, 0x69, 0x62, 0x65, 0x52, 0x65, 0x71, 0x75,
-	0x65, 0x73, 0x74, 0x1a, 0x1a, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2e, 0x55, 0x6e, 0x73, 0x75,
-	0x62, 0x73, 0x63, 0x72, 0x69, 0x62, 0x65, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12,
-	0x30, 0x0a, 0x12, 0x4a, 0x53, 0x4f, 0x4e, 0x53, 0x63, 0x68, 0x65, 0x6d, 0x61, 0x46, 0x6f, 0x72,
-	0x43, 0x6c, 0x61, 0x73, 0x73, 0x12, 0x0c, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2e, 0x42, 0x79,
-	0x74, 0x65, 0x73, 0x1a, 0x0c, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2e, 0x42, 0x79, 0x74, 0x65,
-	0x73, 0x12, 0x33, 0x0a, 0x15, 0x4a, 0x53, 0x4f, 0x4e, 0x53, 0x63, 0x68, 0x65, 0x6d, 0x61, 0x46,
-	0x6f, 0x72, 0x43, 0x6f, 0x6e, 0x74, 0x72, 0x61, 0x63, 0x74, 0x12, 0x0c, 0x2e, 0x70, 0x72, 0x6f,
-	0x74, 0x6f, 0x2e, 0x42, 0x79, 0x74, 0x65, 0x73, 0x1a, 0x0c, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f,
-	0x2e, 0x42, 0x79, 0x74, 0x65, 0x73, 0x42, 0x33, 0x5a, 0x31, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62,
-	0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x64, 0x69, 0x70, 0x64, 0x75, 0x70, 0x2d, 0x69, 0x6f, 0x2f, 0x73,
-	0x74, 0x61, 0x72, 0x6b, 0x6e, 0x65, 0x74, 0x2d, 0x69, 0x6e, 0x64, 0x65, 0x78, 0x65, 0x72, 0x2f,
-	0x70, 0x6b, 0x67, 0x2f, 0x67, 0x72, 0x70, 0x63, 0x2f, 0x70, 0x62, 0x62, 0x06, 0x70, 0x72, 0x6f,
-	0x74, 0x6f, 0x33,
+	0x0c, 0x52, 0x06, 0x73, 0x63, 0x68, 0x65, 0x6d, 0x61, 0x22, 0x5a, 0x0a, 0x0c, 0x50, 0x72, 0x6f,
+	0x78, 0x79, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x20, 0x0a, 0x04, 0x68, 0x61, 0x73,
+	0x68, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x0c, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2e,
+	0x42, 0x79, 0x74, 0x65, 0x73, 0x52, 0x04, 0x68, 0x61, 0x73, 0x68, 0x12, 0x28, 0x0a, 0x08, 0x73,
+	0x65, 0x6c, 0x65, 0x63, 0x74, 0x6f, 0x72, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x0c, 0x2e,
+	0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2e, 0x42, 0x79, 0x74, 0x65, 0x73, 0x52, 0x08, 0x73, 0x65, 0x6c,
+	0x65, 0x63, 0x74, 0x6f, 0x72, 0x32, 0xa9, 0x02, 0x0a, 0x0e, 0x49, 0x6e, 0x64, 0x65, 0x78, 0x65,
+	0x72, 0x53, 0x65, 0x72, 0x76, 0x69, 0x63, 0x65, 0x12, 0x3b, 0x0a, 0x09, 0x53, 0x75, 0x62, 0x73,
+	0x63, 0x72, 0x69, 0x62, 0x65, 0x12, 0x17, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2e, 0x53, 0x75,
+	0x62, 0x73, 0x63, 0x72, 0x69, 0x62, 0x65, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x13,
+	0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2e, 0x53, 0x75, 0x62, 0x73, 0x63, 0x72, 0x69, 0x70, 0x74,
+	0x69, 0x6f, 0x6e, 0x30, 0x01, 0x12, 0x44, 0x0a, 0x0b, 0x55, 0x6e, 0x73, 0x75, 0x62, 0x73, 0x63,
+	0x72, 0x69, 0x62, 0x65, 0x12, 0x19, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2e, 0x55, 0x6e, 0x73,
+	0x75, 0x62, 0x73, 0x63, 0x72, 0x69, 0x62, 0x65, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a,
+	0x1a, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2e, 0x55, 0x6e, 0x73, 0x75, 0x62, 0x73, 0x63, 0x72,
+	0x69, 0x62, 0x65, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x30, 0x0a, 0x12, 0x4a,
+	0x53, 0x4f, 0x4e, 0x53, 0x63, 0x68, 0x65, 0x6d, 0x61, 0x46, 0x6f, 0x72, 0x43, 0x6c, 0x61, 0x73,
+	0x73, 0x12, 0x0c, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2e, 0x42, 0x79, 0x74, 0x65, 0x73, 0x1a,
+	0x0c, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2e, 0x42, 0x79, 0x74, 0x65, 0x73, 0x12, 0x33, 0x0a,
+	0x15, 0x4a, 0x53, 0x4f, 0x4e, 0x53, 0x63, 0x68, 0x65, 0x6d, 0x61, 0x46, 0x6f, 0x72, 0x43, 0x6f,
+	0x6e, 0x74, 0x72, 0x61, 0x63, 0x74, 0x12, 0x0c, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2e, 0x42,
+	0x79, 0x74, 0x65, 0x73, 0x1a, 0x0c, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2e, 0x42, 0x79, 0x74,
+	0x65, 0x73, 0x12, 0x2d, 0x0a, 0x08, 0x47, 0x65, 0x74, 0x50, 0x72, 0x6f, 0x78, 0x79, 0x12, 0x13,
+	0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2e, 0x50, 0x72, 0x6f, 0x78, 0x79, 0x52, 0x65, 0x71, 0x75,
+	0x65, 0x73, 0x74, 0x1a, 0x0c, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2e, 0x50, 0x72, 0x6f, 0x78,
+	0x79, 0x42, 0x33, 0x5a, 0x31, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f,
+	0x64, 0x69, 0x70, 0x64, 0x75, 0x70, 0x2d, 0x69, 0x6f, 0x2f, 0x73, 0x74, 0x61, 0x72, 0x6b, 0x6e,
+	0x65, 0x74, 0x2d, 0x69, 0x6e, 0x64, 0x65, 0x78, 0x65, 0x72, 0x2f, 0x70, 0x6b, 0x67, 0x2f, 0x67,
+	0x72, 0x70, 0x63, 0x2f, 0x70, 0x62, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -722,97 +787,103 @@ func file_github_com_dipdup_io_starknet_indexer_pkg_grpc_proto_indexer_proto_raw
 	return file_github_com_dipdup_io_starknet_indexer_pkg_grpc_proto_indexer_proto_rawDescData
 }
 
-var file_github_com_dipdup_io_starknet_indexer_pkg_grpc_proto_indexer_proto_msgTypes = make([]protoimpl.MessageInfo, 5)
+var file_github_com_dipdup_io_starknet_indexer_pkg_grpc_proto_indexer_proto_msgTypes = make([]protoimpl.MessageInfo, 6)
 var file_github_com_dipdup_io_starknet_indexer_pkg_grpc_proto_indexer_proto_goTypes = []interface{}{
 	(*SubscribeRequest)(nil),       // 0: proto.SubscribeRequest
 	(*Subscription)(nil),           // 1: proto.Subscription
 	(*Bytes)(nil),                  // 2: proto.Bytes
 	(*JsonSchema)(nil),             // 3: proto.JsonSchema
 	(*JsonSchemaItem)(nil),         // 4: proto.JsonSchemaItem
-	(*InvokeFilters)(nil),          // 5: proto.InvokeFilters
-	(*DeclareFilters)(nil),         // 6: proto.DeclareFilters
-	(*DeployFilters)(nil),          // 7: proto.DeployFilters
-	(*DeployAccountFilters)(nil),   // 8: proto.DeployAccountFilters
-	(*L1HandlerFilter)(nil),        // 9: proto.L1HandlerFilter
-	(*InternalFilter)(nil),         // 10: proto.InternalFilter
-	(*FeeFilter)(nil),              // 11: proto.FeeFilter
-	(*EventFilter)(nil),            // 12: proto.EventFilter
-	(*MessageFilter)(nil),          // 13: proto.MessageFilter
-	(*TransferFilter)(nil),         // 14: proto.TransferFilter
-	(*StorageDiffFilter)(nil),      // 15: proto.StorageDiffFilter
-	(*TokenBalanceFilter)(nil),     // 16: proto.TokenBalanceFilter
-	(*TokenFilter)(nil),            // 17: proto.TokenFilter
-	(*AddressFilter)(nil),          // 18: proto.AddressFilter
-	(*pb.SubscribeResponse)(nil),   // 19: proto.SubscribeResponse
-	(*Block)(nil),                  // 20: proto.Block
-	(*Declare)(nil),                // 21: proto.Declare
-	(*Deploy)(nil),                 // 22: proto.Deploy
-	(*DeployAccount)(nil),          // 23: proto.DeployAccount
-	(*Event)(nil),                  // 24: proto.Event
-	(*Fee)(nil),                    // 25: proto.Fee
-	(*Internal)(nil),               // 26: proto.Internal
-	(*Invoke)(nil),                 // 27: proto.Invoke
-	(*L1Handler)(nil),              // 28: proto.L1Handler
-	(*StarknetMessage)(nil),        // 29: proto.StarknetMessage
-	(*StorageDiff)(nil),            // 30: proto.StorageDiff
-	(*TokenBalance)(nil),           // 31: proto.TokenBalance
-	(*Transfer)(nil),               // 32: proto.Transfer
-	(*Token)(nil),                  // 33: proto.Token
-	(*Address)(nil),                // 34: proto.Address
-	(*EndOfBlock)(nil),             // 35: proto.EndOfBlock
-	(*pb.UnsubscribeRequest)(nil),  // 36: proto.UnsubscribeRequest
-	(*pb.UnsubscribeResponse)(nil), // 37: proto.UnsubscribeResponse
+	(*ProxyRequest)(nil),           // 5: proto.ProxyRequest
+	(*InvokeFilters)(nil),          // 6: proto.InvokeFilters
+	(*DeclareFilters)(nil),         // 7: proto.DeclareFilters
+	(*DeployFilters)(nil),          // 8: proto.DeployFilters
+	(*DeployAccountFilters)(nil),   // 9: proto.DeployAccountFilters
+	(*L1HandlerFilter)(nil),        // 10: proto.L1HandlerFilter
+	(*InternalFilter)(nil),         // 11: proto.InternalFilter
+	(*FeeFilter)(nil),              // 12: proto.FeeFilter
+	(*EventFilter)(nil),            // 13: proto.EventFilter
+	(*MessageFilter)(nil),          // 14: proto.MessageFilter
+	(*TransferFilter)(nil),         // 15: proto.TransferFilter
+	(*StorageDiffFilter)(nil),      // 16: proto.StorageDiffFilter
+	(*TokenBalanceFilter)(nil),     // 17: proto.TokenBalanceFilter
+	(*TokenFilter)(nil),            // 18: proto.TokenFilter
+	(*AddressFilter)(nil),          // 19: proto.AddressFilter
+	(*pb.SubscribeResponse)(nil),   // 20: proto.SubscribeResponse
+	(*Block)(nil),                  // 21: proto.Block
+	(*Declare)(nil),                // 22: proto.Declare
+	(*Deploy)(nil),                 // 23: proto.Deploy
+	(*DeployAccount)(nil),          // 24: proto.DeployAccount
+	(*Event)(nil),                  // 25: proto.Event
+	(*Fee)(nil),                    // 26: proto.Fee
+	(*Internal)(nil),               // 27: proto.Internal
+	(*Invoke)(nil),                 // 28: proto.Invoke
+	(*L1Handler)(nil),              // 29: proto.L1Handler
+	(*StarknetMessage)(nil),        // 30: proto.StarknetMessage
+	(*StorageDiff)(nil),            // 31: proto.StorageDiff
+	(*TokenBalance)(nil),           // 32: proto.TokenBalance
+	(*Transfer)(nil),               // 33: proto.Transfer
+	(*Token)(nil),                  // 34: proto.Token
+	(*Address)(nil),                // 35: proto.Address
+	(*EndOfBlock)(nil),             // 36: proto.EndOfBlock
+	(*pb.UnsubscribeRequest)(nil),  // 37: proto.UnsubscribeRequest
+	(*pb.UnsubscribeResponse)(nil), // 38: proto.UnsubscribeResponse
+	(*Proxy)(nil),                  // 39: proto.Proxy
 }
 var file_github_com_dipdup_io_starknet_indexer_pkg_grpc_proto_indexer_proto_depIdxs = []int32{
-	5,  // 0: proto.SubscribeRequest.invokes:type_name -> proto.InvokeFilters
-	6,  // 1: proto.SubscribeRequest.declares:type_name -> proto.DeclareFilters
-	7,  // 2: proto.SubscribeRequest.deploys:type_name -> proto.DeployFilters
-	8,  // 3: proto.SubscribeRequest.deploy_accounts:type_name -> proto.DeployAccountFilters
-	9,  // 4: proto.SubscribeRequest.l1_handlers:type_name -> proto.L1HandlerFilter
-	10, // 5: proto.SubscribeRequest.internals:type_name -> proto.InternalFilter
-	11, // 6: proto.SubscribeRequest.fees:type_name -> proto.FeeFilter
-	12, // 7: proto.SubscribeRequest.events:type_name -> proto.EventFilter
-	13, // 8: proto.SubscribeRequest.msgs:type_name -> proto.MessageFilter
-	14, // 9: proto.SubscribeRequest.transfers:type_name -> proto.TransferFilter
-	15, // 10: proto.SubscribeRequest.storage_diffs:type_name -> proto.StorageDiffFilter
-	16, // 11: proto.SubscribeRequest.token_balances:type_name -> proto.TokenBalanceFilter
-	17, // 12: proto.SubscribeRequest.tokens:type_name -> proto.TokenFilter
-	18, // 13: proto.SubscribeRequest.addresses:type_name -> proto.AddressFilter
-	19, // 14: proto.Subscription.response:type_name -> proto.SubscribeResponse
-	20, // 15: proto.Subscription.block:type_name -> proto.Block
-	21, // 16: proto.Subscription.declare:type_name -> proto.Declare
-	22, // 17: proto.Subscription.deploy:type_name -> proto.Deploy
-	23, // 18: proto.Subscription.deploy_account:type_name -> proto.DeployAccount
-	24, // 19: proto.Subscription.event:type_name -> proto.Event
-	25, // 20: proto.Subscription.fee:type_name -> proto.Fee
-	26, // 21: proto.Subscription.internal:type_name -> proto.Internal
-	27, // 22: proto.Subscription.invoke:type_name -> proto.Invoke
-	28, // 23: proto.Subscription.l1_handler:type_name -> proto.L1Handler
-	29, // 24: proto.Subscription.message:type_name -> proto.StarknetMessage
-	30, // 25: proto.Subscription.storage_diff:type_name -> proto.StorageDiff
-	31, // 26: proto.Subscription.token_balance:type_name -> proto.TokenBalance
-	32, // 27: proto.Subscription.transfer:type_name -> proto.Transfer
-	33, // 28: proto.Subscription.token:type_name -> proto.Token
-	34, // 29: proto.Subscription.address:type_name -> proto.Address
-	35, // 30: proto.Subscription.end_of_block:type_name -> proto.EndOfBlock
+	6,  // 0: proto.SubscribeRequest.invokes:type_name -> proto.InvokeFilters
+	7,  // 1: proto.SubscribeRequest.declares:type_name -> proto.DeclareFilters
+	8,  // 2: proto.SubscribeRequest.deploys:type_name -> proto.DeployFilters
+	9,  // 3: proto.SubscribeRequest.deploy_accounts:type_name -> proto.DeployAccountFilters
+	10, // 4: proto.SubscribeRequest.l1_handlers:type_name -> proto.L1HandlerFilter
+	11, // 5: proto.SubscribeRequest.internals:type_name -> proto.InternalFilter
+	12, // 6: proto.SubscribeRequest.fees:type_name -> proto.FeeFilter
+	13, // 7: proto.SubscribeRequest.events:type_name -> proto.EventFilter
+	14, // 8: proto.SubscribeRequest.msgs:type_name -> proto.MessageFilter
+	15, // 9: proto.SubscribeRequest.transfers:type_name -> proto.TransferFilter
+	16, // 10: proto.SubscribeRequest.storage_diffs:type_name -> proto.StorageDiffFilter
+	17, // 11: proto.SubscribeRequest.token_balances:type_name -> proto.TokenBalanceFilter
+	18, // 12: proto.SubscribeRequest.tokens:type_name -> proto.TokenFilter
+	19, // 13: proto.SubscribeRequest.addresses:type_name -> proto.AddressFilter
+	20, // 14: proto.Subscription.response:type_name -> proto.SubscribeResponse
+	21, // 15: proto.Subscription.block:type_name -> proto.Block
+	22, // 16: proto.Subscription.declare:type_name -> proto.Declare
+	23, // 17: proto.Subscription.deploy:type_name -> proto.Deploy
+	24, // 18: proto.Subscription.deploy_account:type_name -> proto.DeployAccount
+	25, // 19: proto.Subscription.event:type_name -> proto.Event
+	26, // 20: proto.Subscription.fee:type_name -> proto.Fee
+	27, // 21: proto.Subscription.internal:type_name -> proto.Internal
+	28, // 22: proto.Subscription.invoke:type_name -> proto.Invoke
+	29, // 23: proto.Subscription.l1_handler:type_name -> proto.L1Handler
+	30, // 24: proto.Subscription.message:type_name -> proto.StarknetMessage
+	31, // 25: proto.Subscription.storage_diff:type_name -> proto.StorageDiff
+	32, // 26: proto.Subscription.token_balance:type_name -> proto.TokenBalance
+	33, // 27: proto.Subscription.transfer:type_name -> proto.Transfer
+	34, // 28: proto.Subscription.token:type_name -> proto.Token
+	35, // 29: proto.Subscription.address:type_name -> proto.Address
+	36, // 30: proto.Subscription.end_of_block:type_name -> proto.EndOfBlock
 	4,  // 31: proto.JsonSchema.functions:type_name -> proto.JsonSchemaItem
 	4,  // 32: proto.JsonSchema.l1_handlers:type_name -> proto.JsonSchemaItem
 	4,  // 33: proto.JsonSchema.constructors:type_name -> proto.JsonSchemaItem
 	4,  // 34: proto.JsonSchema.events:type_name -> proto.JsonSchemaItem
 	4,  // 35: proto.JsonSchema.structs:type_name -> proto.JsonSchemaItem
-	0,  // 36: proto.IndexerService.Subscribe:input_type -> proto.SubscribeRequest
-	36, // 37: proto.IndexerService.Unsubscribe:input_type -> proto.UnsubscribeRequest
-	2,  // 38: proto.IndexerService.JSONSchemaForClass:input_type -> proto.Bytes
-	2,  // 39: proto.IndexerService.JSONSchemaForContract:input_type -> proto.Bytes
-	1,  // 40: proto.IndexerService.Subscribe:output_type -> proto.Subscription
-	37, // 41: proto.IndexerService.Unsubscribe:output_type -> proto.UnsubscribeResponse
-	2,  // 42: proto.IndexerService.JSONSchemaForClass:output_type -> proto.Bytes
-	2,  // 43: proto.IndexerService.JSONSchemaForContract:output_type -> proto.Bytes
-	40, // [40:44] is the sub-list for method output_type
-	36, // [36:40] is the sub-list for method input_type
-	36, // [36:36] is the sub-list for extension type_name
-	36, // [36:36] is the sub-list for extension extendee
-	0,  // [0:36] is the sub-list for field type_name
+	2,  // 36: proto.ProxyRequest.hash:type_name -> proto.Bytes
+	2,  // 37: proto.ProxyRequest.selector:type_name -> proto.Bytes
+	0,  // 38: proto.IndexerService.Subscribe:input_type -> proto.SubscribeRequest
+	37, // 39: proto.IndexerService.Unsubscribe:input_type -> proto.UnsubscribeRequest
+	2,  // 40: proto.IndexerService.JSONSchemaForClass:input_type -> proto.Bytes
+	2,  // 41: proto.IndexerService.JSONSchemaForContract:input_type -> proto.Bytes
+	5,  // 42: proto.IndexerService.GetProxy:input_type -> proto.ProxyRequest
+	1,  // 43: proto.IndexerService.Subscribe:output_type -> proto.Subscription
+	38, // 44: proto.IndexerService.Unsubscribe:output_type -> proto.UnsubscribeResponse
+	2,  // 45: proto.IndexerService.JSONSchemaForClass:output_type -> proto.Bytes
+	2,  // 46: proto.IndexerService.JSONSchemaForContract:output_type -> proto.Bytes
+	39, // 47: proto.IndexerService.GetProxy:output_type -> proto.Proxy
+	43, // [43:48] is the sub-list for method output_type
+	38, // [38:43] is the sub-list for method input_type
+	38, // [38:38] is the sub-list for extension type_name
+	38, // [38:38] is the sub-list for extension extendee
+	0,  // [0:38] is the sub-list for field type_name
 }
 
 func init() { file_github_com_dipdup_io_starknet_indexer_pkg_grpc_proto_indexer_proto_init() }
@@ -883,6 +954,18 @@ func file_github_com_dipdup_io_starknet_indexer_pkg_grpc_proto_indexer_proto_ini
 				return nil
 			}
 		}
+		file_github_com_dipdup_io_starknet_indexer_pkg_grpc_proto_indexer_proto_msgTypes[5].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*ProxyRequest); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
@@ -890,7 +973,7 @@ func file_github_com_dipdup_io_starknet_indexer_pkg_grpc_proto_indexer_proto_ini
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_github_com_dipdup_io_starknet_indexer_pkg_grpc_proto_indexer_proto_rawDesc,
 			NumEnums:      0,
-			NumMessages:   5,
+			NumMessages:   6,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

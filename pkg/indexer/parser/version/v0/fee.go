@@ -100,6 +100,12 @@ func (parser FeeParser) ParseActualFee(ctx context.Context, txCtx data.TxContext
 		DeployAccountID: txCtx.DeployAccountID,
 		InvokeID:        txCtx.InvokeID,
 		L1HandlerID:     txCtx.L1HandlerID,
+		Token: storage.Token{
+			TokenId:     decimal.Zero,
+			ContractId:  parser.actualFeeContractId,
+			Type:        storage.TokenTypeERC20,
+			FirstHeight: txCtx.Height,
+		},
 	}, nil
 }
 

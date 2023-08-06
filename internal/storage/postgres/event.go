@@ -162,6 +162,7 @@ func (event *Event) Filter(ctx context.Context, fltr []storage.EventFilter, opts
 	})
 
 	query = optionsFilter(query, "event", opts...)
+	query.Relation("Contract").Relation("From")
 
 	var result []storage.Event
 	err := query.Select(&result)

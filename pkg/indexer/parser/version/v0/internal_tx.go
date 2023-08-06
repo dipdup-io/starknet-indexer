@@ -26,7 +26,6 @@ type InternalTxParser struct {
 	EventParser    interfaces.EventParser
 	MessageParser  interfaces.MessageParser
 	TransferParser interfaces.TransferParser
-	TokenParser    interfaces.TokenParser
 	ProxyUpgrader  interfaces.ProxyUpgrader
 }
 
@@ -38,7 +37,6 @@ func NewInternalTxParser(
 	eventParser interfaces.EventParser,
 	messageParser interfaces.MessageParser,
 	transferParser interfaces.TransferParser,
-	tokenParser interfaces.TokenParser,
 	proxyUpgrader interfaces.ProxyUpgrader,
 ) InternalTxParser {
 	return InternalTxParser{
@@ -48,7 +46,6 @@ func NewInternalTxParser(
 		EventParser:    eventParser,
 		MessageParser:  messageParser,
 		TransferParser: transferParser,
-		TokenParser:    tokenParser,
 		ProxyUpgrader:  proxyUpgrader,
 	}
 }
@@ -245,17 +242,6 @@ func (parser InternalTxParser) Parse(ctx context.Context, txCtx parserData.TxCon
 				return tx, err
 			}
 		}
-	}
-
-	isParentDeploy := tx.DeployID != nil
-	isConstructor := tx.EntrypointType == storage.EntrypointTypeConstructor
-	isToken := tx.Class.Type.OneOf(storage.ClassTypeERC20, storage.ClassTypeERC721, storage.ClassTypeERC1155)
-	if (isParentDeploy || isConstructor) && isToken {
-		token, err := parser.TokenParser.Parse(ctx, txCtx, tx.Contract, tx.Class.Type, tx.ParsedCalldata)
-		if err != nil {
-			return tx, err
-		}
-		tx.Token = token
 	}
 
 	return tx, nil

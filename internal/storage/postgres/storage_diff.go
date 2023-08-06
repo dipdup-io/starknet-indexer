@@ -96,6 +96,7 @@ func (sd *StorageDiff) Filter(ctx context.Context, fltr []storage.StorageDiffFil
 		return q1, nil
 	})
 	query = optionsFilter(query, "storage_diff", opts...)
+	query.Relation("Contract")
 
 	var result []storage.StorageDiff
 	err := query.Select(&result)

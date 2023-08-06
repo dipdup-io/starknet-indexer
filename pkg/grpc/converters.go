@@ -63,7 +63,7 @@ func Declare(model *storage.Declare) *pb.Declare {
 		Time:     uint64(model.Time.Unix()),
 		Version:  model.Version,
 		Position: uint64(model.Position),
-		Class:    model.Class.Hash,
+		Class:    Class(&model.Class),
 		Status:   uint64(model.Status),
 		Hash:     model.Hash,
 		MaxFee:   model.MaxFee.String(),
@@ -96,8 +96,7 @@ func Deploy(model *storage.Deploy) *pb.Deploy {
 		Time:     uint64(model.Time.Unix()),
 		Position: uint64(model.Position),
 		Contract: Address(&model.Contract),
-
-		Class:    model.Class.Hash,
+		Class:    Class(&model.Class),
 		Status:   uint64(model.Status),
 		Hash:     model.Hash,
 		Salt:     model.ContractAddressSalt,
@@ -133,8 +132,7 @@ func DeployAccount(model *storage.DeployAccount) *pb.DeployAccount {
 		Time:     uint64(model.Time.Unix()),
 		Position: uint64(model.Position),
 		Contract: Address(&model.Contract),
-
-		Class:    model.Class.Hash,
+		Class:    Class(&model.Class),
 		Status:   uint64(model.Status),
 		Hash:     model.Hash,
 		MaxFee:   model.MaxFee.String(),
@@ -172,12 +170,10 @@ func Event(model *storage.Event) *pb.Event {
 		Time:     uint64(model.Time.Unix()),
 		Order:    model.Order,
 		Contract: Address(&model.Contract),
-
-		From: Address(&model.From),
-
-		Keys: model.Keys,
-		Data: model.Data,
-		Name: model.Name,
+		From:     Address(&model.From),
+		Keys:     model.Keys,
+		Data:     model.Data,
+		Name:     model.Name,
 	}
 
 	if model.ParsedData != nil {
@@ -209,7 +205,7 @@ func Fee(model *storage.Fee) *pb.Fee {
 		Time:           uint64(model.Time.Unix()),
 		Contract:       Address(&model.Contract),
 		Caller:         Address(&model.Caller),
-		Class:          model.Class.Hash,
+		Class:          Class(&model.Class),
 		Selector:       model.Selector,
 		EntrypointType: uint64(model.EntrypointType),
 		CallType:       uint64(model.CallType),
@@ -249,7 +245,7 @@ func Internal(model *storage.Internal) *pb.Internal {
 		Hash:           model.Hash,
 		Contract:       Address(&model.Contract),
 		Caller:         Address(&model.Caller),
-		Class:          model.Class.Hash,
+		Class:          Class(&model.Class),
 		Selector:       model.Selector,
 		EntrypointType: uint64(model.EntrypointType),
 		CallType:       uint64(model.CallType),
@@ -452,26 +448,18 @@ func SubscriptionToken(id uint64, msg *subscriptions.Message) *pb.Subscription {
 		Response: &generalPB.SubscribeResponse{
 			Id: id,
 		},
-		Transfer: Transfer(msg.Transfer),
+		Token: Token(msg.Token),
 	}
 }
 
 // Token -
 func Token(model *storage.Token) *pb.Token {
 	pbModel := &pb.Token{
-		Id:           model.ID,
-		DeployHeight: model.DeployHeight,
-		DeployTime:   uint64(model.DeployTime.Unix()),
-		Contract:     Address(&model.Contract),
-		Owner:        Address(&model.Owner),
-		Type:         int32(model.Type),
-	}
-	if model.Metadata != nil {
-		metadata, err := json.Marshal(model.Metadata)
-		if err != nil {
-			return pbModel
-		}
-		pbModel.Metadata = metadata
+		Id:          model.ID,
+		FirstHeight: model.FirstHeight,
+		Contract:    Address(&model.Contract),
+		Type:        string(model.Type),
+		TokenId:     model.TokenId.String(),
 	}
 	return pbModel
 }
@@ -518,5 +506,17 @@ func SubscriptionAddress(id uint64, msg *subscriptions.Message) *pb.Subscription
 			Id: id,
 		},
 		Address: Address(msg.Address),
+	}
+}
+
+// Class -
+func Class(model *storage.Class) *pb.Class {
+	if model == nil || (model.ID == 0 && model.Hash == nil) {
+		return nil
+	}
+
+	return &pb.Class{
+		Id:   model.ID,
+		Hash: model.Hash,
 	}
 }
