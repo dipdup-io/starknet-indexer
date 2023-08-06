@@ -144,6 +144,7 @@ func (invoke *Invoke) Filter(ctx context.Context, fltr []storage.InvokeFilter, o
 		return q1, nil
 	})
 	query = optionsFilter(query, "invoke", opts...)
+	query.Relation("Contract")
 
 	var result []storage.Invoke
 	err := query.Select(&result)

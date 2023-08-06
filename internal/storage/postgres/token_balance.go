@@ -103,6 +103,7 @@ func (tb *TokenBalance) Filter(ctx context.Context, fltr []storage.TokenBalanceF
 		return q1, nil
 	})
 	query = optionsFilter(query, "token_balance", opts...)
+	query.Relation("Contract").Relation("Owner")
 
 	var result []storage.TokenBalance
 	err := query.Select(&result)

@@ -58,6 +58,7 @@
 - [github.com/dipdup-io/starknet-indexer/pkg/grpc/proto/response.proto](#github-com_dipdup-io_starknet-indexer_pkg_grpc_proto_response-proto)
     - [Address](#proto-Address)
     - [Block](#proto-Block)
+    - [Class](#proto-Class)
     - [Declare](#proto-Declare)
     - [Deploy](#proto-Deploy)
     - [DeployAccount](#proto-DeployAccount)
@@ -986,6 +987,22 @@ Desription of server interface
 
 
 
+<a name="proto-Class"></a>
+
+### Class
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| id | [uint64](#uint64) |  |  |
+| hash | [bytes](#bytes) |  |  |
+
+
+
+
+
+
 <a name="proto-Declare"></a>
 
 ### Declare
@@ -1002,7 +1019,7 @@ Desription of server interface
 | sender | [Address](#proto-Address) | optional |  |
 | contract | [Address](#proto-Address) | optional |  |
 | status | [uint64](#uint64) |  |  |
-| class | [bytes](#bytes) |  |  |
+| class | [Class](#proto-Class) |  |  |
 | hash | [bytes](#bytes) |  |  |
 | max_fee | [string](#string) |  |  |
 | nonce | [string](#string) |  |  |
@@ -1026,7 +1043,7 @@ Desription of server interface
 | position | [uint64](#uint64) |  |  |
 | contract | [Address](#proto-Address) |  |  |
 | status | [uint64](#uint64) |  |  |
-| class | [bytes](#bytes) |  |  |
+| class | [Class](#proto-Class) |  |  |
 | hash | [bytes](#bytes) |  |  |
 | salt | [bytes](#bytes) |  |  |
 | calldata | [string](#string) | repeated |  |
@@ -1051,7 +1068,7 @@ Desription of server interface
 | position | [uint64](#uint64) |  |  |
 | contract | [Address](#proto-Address) |  |  |
 | status | [uint64](#uint64) |  |  |
-| class | [bytes](#bytes) |  |  |
+| class | [Class](#proto-Class) |  |  |
 | hash | [bytes](#bytes) |  |  |
 | salt | [bytes](#bytes) |  |  |
 | max_fee | [string](#string) |  |  |
@@ -1116,7 +1133,7 @@ Desription of server interface
 | time | [uint64](#uint64) |  |  |
 | contract | [Address](#proto-Address) |  |  |
 | caller | [Address](#proto-Address) |  |  |
-| class | [bytes](#bytes) |  |  |
+| class | [Class](#proto-Class) |  |  |
 | selector | [bytes](#bytes) |  |  |
 | entrypoint_type | [uint64](#uint64) |  |  |
 | call_type | [uint64](#uint64) |  |  |
@@ -1145,7 +1162,7 @@ Desription of server interface
 | hash | [bytes](#bytes) |  |  |
 | contract | [Address](#proto-Address) |  |  |
 | caller | [Address](#proto-Address) |  |  |
-| class | [bytes](#bytes) |  |  |
+| class | [Class](#proto-Class) |  |  |
 | selector | [bytes](#bytes) |  |  |
 | entrypoint_type | [uint64](#uint64) |  |  |
 | call_type | [uint64](#uint64) |  |  |

@@ -196,6 +196,7 @@ func (d *Internal) Filter(ctx context.Context, fltr []storage.InternalFilter, op
 		return q1, nil
 	})
 	query = optionsFilter(query, "internal_tx", opts...)
+	query.Relation("Contract").Relation("Caller").Relation("Class")
 
 	var result []storage.Internal
 	err := query.Select(&result)

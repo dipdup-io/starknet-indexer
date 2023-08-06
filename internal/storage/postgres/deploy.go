@@ -123,6 +123,7 @@ func (d *Deploy) Filter(ctx context.Context, fltr []storage.DeployFilter, opts .
 		return q1, nil
 	})
 	query = optionsFilter(query, "deploy", opts...)
+	query.Relation("Contract").Relation("Class")
 
 	var result []storage.Deploy
 	err := query.Select(&result)

@@ -138,6 +138,7 @@ func (l1 *L1Handler) Filter(ctx context.Context, fltr []storage.L1HandlerFilter,
 	})
 
 	query = optionsFilter(query, "l1_handler", opts...)
+	query.Relation("Contract")
 
 	var result []storage.L1Handler
 	err := query.Select(&result)

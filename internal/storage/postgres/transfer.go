@@ -144,6 +144,7 @@ func (t *Transfer) Filter(ctx context.Context, fltr []storage.TransferFilter, op
 		return q1, nil
 	})
 	query = optionsFilter(query, "transfer", opts...)
+	query.Relation("Contract").Relation("From").Relation("To")
 
 	var result []storage.Transfer
 	err := query.Select(&result)

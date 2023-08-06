@@ -18,7 +18,7 @@ type ClientConfig struct {
 type Subscription struct {
 	Head                 bool                    `yaml:"head" validate:"omitempty"`
 	InvokeFilters        []*InvokeFilters        `yaml:"invokes" validate:"omitempty"`
-	DeclareFilters       []*DeclareFilters       `yaml:"filters" validate:"omitempty"`
+	DeclareFilters       []*DeclareFilters       `yaml:"declares" validate:"omitempty"`
 	DeployFilters        []*DeployFilters        `yaml:"deploys" validate:"omitempty"`
 	DeployAccountFilters []*DeployAccountFilters `yaml:"deploy_accounts" validate:"omitempty"`
 	L1HandlerFilter      []*L1HandlerFilters     `yaml:"l1_handlers" validate:"omitempty"`

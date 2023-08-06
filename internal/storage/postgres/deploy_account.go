@@ -39,6 +39,7 @@ func (d *DeployAccount) Filter(ctx context.Context, fltr []storage.DeployAccount
 		return q1, nil
 	})
 	query = optionsFilter(query, "deploy_account", opts...)
+	query.Relation("Contract").Relation("Class")
 
 	var result []storage.DeployAccount
 	err := query.Select(&result)

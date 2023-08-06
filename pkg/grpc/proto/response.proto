@@ -32,7 +32,7 @@ message Declare {
     optional Address sender = 6;
     optional Address contract = 7;
     uint64 status = 8;
-    bytes class = 9;
+    Class class = 9;
     bytes hash = 10;
     string max_fee = 11;
     string nonce = 12;
@@ -45,7 +45,7 @@ message DeployAccount {
     uint64 position = 4;
     Address contract = 5;
     uint64 status = 6;
-    bytes class = 7;
+    Class class = 7;
     bytes hash = 8;
     bytes salt = 9;
     string max_fee = 10;
@@ -61,7 +61,7 @@ message Deploy {
     uint64 position = 4;
     Address contract = 5;
     uint64 status = 6;
-    bytes class = 7;
+    Class class = 7;
     bytes hash = 8;
     bytes salt = 9;
     repeated string calldata = 10;
@@ -87,7 +87,7 @@ message Fee {
     uint64 time = 3;
     Address contract = 4;
     Address caller = 5;
-    bytes class = 6;
+    Class class = 6;
     bytes selector = 7;
     uint64 entrypoint_type = 8;
     uint64 call_type = 9;
@@ -105,7 +105,7 @@ message Internal {
     bytes hash = 5;
     Address contract = 6;
     Address caller = 7;
-    bytes class = 8;
+    Class class = 8;
     bytes selector = 9;
     uint64 entrypoint_type = 10;
     uint64 call_type = 11;
@@ -210,4 +210,9 @@ message Proxy {
     uint64 id = 1;
     bytes hash = 2;
     uint32 type = 3;
+}
+
+message Class {
+    uint64 id = 1;
+    bytes hash = 2;
 }

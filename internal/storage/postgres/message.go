@@ -40,6 +40,7 @@ func (msg *Message) Filter(ctx context.Context, fltr []storage.MessageFilter, op
 		return q1, nil
 	})
 	query = optionsFilter(query, "message", opts...)
+	query.Relation("Contract").Relation("From").Relation("To")
 
 	var result []storage.Message
 	err := query.Select(&result)
