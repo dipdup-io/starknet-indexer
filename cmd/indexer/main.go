@@ -4,6 +4,7 @@ import (
 	"context"
 	"os"
 	"os/signal"
+	"strconv"
 	"syscall"
 
 	"github.com/dipdup-io/starknet-indexer/internal/starknet"
@@ -58,6 +59,18 @@ func main() {
 		return
 	}
 	zerolog.SetGlobalLevel(logLevel)
+	zerolog.CallerMarshalFunc = func(pc uintptr, file string, line int) string {
+		short := file
+		for i := len(file) - 1; i > 0; i-- {
+			if file[i] == '/' {
+				short = file[i+1:]
+				break
+			}
+		}
+		file = short
+		return file + ":" + strconv.Itoa(line)
+	}
+	log.Logger = log.Logger.With().Caller().Logger()
 
 	if err := starknet.LoadBridgedTokens(cfg.Indexer.BridgedTokensFile); err != nil {
 		log.Panic().Err(err).Msg("loading bridged tokens")
@@ -115,10 +128,10 @@ func main() {
 	grpcModule.Start(ctx)
 	indexerModule.Start(ctx)
 
-	signals := make(chan os.Signal, 1)
-	signal.Notify(signals, os.Interrupt, syscall.SIGTERM, syscall.SIGINT)
+	notifyCtx, notifyCancel := signal.NotifyContext(ctx, os.Interrupt, syscall.SIGTERM, syscall.SIGINT)
+	defer notifyCancel()
 
-	<-signals
+	<-notifyCtx.Done()
 	cancel()
 
 	if err := indexerModule.Close(); err != nil {
@@ -127,6 +140,4 @@ func main() {
 	if err := grpcModule.Close(); err != nil {
 		log.Panic().Err(err).Msg("closing grpc server")
 	}
-
-	close(signals)
 }

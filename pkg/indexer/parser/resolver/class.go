@@ -29,6 +29,7 @@ func (resolver *Resolver) ReceiveClass(ctx context.Context, class *storage.Class
 		}
 		class.Type = storage.NewClassType(interfaces...)
 		resolver.cache.SetAbiByClassHash(*class, a)
+		resolver.cache.SetClassByHash(*class)
 	}
 
 	switch rawClass.ClassVersion {
