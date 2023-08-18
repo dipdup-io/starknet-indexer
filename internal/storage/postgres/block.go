@@ -15,7 +15,7 @@ type Blocks struct {
 }
 
 // NewBlocks -
-func NewBlocks(db *database.PgGo) *Blocks {
+func NewBlocks(db *database.Bun) *Blocks {
 	return &Blocks{
 		Table: postgres.NewTable[*storage.Block](db),
 	}
@@ -23,19 +23,19 @@ func NewBlocks(db *database.PgGo) *Blocks {
 
 // ByHeight -
 func (b *Blocks) ByHeight(ctx context.Context, height uint64) (block storage.Block, err error) {
-	err = b.DB().ModelContext(ctx, &block).Where("height = ?", height).Limit(1).Select()
+	err = b.DB().NewSelect().Model(&block).Where("height = ?", height).Limit(1).Scan(ctx)
 	return
 }
 
 // Last -
 func (b *Blocks) Last(ctx context.Context) (block storage.Block, err error) {
-	err = b.DB().ModelContext(ctx, &block).Order("height desc").Limit(1).Select()
+	err = b.DB().NewSelect().Model(&block).Order("height desc").Limit(1).Scan(ctx)
 	return
 }
 
 // ByStatus -
 func (b *Blocks) ByStatus(ctx context.Context, status storage.Status, limit, offset uint64, order sdk.SortOrder) (blocks []storage.Block, err error) {
-	query := b.DB().ModelContext(ctx, (*storage.Block)(nil)).
+	query := b.DB().NewSelect().Model(&blocks).
 		Where("status = ?", status).
 		Limit(int(limit)).
 		Offset(int(offset))
@@ -46,6 +46,6 @@ func (b *Blocks) ByStatus(ctx context.Context, status storage.Status, limit, off
 		query.Order("id desc")
 	}
 
-	err = query.Select(&blocks)
+	err = query.Scan(ctx)
 	return
 }

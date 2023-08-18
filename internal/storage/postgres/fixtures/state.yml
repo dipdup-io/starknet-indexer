@@ -1,0 +1,14 @@
+- id: 1
+  invokes_count: 25377077
+  deploys_count: 473904
+  deploy_accounts_count: 1386271
+  declares_count: 29627
+  l1_handlers_count: 898452
+  last_address_id: 2819288
+  last_class_id: 18294
+  last_event_id: 138304997
+  last_height: 154750
+  last_tx_id: 394067016
+  last_time: '2023-08-14T10:22:19+00:00'
+  name: dipdup_starknet_indexer
+  tx_count: 28165331

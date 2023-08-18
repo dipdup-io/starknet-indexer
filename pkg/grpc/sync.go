@@ -3,12 +3,12 @@ package grpc
 import (
 	"context"
 	"math"
+	"sort"
 
 	"github.com/dipdup-io/starknet-indexer/internal/storage"
 	"github.com/dipdup-io/starknet-indexer/pkg/grpc/pb"
 	"github.com/dipdup-io/starknet-indexer/pkg/grpc/subscriptions"
 	generalPB "github.com/dipdup-net/indexer-sdk/pkg/modules/grpc/pb"
-	"golang.org/x/exp/slices"
 )
 
 const (
@@ -261,11 +261,11 @@ func (module *Server) syncTables(ctx context.Context, tables tables, targetHeigh
 	var currentHeight uint64
 
 	for !tables.Finished() {
-		slices.SortFunc(tables, func(a synchronizable, b synchronizable) bool {
-			aH := a.GetHeight()
-			bH := b.GetHeight()
+		sort.Slice(tables, func(i, j int) bool {
+			aH := tables[i].GetHeight()
+			bH := tables[j].GetHeight()
 			if aH == bH {
-				return a.Priority() > b.Priority()
+				return tables[i].Priority() > tables[j].Priority()
 			}
 			return aH < bH
 		})

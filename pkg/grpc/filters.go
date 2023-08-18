@@ -452,11 +452,15 @@ func idFilter(ctx context.Context, address storage.IAddress, fltr *pb.BytesFilte
 		}
 		result.Eq = a.ID
 	case fltr.GetIn() != nil && len(fltr.GetIn().Arr) > 0:
-		ids, err := address.GetIdsByHash(ctx, fltr.GetIn().Arr)
+		addresses, err := address.GetByHashes(ctx, fltr.GetIn().Arr)
 		if err != nil {
 			return result, err
 		}
-		result.In = ids
+
+		result.In = make([]uint64, len(addresses))
+		for i := range addresses {
+			result.In[i] = addresses[i].ID
+		}
 	}
 
 	return

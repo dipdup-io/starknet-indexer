@@ -7,7 +7,7 @@ import (
 	"github.com/dipdup-net/go-lib/database"
 	sdk "github.com/dipdup-net/indexer-sdk/pkg/storage"
 	"github.com/dipdup-net/indexer-sdk/pkg/storage/postgres"
-	"github.com/go-pg/pg/v10/orm"
+	"github.com/uptrace/bun"
 )
 
 // Token -
@@ -16,15 +16,15 @@ type Token struct {
 }
 
 // NewToken -
-func NewToken(db *database.PgGo) *Token {
+func NewToken(db *database.Bun) *Token {
 	return &Token{
 		Table: postgres.NewTable[*storage.Token](db),
 	}
 }
 
 // ListByType -
-func (tokens *Token) ListByType(ctx context.Context, typ storage.TokenType, limit uint64, offset uint64, order sdk.SortOrder) ([]storage.Token, error) {
-	query := tokens.DB().ModelContext(ctx, (*storage.Token)(nil)).
+func (tokens *Token) ListByType(ctx context.Context, typ storage.TokenType, limit uint64, offset uint64, order sdk.SortOrder) (result []storage.Token, err error) {
+	query := tokens.DB().NewSelect().Model(&result).
 		Where("type = ?", typ).
 		Offset(int(offset))
 	if limit == 0 {
@@ -42,40 +42,38 @@ func (tokens *Token) ListByType(ctx context.Context, typ storage.TokenType, limi
 		query.Order("id asc")
 	}
 
-	var result []storage.Token
-	err := query.Select(&result)
+	err = query.Scan(ctx)
 	return result, err
 }
 
 // Filter -
-func (token *Token) Filter(ctx context.Context, fltr []storage.TokenFilter, opts ...storage.FilterOption) ([]storage.Token, error) {
-	query := token.DB().ModelContext(ctx, (*storage.Token)(nil))
-	query = query.WhereGroup(func(q1 *orm.Query) (*orm.Query, error) {
+func (token *Token) Filter(ctx context.Context, fltr []storage.TokenFilter, opts ...storage.FilterOption) (result []storage.Token, err error) {
+	query := token.DB().NewSelect().Model(&result)
+	query = query.WhereGroup(" AND ", func(q1 *bun.SelectQuery) *bun.SelectQuery {
 		for i := range fltr {
-			q1 = q1.WhereOrGroup(func(q *orm.Query) (*orm.Query, error) {
+			q1 = q1.WhereGroup(" OR ", func(q *bun.SelectQuery) *bun.SelectQuery {
 				q = integerFilter(q, "token.id", fltr[i].ID)
-				q = addressFilter(q, "token.contract_id", fltr[i].Contract, "Contract")
+				q = addressFilter(q, "hash", fltr[i].Contract, "Contract")
 				q = stringFilter(q, "token.token_id", fltr[i].TokenId)
 				q = enumStringFilter(q, "token.type", fltr[i].Type)
-				return q, nil
+				return q
 			})
 		}
-		return q1, nil
+		return q1
 	})
 	query = optionsFilter(query, "token", opts...)
 	query = query.Relation("Contract")
 
-	var result []storage.Token
-	err := query.Select(&result)
+	err = query.Scan(ctx)
 	return result, err
 }
 
 // Find -
 func (token *Token) Find(ctx context.Context, contractId uint64, tokenId string) (t storage.Token, err error) {
-	err = token.DB().ModelContext(ctx, &t).
+	err = token.DB().NewSelect().Model(&t).
 		Where("contract_id = ?", contractId).
 		Where("token_id = ?", tokenId).
 		Limit(1).
-		Select(&t)
+		Scan(ctx)
 	return
 }

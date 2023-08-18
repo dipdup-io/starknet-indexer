@@ -14,6 +14,7 @@ func (resolver *Resolver) FindAddress(ctx context.Context, address *storage.Addr
 	if value, ok := addresses[encoding.EncodeHex(address.Hash)]; ok {
 		address.ID = value.ID
 		address.ClassID = value.ClassID
+		address.Height = value.Height
 		return nil
 	}
 	generated, err := resolver.idGenerator.SetAddressId(ctx, address)

@@ -4,6 +4,7 @@ import (
 	"encoding/hex"
 	stdJSON "encoding/json"
 	"errors"
+	"strings"
 )
 
 // Bytes -
@@ -30,4 +31,20 @@ func (b *Bytes) UnmarshalJSON(data []byte) error {
 func MustNewBytes(str string) Bytes {
 	raw, _ := hex.DecodeString(str)
 	return Bytes(raw)
+}
+
+// Implements the Unmarshaler interface of the yaml pkg.
+func (b *Bytes) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	var seq string
+	if err := unmarshal(&seq); err != nil {
+		return err
+	}
+
+	seq = strings.TrimPrefix(seq, "0x")
+	data, err := hex.DecodeString(seq)
+	if err != nil {
+		return err
+	}
+	*b = append((*b)[0:0], data...)
+	return nil
 }

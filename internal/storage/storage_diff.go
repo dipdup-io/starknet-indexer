@@ -4,12 +4,12 @@ import (
 	"context"
 
 	"github.com/dipdup-net/indexer-sdk/pkg/storage"
+	"github.com/uptrace/bun"
 )
 
 // IStorageDiff -
 type IStorageDiff interface {
 	storage.Table[*StorageDiff]
-	Copiable[StorageDiff]
 	Filterable[StorageDiff, StorageDiffFilter]
 
 	GetOnBlock(ctx context.Context, height, contractId uint64, key []byte) (StorageDiff, error)
@@ -25,16 +25,15 @@ type StorageDiffFilter struct {
 
 // StorageDiff -
 type StorageDiff struct {
-	// nolint
-	tableName struct{} `pg:"storage_diff"`
+	bun.BaseModel `bun:"storage_diff"`
 
-	ID         uint64 `comment:"Unique internal identity"`
-	Height     uint64 `pg:",use_zero" comment:"Block height"`
+	ID         uint64 `bun:",pk,autoincrement" comment:"Unique internal identity"`
+	Height     uint64 `comment:"Block height"`
 	ContractID uint64 `comment:"Contract id which storage was changed"`
 	Key        []byte `comment:"Storage key"`
 	Value      []byte `comment:"Data"`
 
-	Contract Address `pg:"rel:has-one" hasura:"table:address,field:contract_id,remote_field:id,type:oto,name:contract"`
+	Contract Address `bun:"rel:belongs-to" hasura:"table:address,field:contract_id,remote_field:id,type:oto,name:contract"`
 }
 
 // TableName -
@@ -50,4 +49,21 @@ func (sd StorageDiff) GetHeight() uint64 {
 // GetId -
 func (sd StorageDiff) GetId() uint64 {
 	return sd.ID
+}
+
+// Columns -
+func (StorageDiff) Columns() []string {
+	return []string{
+		"height", "contract_id", "key", "value",
+	}
+}
+
+// Flat -
+func (sd StorageDiff) Flat() []any {
+	return []any{
+		sd.Height,
+		sd.ContractID,
+		sd.Key,
+		sd.Value,
+	}
 }

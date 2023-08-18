@@ -2,15 +2,15 @@ package postgres
 
 import (
 	"context"
+	"database/sql"
 
 	models "github.com/dipdup-io/starknet-indexer/internal/storage"
 	"github.com/dipdup-net/go-lib/config"
 	"github.com/dipdup-net/go-lib/database"
 	"github.com/dipdup-net/indexer-sdk/pkg/storage/postgres"
-	"github.com/go-pg/pg/v10"
-	"github.com/go-pg/pg/v10/orm"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
+	"github.com/uptrace/bun"
 )
 
 // Storage -
@@ -38,7 +38,7 @@ type Storage struct {
 	TokenBalance  models.ITokenBalance
 	State         models.IState
 
-	PartitionManager PartitionManager
+	PartitionManager database.RangePartitionManager
 	RollbackManager  RollbackManager
 }
 
@@ -71,7 +71,7 @@ func Create(ctx context.Context, cfg config.Database) (Storage, error) {
 		TokenBalance:  NewTokenBalance(strg.Connection()),
 		State:         NewState(strg.Connection()),
 
-		PartitionManager: NewPartitionManager(strg.Connection()),
+		PartitionManager: database.NewPartitionManager(strg.Connection(), database.PartitionByMonth),
 	}
 
 	s.RollbackManager = NewRollbackManager(s.Transactable, s.State, s.Blocks, s.ProxyUpgrade, s.Transfer)
@@ -79,36 +79,31 @@ func Create(ctx context.Context, cfg config.Database) (Storage, error) {
 	return s, nil
 }
 
-func initDatabase(ctx context.Context, conn *database.PgGo) error {
+func initDatabase(ctx context.Context, conn *database.Bun) error {
 	if err := createTypes(ctx, conn); err != nil {
 		return errors.Wrap(err, "creating custom types")
 	}
 
-	for _, data := range models.Models {
-		if err := conn.DB().WithContext(ctx).Model(data).CreateTable(&orm.CreateTableOptions{
-			IfNotExists: true,
-		}); err != nil {
-			if err := conn.Close(); err != nil {
-				return err
-			}
+	if err := database.CreateTables(ctx, conn, models.ModelsAny...); err != nil {
+		if err := conn.Close(); err != nil {
 			return err
 		}
+		return err
 	}
 
-	data := make([]any, len(models.Models))
-	for i := range models.Models {
-		data[i] = models.Models[i]
-	}
-	if err := database.MakeComments(ctx, conn, data...); err != nil {
+	if err := database.MakeComments(ctx, conn, models.ModelsAny...); err != nil {
+		if err := conn.Close(); err != nil {
+			return err
+		}
 		return errors.Wrap(err, "make comments")
 	}
 
 	return createIndices(ctx, conn)
 }
 
-func createIndices(ctx context.Context, conn *database.PgGo) error {
+func createIndices(ctx context.Context, conn *database.Bun) error {
 	log.Info().Msg("creating indexes...")
-	return conn.DB().RunInTransaction(ctx, func(tx *pg.Tx) error {
+	return conn.DB().RunInTx(ctx, &sql.TxOptions{}, func(ctx context.Context, tx bun.Tx) error {
 		// Address
 		if _, err := tx.ExecContext(ctx, `CREATE INDEX IF NOT EXISTS address_hash_idx ON address (hash)`); err != nil {
 			return err
@@ -210,9 +205,9 @@ func createIndices(ctx context.Context, conn *database.PgGo) error {
 	})
 }
 
-func createTypes(ctx context.Context, conn *database.PgGo) error {
+func createTypes(ctx context.Context, conn *database.Bun) error {
 	log.Info().Msg("creating custom types...")
-	return conn.DB().RunInTransaction(ctx, func(tx *pg.Tx) error {
+	return conn.DB().RunInTx(ctx, &sql.TxOptions{}, func(ctx context.Context, tx bun.Tx) error {
 		if _, err := tx.ExecContext(
 			ctx,
 			`DO $$

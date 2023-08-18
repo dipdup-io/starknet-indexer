@@ -6,6 +6,7 @@ import (
 
 	"github.com/dipdup-net/indexer-sdk/pkg/storage"
 	"github.com/shopspring/decimal"
+	"github.com/uptrace/bun"
 )
 
 // ITokenBalance -
@@ -13,9 +14,6 @@ type ITokenBalance interface {
 	storage.Table[*TokenBalance]
 	Filterable[TokenBalance, TokenBalanceFilter]
 
-	NegativeBalances(ctx context.Context) ([]TokenBalance, error)
-	TotalSupply(ctx context.Context, contractId, tokenId uint64) (decimal.Decimal, error)
-	Owner(ctx context.Context, cotractId uint64, tokenId decimal.Decimal) (TokenBalance, error)
 	Balances(ctx context.Context, contractId uint64, tokenId int64, limit, offset int) ([]TokenBalance, error)
 }
 
@@ -28,17 +26,15 @@ type TokenBalanceFilter struct {
 
 // TokenBalance -
 type TokenBalance struct {
-	// nolint
-	tableName struct{} `pg:"token_balance" comment:"Table with token balances"`
+	bun.BaseModel `bun:"token_balance" comment:"Table with token balances"`
 
-	OwnerID    uint64          `pg:",pk" comment:"Identity of owner address"`
-	ContractID uint64          `pg:",pk" comment:"Identity of contract address"`
-	TokenID    decimal.Decimal `pg:",pk,type:numeric,use_zero" comment:"Token id"`
-	Balance    decimal.Decimal `pg:",type:numeric,use_zero" comment:"Token balance"`
+	OwnerID    uint64          `bun:",pk" comment:"Identity of owner address"`
+	ContractID uint64          `bun:",pk" comment:"Identity of contract address"`
+	TokenID    decimal.Decimal `bun:",pk,type:numeric" comment:"Token id"`
+	Balance    decimal.Decimal `bun:",type:numeric" comment:"Token balance"`
 
-	Contract Address `pg:"rel:has-one" hasura:"table:address,field:contract_id,remote_field:id,type:oto,name:contract"`
-	Owner    Address `pg:"rel:has-one" hasura:"table:address,field:owner_id,remote_field:id,type:oto,name:owner"`
-	Token    Token   `pg:"rel:has-one,fk:contract_id" hasura:"table:token,field:contract_id,remote_field:contract_id,type:oto,name:token"`
+	Contract Address `bun:"rel:belongs-to,join:contract_id=id" hasura:"table:address,field:contract_id,remote_field:id,type:oto,name:contract"`
+	Owner    Address `bun:"rel:belongs-to,join:owner_id=id" hasura:"table:address,field:owner_id,remote_field:id,type:oto,name:owner"`
 }
 
 // TableName -

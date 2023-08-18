@@ -2,12 +2,9 @@ package store
 
 import (
 	"context"
-	"fmt"
-	"strings"
 
 	models "github.com/dipdup-io/starknet-indexer/internal/storage"
 	"github.com/dipdup-net/indexer-sdk/pkg/storage"
-	"github.com/go-pg/pg/v10"
 )
 
 const copyThreashold = 25
@@ -18,10 +15,6 @@ type subModels struct {
 	Events        []models.Event
 	Messages      []any
 	Internals     []models.Internal
-
-	internalsStorage models.IInternal
-	transfersStorage models.ITransfer
-	eventsStorage    models.IEvent
 }
 
 func newSubModels(
@@ -30,24 +23,21 @@ func newSubModels(
 	eventsStorage models.IEvent,
 ) *subModels {
 	return &subModels{
-		Transfers:        make([]models.Transfer, 0),
-		Events:           make([]models.Event, 0),
-		Messages:         make([]any, 0),
-		Internals:        make([]models.Internal, 0),
-		TokenBalances:    make([]models.TokenBalance, 0),
-		internalsStorage: internalsStorage,
-		transfersStorage: transfersStorage,
-		eventsStorage:    eventsStorage,
+		Transfers:     make([]models.Transfer, 0),
+		Events:        make([]models.Event, 0),
+		Messages:      make([]any, 0),
+		Internals:     make([]models.Internal, 0),
+		TokenBalances: make([]models.TokenBalance, 0),
 	}
 }
 
 // Save -
 func (sm *subModels) Save(ctx context.Context, tx storage.Transaction) error {
-	if err := bulkSaveWithCopy[models.Internal](ctx, tx, sm.internalsStorage, sm.Internals); err != nil {
+	if err := bulkSaveWithCopy(ctx, tx, sm.Internals); err != nil {
 		return err
 	}
 
-	if err := bulkSaveWithCopy[models.Event](ctx, tx, sm.eventsStorage, sm.Events); err != nil {
+	if err := bulkSaveWithCopy(ctx, tx, sm.Events); err != nil {
 		return err
 	}
 
@@ -57,7 +47,7 @@ func (sm *subModels) Save(ctx context.Context, tx storage.Transaction) error {
 		}
 	}
 
-	if err := bulkSaveWithCopy[models.Transfer](ctx, tx, sm.transfersStorage, sm.Transfers); err != nil {
+	if err := bulkSaveWithCopy(ctx, tx, sm.Transfers); err != nil {
 		return err
 	}
 
@@ -102,29 +92,24 @@ func (sm *subModels) saveTokenBalanceUpdates(ctx context.Context, tx storage.Tra
 		}
 	}
 
-	values := make([]string, 0)
+	arr := make([]*models.TokenBalance, 0)
 	for _, update := range updates {
-		value := fmt.Sprintf(
-			"(%d,%d,%s,%s)",
-			update.OwnerID,
-			update.ContractID,
-			update.TokenID,
-			update.Balance,
-		)
-		values = append(values, value)
+		arr = append(arr, update)
 	}
-	_, err := tx.Exec(ctx,
-		`INSERT INTO token_balance (owner_id, contract_id, token_id, balance)
-		VALUES ? 
-		ON CONFLICT (owner_id, contract_id, token_id)
-		DO 
-		UPDATE SET balance = token_balance.balance + excluded.balance`,
-		pg.Safe(strings.Join(values, ",")),
-	)
+
+	values := tx.Tx().NewValues(&arr)
+	_, err := tx.Tx().NewInsert().
+		With("_data", values).
+		Model((*models.TokenBalance)(nil)).
+		On("CONFLICT (owner_id, contract_id, token_id) DO UPDATE").
+		TableExpr("_data").
+		Set("balance = token_balance.balance + excluded.balance").
+		Exec(ctx)
+
 	return err
 }
 
-func bulkSaveWithCopy[M storage.Model](ctx context.Context, tx storage.Transaction, copiable models.Copiable[M], arr []M) error {
+func bulkSaveWithCopy[M models.CopiableModel](ctx context.Context, tx storage.Transaction, arr []M) error {
 	switch {
 	case len(arr) == 0:
 		return nil
@@ -135,10 +120,11 @@ func bulkSaveWithCopy[M storage.Model](ctx context.Context, tx storage.Transacti
 		}
 		return tx.BulkSave(ctx, data)
 	default:
-		reader, query, err := copiable.InsertByCopy(arr)
-		if err != nil {
-			return err
+		tableName := arr[0].TableName()
+		data := make([]storage.Copiable, len(arr))
+		for i := range arr {
+			data[i] = arr[i]
 		}
-		return tx.CopyFrom(reader, query)
+		return tx.CopyFrom(ctx, tableName, data)
 	}
 }

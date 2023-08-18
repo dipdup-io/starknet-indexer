@@ -14,15 +14,27 @@ type ProxyUpgrade struct {
 }
 
 // NewProxyUpgrade -
-func NewProxyUpgrade(db *database.PgGo) *ProxyUpgrade {
+func NewProxyUpgrade(db *database.Bun) *ProxyUpgrade {
 	return &ProxyUpgrade{
 		Table: postgres.NewTable[*storage.ProxyUpgrade](db),
 	}
 }
 
 // LastBefore -
-func (pu *ProxyUpgrade) LastBefore(ctx context.Context, height uint64) (upg storage.ProxyUpgrade, err error) {
-	err = pu.DB().ModelContext(ctx, &upg).Where("height < ?", height).Last()
+func (pu *ProxyUpgrade) LastBefore(ctx context.Context, hash, selector []byte, height uint64) (upg storage.ProxyUpgrade, err error) {
+	query := pu.DB().NewSelect().Model(&upg).
+		Where("height < ?", height).
+		Where("hash = ?", hash).
+		Limit(1).
+		Order("id desc")
+
+	if len(selector) == 0 {
+		query = query.Where("selector IS NULL")
+	} else {
+		query = query.Where("selector = ?", selector)
+	}
+
+	err = query.Scan(ctx)
 	return
 }
 
@@ -32,12 +44,12 @@ func (pu *ProxyUpgrade) ListWithHeight(ctx context.Context, height uint64, limit
 		limit = 10
 	}
 
-	err = pu.DB().ModelContext(ctx, &upgrades).
+	err = pu.DB().NewSelect().Model(&upgrades).
 		Where("height > ?", height).
 		Limit(limit).
 		Offset(offset).
 		Order("id desc").
-		Select(&upgrades)
+		Scan(ctx)
 
 	return upgrades, err
 }

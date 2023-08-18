@@ -3,7 +3,6 @@ package store
 import (
 	"context"
 
-	models "github.com/dipdup-io/starknet-indexer/internal/storage"
 	parserData "github.com/dipdup-io/starknet-indexer/pkg/indexer/parser/data"
 	"github.com/dipdup-net/indexer-sdk/pkg/storage"
 )
@@ -29,5 +28,5 @@ func (store *Store) saveInvoke(
 		}
 	}
 
-	return bulkSaveWithCopy[models.Invoke](ctx, tx, store.invokes, result.Block.Invoke)
+	return bulkSaveWithCopy(ctx, tx, result.Block.Invoke)
 }

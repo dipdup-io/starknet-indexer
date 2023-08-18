@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/dipdup-net/indexer-sdk/pkg/storage"
+	"github.com/uptrace/bun"
 )
 
 // EntityType -
@@ -24,19 +25,18 @@ type IProxy interface {
 
 // Proxy -
 type Proxy struct {
-	// nolint
-	tableName struct{} `pg:"proxy"`
+	bun.BaseModel `bun:"proxy"`
 
-	ID         uint64     `comment:"Unique internal identity"`
+	ID         uint64     `bun:",pk,autoincrement" comment:"Unique internal identity"`
 	ContractID uint64     `comment:"Proxy contract id"`
 	Hash       []byte     `comment:"Proxy contract hash"`
 	Selector   []byte     `comment:"Proxy contract selector (for modules)"`
-	EntityType EntityType `pg:",use_zero" comment:"Entity type behind proxy (0 - class | 1 - contract)"`
+	EntityType EntityType `comment:"Entity type behind proxy (0 - class | 1 - contract)"`
 	EntityID   uint64     `comment:"Entity id behind proxy"`
 	EntityHash []byte     `comment:"Entity hash behind proxy"`
 
-	Contract Address `pg:"rel:has-one,fk:contract_id" hasura:"table:address,field:contract_id,remote_field:id,type:oto,name:contract"`
-	Entity   Address `pg:"rel:has-one,fk:entity_id" hasura:"table:address,field:entity_id,remote_field:id,type:oto,name:entity"`
+	Contract Address `bun:"rel:belongs-to,join:contract_id=id" hasura:"table:address,field:contract_id,remote_field:id,type:oto,name:contract"`
+	Entity   Address `bun:"rel:belongs-to,join:entity_id=id" hasura:"table:address,field:entity_id,remote_field:id,type:oto,name:entity"`
 }
 
 // TableName -

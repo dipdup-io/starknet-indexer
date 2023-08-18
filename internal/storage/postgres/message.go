@@ -6,7 +6,7 @@ import (
 	"github.com/dipdup-io/starknet-indexer/internal/storage"
 	"github.com/dipdup-net/go-lib/database"
 	"github.com/dipdup-net/indexer-sdk/pkg/storage/postgres"
-	"github.com/go-pg/pg/v10/orm"
+	"github.com/uptrace/bun"
 )
 
 // Message -
@@ -15,34 +15,33 @@ type Message struct {
 }
 
 // NewMessage -
-func NewMessage(db *database.PgGo) *Message {
+func NewMessage(db *database.Bun) *Message {
 	return &Message{
 		Table: postgres.NewTable[*storage.Message](db),
 	}
 }
 
 // Filter -
-func (msg *Message) Filter(ctx context.Context, fltr []storage.MessageFilter, opts ...storage.FilterOption) ([]storage.Message, error) {
-	query := msg.DB().ModelContext(ctx, (*storage.Message)(nil))
-	query = query.WhereGroup(func(q1 *orm.Query) (*orm.Query, error) {
+func (msg *Message) Filter(ctx context.Context, fltr []storage.MessageFilter, opts ...storage.FilterOption) (result []storage.Message, err error) {
+	query := msg.DB().NewSelect().Model(&result)
+	query = query.WhereGroup(" AND ", func(q1 *bun.SelectQuery) *bun.SelectQuery {
 		for i := range fltr {
-			q1 = q1.WhereOrGroup(func(q *orm.Query) (*orm.Query, error) {
+			q1 = q1.WhereGroup(" OR ", func(q *bun.SelectQuery) *bun.SelectQuery {
 				q = integerFilter(q, "message.id", fltr[i].ID)
 				q = integerFilter(q, "message.height", fltr[i].Height)
 				q = timeFilter(q, "message.time", fltr[i].Time)
-				q = addressFilter(q, "message.contract_id", fltr[i].Contract, "Contract")
-				q = addressFilter(q, "message.from_id", fltr[i].From, "From")
-				q = addressFilter(q, "message.to_id", fltr[i].To, "To")
-				q = equalityFilter(q, "message.selector", fltr[i].Selector)
-				return q, nil
+				q = addressFilter(q, "hash", fltr[i].Contract, "Contract")
+				q = addressFilter(q, "hash", fltr[i].From, "From")
+				q = addressFilter(q, "hash", fltr[i].To, "To")
+				q = equalityFilter(q, "hash", fltr[i].Selector)
+				return q
 			})
 		}
-		return q1, nil
+		return q1
 	})
 	query = optionsFilter(query, "message", opts...)
 	query.Relation("Contract").Relation("From").Relation("To")
 
-	var result []storage.Message
-	err := query.Select(&result)
+	err = query.Scan(ctx)
 	return result, err
 }

@@ -2,7 +2,6 @@ package storage
 
 import (
 	"context"
-	"io"
 
 	"github.com/dipdup-net/indexer-sdk/pkg/storage"
 )
@@ -12,9 +11,10 @@ type Rollback interface {
 	Rollback(ctx context.Context, indexerName string, height uint64) error
 }
 
-// Copiable -
-type Copiable[M storage.Model] interface {
-	InsertByCopy(models []M) (io.Reader, string, error)
+// CopiableModel -
+type CopiableModel interface {
+	storage.Model
+	storage.Copiable
 }
 
 // Heightable -
@@ -105,6 +105,29 @@ func WithCursor(id uint64) FilterOption {
 
 // Models - list all models
 var Models = []storage.Model{
+	&State{},
+	&Address{},
+	&Class{},
+	&StorageDiff{},
+	&Block{},
+	&Invoke{},
+	&Declare{},
+	&Deploy{},
+	&DeployAccount{},
+	&L1Handler{},
+	&Internal{},
+	&Event{},
+	&Message{},
+	&Transfer{},
+	&Fee{},
+	&Token{},
+	&TokenBalance{},
+	&ProxyUpgrade{},
+	&Proxy{},
+}
+
+// ModelsAny - list all models with any type
+var ModelsAny = []any{
 	&State{},
 	&Address{},
 	&Class{},

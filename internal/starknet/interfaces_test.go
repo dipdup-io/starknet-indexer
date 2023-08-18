@@ -43,6 +43,12 @@ func TestFindInterfaces(t *testing.T) {
 	}{
 		{
 			name:     "find interfaces",
+			filename: "./test_classes/0x71429d7850e4421236ed7e4f58b7778fc0e0c01b8770335ba4140bcb13733e9.json",
+			want: []string{
+				"proxy",
+			},
+		}, {
+			name:     "find interfaces",
 			filename: "./test_classes/0x0702025b02d838976cf33dd7deec76b27a111d331b6093f2e7137e31c2f6ffd4.json",
 			want: []string{
 				"erc1155",

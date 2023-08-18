@@ -4,13 +4,14 @@ import (
 	"time"
 
 	"github.com/dipdup-net/indexer-sdk/pkg/storage"
+	"github.com/goccy/go-json"
+	"github.com/lib/pq"
+	"github.com/uptrace/bun"
 )
 
 // IInternal -
 type IInternal interface {
 	storage.Table[*Internal]
-
-	Copiable[Internal]
 	Filterable[Internal, InternalFilter]
 }
 
@@ -32,12 +33,11 @@ type InternalFilter struct {
 
 // Internal -
 type Internal struct {
-	// nolint
-	tableName struct{} `pg:"internal_tx,partition_by:RANGE(time)" comment:"Table with internal transactions"`
+	bun.BaseModel `bun:"internal_tx" comment:"Table with internal transactions" partition:"RANGE(time)"`
 
-	ID     uint64    `pg:"id,type:bigint,pk,notnull" comment:"Unique internal identity"`
-	Height uint64    `pg:",use_zero" comment:"Block height"`
-	Time   time.Time `pg:",pk" comment:"Time of block"`
+	ID     uint64    `bun:"id,type:bigint,pk,notnull" comment:"Unique internal identity"`
+	Height uint64    `comment:"Block height"`
+	Time   time.Time `bun:",pk" comment:"Time of block"`
 
 	InvokeID        *uint64 `comment:"Parent invoke id"`
 	DeclareID       *uint64 `comment:"Parent declare id"`
@@ -49,26 +49,25 @@ type Internal struct {
 	CallerID        uint64  `comment:"Caller address id"`
 	ContractID      uint64  `comment:"Contract address id"`
 
-	Status         Status         `pg:",type:SMALLINT,use_zero" comment:"Status in blockchain (unknown - 1 | not received - 2  | received - 3 | pending - 4 | rejected - 5 | accepted on l2 - 6 | accepted on l1 - 7 )"`
-	EntrypointType EntrypointType `pg:",type:SMALLINT" comment:"Entrypoint type (unknown - 1 | external - 2 | constructor - 3 | l1 handler - 4)"`
-	CallType       CallType       `pg:",type:SMALLINT" comment:"Call type (unknwown - 1 | call - 2 | delegate - 3)"`
+	Status         Status         `bun:",type:SMALLINT" comment:"Status in blockchain (unknown - 1 | not received - 2  | received - 3 | pending - 4 | rejected - 5 | accepted on l2 - 6 | accepted on l1 - 7 )"`
+	EntrypointType EntrypointType `bun:",type:SMALLINT" comment:"Entrypoint type (unknown - 1 | external - 2 | constructor - 3 | l1 handler - 4)"`
+	CallType       CallType       `bun:",type:SMALLINT" comment:"Call type (unknwown - 1 | call - 2 | delegate - 3)"`
 
 	Hash           []byte         `comment:"Transaction hash"`
 	Selector       []byte         `comment:"Called selector"`
 	Entrypoint     string         `comment:"Entrypoint name"`
-	Result         []string       `pg:",array" comment:"Raw result"`
-	Calldata       []string       `pg:",array" comment:"Raw calldata"`
+	Result         []string       `bun:",array" comment:"Raw result"`
+	Calldata       []string       `bun:",array" comment:"Raw calldata"`
 	ParsedCalldata map[string]any `comment:"Calldata parsed according to contract ABI"`
 	ParsedResult   map[string]any `comment:"Result parsed according to contract ABI"`
 
-	Class     Class      `pg:"rel:has-one" hasura:"table:class,field:class_id,remote_field:id,type:oto,name:class"`
-	Caller    Address    `pg:"rel:has-one" hasura:"table:address,field:caller_id,remote_field:id,type:oto,name:caller"`
-	Contract  Address    `pg:"rel:has-one" hasura:"table:address,field:contract_id,remote_field:id,type:oto,name:contract"`
-	Internals []Internal `pg:"rel:has-many"`
-	Messages  []Message  `pg:"rel:has-many"`
-	Events    []Event    `pg:"rel:has-many"`
-	Transfers []Transfer `pg:"rel:has-many"`
-	Token     *Token     `pg:"-"`
+	Class     Class      `bun:"rel:belongs-to" hasura:"table:class,field:class_id,remote_field:id,type:oto,name:class"`
+	Caller    Address    `bun:"rel:belongs-to" hasura:"table:address,field:caller_id,remote_field:id,type:oto,name:caller"`
+	Contract  Address    `bun:"rel:belongs-to" hasura:"table:address,field:contract_id,remote_field:id,type:oto,name:contract"`
+	Internals []Internal `bun:"rel:has-many"`
+	Messages  []Message  `bun:"rel:has-many"`
+	Events    []Event    `bun:"rel:has-many"`
+	Transfers []Transfer `bun:"rel:has-many"`
 }
 
 // TableName -
@@ -84,4 +83,57 @@ func (i Internal) GetHeight() uint64 {
 // GetId -
 func (i Internal) GetId() uint64 {
 	return i.ID
+}
+
+// Columns -
+func (Internal) Columns() []string {
+	return []string{
+		"id", "height", "time", "contract_id", "caller_id",
+		"class_id", "invoke_id", "declare_id", "internal_id",
+		"deploy_id", "deploy_account_id", "l1_handler_id",
+		"entrypoint_type", "call_type", "status", "selector",
+		"hash", "entrypoint", "calldata", "result",
+		"parsed_calldata", "parsed_result",
+	}
+}
+
+// Flat -
+func (i Internal) Flat() []any {
+	data := []any{
+		i.ID,
+		i.Height,
+		i.Time,
+		i.ContractID,
+		i.CallerID,
+		i.ClassID,
+		i.InvokeID,
+		i.DeclareID,
+		i.InternalID,
+		i.DeployID,
+		i.DeployAccountID,
+		i.L1HandlerID,
+		i.EntrypointType,
+		i.CallType,
+		i.Status,
+		i.Selector,
+		i.Hash,
+		i.Entrypoint,
+		pq.StringArray(i.Calldata),
+		pq.StringArray(i.Result),
+	}
+
+	parsed, err := json.MarshalWithOption(i.ParsedCalldata, json.UnorderedMap(), json.DisableNormalizeUTF8())
+	if err != nil {
+		data = append(data, nil)
+	} else {
+		data = append(data, string(parsed))
+	}
+
+	result, err := json.MarshalWithOption(i.ParsedResult, json.UnorderedMap(), json.DisableNormalizeUTF8())
+	if err != nil {
+		data = append(data, nil)
+	} else {
+		data = append(data, string(result))
+	}
+	return data
 }

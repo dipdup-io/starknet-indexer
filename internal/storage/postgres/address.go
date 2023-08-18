@@ -6,8 +6,7 @@ import (
 	"github.com/dipdup-io/starknet-indexer/internal/storage"
 	"github.com/dipdup-net/go-lib/database"
 	"github.com/dipdup-net/indexer-sdk/pkg/storage/postgres"
-	"github.com/go-pg/pg/v10"
-	"github.com/go-pg/pg/v10/orm"
+	"github.com/uptrace/bun"
 )
 
 // Address -
@@ -16,7 +15,7 @@ type Address struct {
 }
 
 // NewAddress -
-func NewAddress(db *database.PgGo) *Address {
+func NewAddress(db *database.Bun) *Address {
 	return &Address{
 		Table: postgres.NewTable[*storage.Address](db),
 	}
@@ -24,9 +23,9 @@ func NewAddress(db *database.PgGo) *Address {
 
 // GetByHash -
 func (a *Address) GetByHash(ctx context.Context, hash []byte) (address storage.Address, err error) {
-	err = a.DB().ModelContext(ctx, &address).
+	err = a.DB().NewSelect().Model(&address).
 		Where("hash = ?", hash).
-		Select(&address)
+		Scan(ctx)
 	return
 }
 
@@ -36,47 +35,45 @@ func (a *Address) GetAddresses(ctx context.Context, ids ...uint64) (address []st
 		return nil, nil
 	}
 
-	err = a.DB().ModelContext(ctx, (*storage.Address)(nil)).
-		Where("id IN (?)", pg.In(ids)).
-		Select(&address)
+	err = a.DB().NewSelect().Model(&address).
+		Where("id IN (?)", bun.In(ids)).
+		Scan(ctx)
 	return
 }
 
 // GetIdsByHash -
-func (a *Address) GetIdsByHash(ctx context.Context, hash [][]byte) (ids []uint64, err error) {
+func (a *Address) GetByHashes(ctx context.Context, hash [][]byte) (addresses []storage.Address, err error) {
 	if len(hash) == 0 {
 		return
 	}
 
-	err = a.DB().ModelContext(ctx, (*storage.Address)(nil)).
-		Column("id").
-		Where("hash in (?)", pg.In(hash)).
-		Select(&ids)
+	err = a.DB().NewSelect().Model(&addresses).
+		Where("hash in (?)", bun.In(hash)).
+		Scan(ctx)
 	return
 }
 
 // Filter -
-func (a *Address) Filter(ctx context.Context, fltr []storage.AddressFilter, opts ...storage.FilterOption) ([]storage.Address, error) {
-	query := a.DB().ModelContext(ctx, (*storage.Address)(nil))
+func (a *Address) Filter(ctx context.Context, fltr []storage.AddressFilter, opts ...storage.FilterOption) (result []storage.Address, err error) {
+	query := a.DB().NewSelect().Model(&result)
 
-	query = query.WhereGroup(func(q1 *orm.Query) (*orm.Query, error) {
+	query = query.WhereGroup(" AND ", func(q1 *bun.SelectQuery) *bun.SelectQuery {
 		for i := range fltr {
-			q1 = q1.WhereOrGroup(func(q *orm.Query) (*orm.Query, error) {
+			q1 = q1.WhereGroup(" OR ", func(q *bun.SelectQuery) *bun.SelectQuery {
 				q = integerFilter(q, "address.id", fltr[i].ID)
 				q = integerFilter(q, "address.height", fltr[i].Height)
 
 				if fltr[i].OnlyStarknet {
 					q = q.Where("address.class_id is not null")
 				}
-				return q, nil
+				return q
 			})
 		}
-		return q1, nil
+		return q1
 	})
 
 	query = optionsFilter(query, "address", opts...)
 
-	var result []storage.Address
-	err := query.Select(&result)
-	return result, err
+	err = query.Scan(ctx)
+	return
 }

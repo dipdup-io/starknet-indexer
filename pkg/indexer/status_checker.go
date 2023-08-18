@@ -9,10 +9,10 @@ import (
 	"github.com/dipdup-io/starknet-indexer/internal/storage"
 	"github.com/dipdup-io/starknet-indexer/pkg/indexer/receiver"
 	sdk "github.com/dipdup-net/indexer-sdk/pkg/storage"
-	"github.com/go-pg/pg/v10"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
+	"github.com/uptrace/bun"
 )
 
 var (
@@ -319,7 +319,7 @@ func (checker *statusChecker) update(ctx context.Context, height uint64, status 
 		&storage.Internal{},
 		&storage.Fee{},
 	} {
-		if _, err := tx.Exec(ctx, `update ? set status = ? where height = ?`, pg.Ident(model.TableName()), status, height); err != nil {
+		if _, err := tx.Exec(ctx, `update ? set status = ? where height = ?`, bun.Ident(model.TableName()), status, height); err != nil {
 			return tx.HandleError(ctx, err)
 		}
 	}

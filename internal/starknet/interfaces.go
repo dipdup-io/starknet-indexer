@@ -99,6 +99,33 @@ func checkInterface(a abi.Abi, i abi.Abi) bool {
 		}
 	}
 
+	for name, iFunc := range i.L1Handlers {
+		aFunc, ok := a.L1Handlers[name]
+		if !ok {
+			return false
+		}
+
+		if len(iFunc.Inputs) != len(aFunc.Inputs) {
+			return false
+		}
+
+		if len(iFunc.Outputs) != len(aFunc.Outputs) {
+			return false
+		}
+
+		for j := range iFunc.Inputs {
+			if iFunc.Inputs[j].Type != aFunc.Inputs[j].Type {
+				return false
+			}
+		}
+
+		for j := range iFunc.Outputs {
+			if iFunc.Outputs[j].Type != aFunc.Outputs[j].Type {
+				return false
+			}
+		}
+	}
+
 	for name, iEvent := range i.Events {
 		aEvent, ok := a.Events[name]
 		if !ok {

@@ -110,12 +110,6 @@ func New(
 		storage.Internal,
 		storage.Transfer,
 		storage.Event,
-		storage.StorageDiff,
-		storage.Invoke,
-		storage.Deploy,
-		storage.L1Handler,
-		storage.Fee,
-		storage.Token,
 		storage.Transactable,
 		storage.PartitionManager)
 
@@ -418,7 +412,7 @@ func (indexer *Indexer) makeRollback(ctx context.Context, height uint64) error {
 func (indexer *Indexer) handleBlock(ctx context.Context, result receiver.Result) error {
 	start := time.Now()
 
-	parseResult, err := parser.Parse(ctx, indexer.receiver, indexer.cache, indexer.idGenerator, indexer.blocks, indexer.proxy, result)
+	parseResult, err := parser.Parse(ctx, indexer.receiver, indexer.cache, indexer.idGenerator, indexer.blocks, indexer.address, indexer.proxy, result)
 	if err != nil {
 		return err
 	}

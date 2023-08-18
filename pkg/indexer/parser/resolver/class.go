@@ -18,6 +18,7 @@ func (resolver *Resolver) ReceiveClass(ctx context.Context, class *storage.Class
 	}
 
 	if rawClass.RawAbi != nil {
+		log.Debug().Hex("hash", class.Hash).Msg("class received")
 		a, err := rawClass.GetAbi()
 		if err != nil {
 			return err

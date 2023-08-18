@@ -91,7 +91,7 @@ func (r *Receiver) Start(ctx context.Context) {
 }
 
 func (r *Receiver) worker(ctx context.Context, height uint64) {
-	r.log.Info().Uint64("height", height).Msg("receiving block data...")
+	start := time.Now()
 	blockId := starknetData.BlockID{
 		Number: &height,
 	}
@@ -156,6 +156,7 @@ func (r *Receiver) worker(ctx context.Context, height uint64) {
 		break
 	}
 
+	r.log.Info().Uint64("height", height).Int64("ms", time.Since(start).Milliseconds()).Msg("received block data")
 	r.result <- result
 	r.processingMx.Lock()
 	{

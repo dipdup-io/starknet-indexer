@@ -14,7 +14,7 @@ type Class struct {
 }
 
 // NewClass -
-func NewClass(db *database.PgGo) *Class {
+func NewClass(db *database.Bun) *Class {
 	return &Class{
 		Table: postgres.NewTable[*storage.Class](db),
 	}
@@ -22,14 +22,14 @@ func NewClass(db *database.PgGo) *Class {
 
 // GetByHash -
 func (c *Class) GetByHash(ctx context.Context, hash []byte) (class storage.Class, err error) {
-	err = c.DB().ModelContext(ctx, &class).
+	err = c.DB().NewSelect().Model(&class).
 		Where("hash = ?", hash).
-		Select(&class)
+		Scan(ctx)
 	return
 }
 
 // GetUnresolved -
 func (c *Class) GetUnresolved(ctx context.Context) (classes []storage.Class, err error) {
-	err = c.DB().ModelContext(ctx, &classes).Where("abi is null").Select(&classes)
+	err = c.DB().NewSelect().Model(&classes).Where("abi is null").Scan(ctx)
 	return
 }

@@ -6,6 +6,7 @@ import (
 
 	"github.com/dipdup-net/indexer-sdk/pkg/storage"
 	"github.com/shopspring/decimal"
+	"github.com/uptrace/bun"
 )
 
 // TokenType -
@@ -37,16 +38,15 @@ type IToken interface {
 
 // Token -
 type Token struct {
-	// nolint
-	tableName struct{} `pg:"token"`
+	bun.BaseModel `bun:"token"`
 
-	ID          uint64          `comment:"Unique internal identity"`
-	FirstHeight uint64          `pg:",use_zero" comment:"Block height when token was first time transferred or minted"`
-	ContractId  uint64          `pg:",unique:token_unique_id" comment:"Token contract id"`
-	TokenId     decimal.Decimal `pg:",unique:token_unique_id,type:numeric,use_zero" comment:"Token id"`
-	Type        TokenType       `pg:",type:token_type" comment:"Token type"`
+	ID          uint64          `bun:"id,pk,autoincrement" comment:"Unique internal identity"`
+	FirstHeight uint64          `comment:"Block height when token was first time transferred or minted"`
+	ContractId  uint64          `bun:",unique:token_unique_id" comment:"Token contract id"`
+	TokenId     decimal.Decimal `bun:",unique:token_unique_id,type:numeric" comment:"Token id"`
+	Type        TokenType       `bun:",type:token_type" comment:"Token type"`
 
-	Contract Address `pg:"rel:has-one" hasura:"table:address,field:contract_id,remote_field:id,type:oto,name:contract"`
+	Contract Address `bun:"rel:belongs-to,join:contract_id=id" hasura:"table:address,field:contract_id,remote_field:id,type:oto,name:contract"`
 }
 
 // TableName -
