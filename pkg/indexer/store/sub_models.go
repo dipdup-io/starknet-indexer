@@ -4,6 +4,7 @@ import (
 	"context"
 
 	models "github.com/dipdup-io/starknet-indexer/internal/storage"
+	"github.com/dipdup-io/starknet-indexer/internal/storage/postgres"
 	"github.com/dipdup-net/indexer-sdk/pkg/storage"
 )
 
@@ -32,7 +33,7 @@ func newSubModels(
 }
 
 // Save -
-func (sm *subModels) Save(ctx context.Context, tx storage.Transaction) error {
+func (sm *subModels) Save(ctx context.Context, tx postgres.Transaction) error {
 	if err := bulkSaveWithCopy(ctx, tx, sm.Internals); err != nil {
 		return err
 	}
@@ -81,7 +82,7 @@ func (sm *subModels) addInternals(internals []models.Internal) {
 	sm.Internals = append(sm.Internals, internals...)
 }
 
-func (sm *subModels) saveTokenBalanceUpdates(ctx context.Context, tx storage.Transaction) error {
+func (sm *subModels) saveTokenBalanceUpdates(ctx context.Context, tx postgres.Transaction) error {
 	updates := make(map[string]*models.TokenBalance)
 	for i := range sm.TokenBalances {
 		key := sm.TokenBalances[i].String()
@@ -97,16 +98,7 @@ func (sm *subModels) saveTokenBalanceUpdates(ctx context.Context, tx storage.Tra
 		arr = append(arr, update)
 	}
 
-	values := tx.Tx().NewValues(&arr)
-	_, err := tx.Tx().NewInsert().
-		With("_data", values).
-		Model((*models.TokenBalance)(nil)).
-		On("CONFLICT (owner_id, contract_id, token_id) DO UPDATE").
-		TableExpr("_data").
-		Set("balance = token_balance.balance + excluded.balance").
-		Exec(ctx)
-
-	return err
+	return tx.SaveTokenBalanceUpdates(ctx, arr...)
 }
 
 func bulkSaveWithCopy[M models.CopiableModel](ctx context.Context, tx storage.Transaction, arr []M) error {

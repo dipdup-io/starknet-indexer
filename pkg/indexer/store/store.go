@@ -2,16 +2,14 @@ package store
 
 import (
 	"context"
-	"fmt"
-	"strings"
 
 	models "github.com/dipdup-io/starknet-indexer/internal/storage"
+	"github.com/dipdup-io/starknet-indexer/internal/storage/postgres"
 	"github.com/dipdup-io/starknet-indexer/pkg/indexer/cache"
 	"github.com/dipdup-io/starknet-indexer/pkg/indexer/parser/data"
 	parserData "github.com/dipdup-io/starknet-indexer/pkg/indexer/parser/data"
 	"github.com/dipdup-net/go-lib/database"
 	"github.com/dipdup-net/indexer-sdk/pkg/storage"
-	"github.com/uptrace/bun"
 )
 
 // Store -
@@ -71,7 +69,7 @@ func (store *Store) Save(
 		return err
 	}
 
-	tx, err := store.transactable.BeginTransaction(ctx)
+	tx, err := postgres.BeginTransaction(ctx, store.transactable)
 	if err != nil {
 		return err
 	}
@@ -143,27 +141,18 @@ func (store *Store) Save(
 	return nil
 }
 
-func saveAddresses(ctx context.Context, tx storage.Transaction, result parserData.Result) error {
+func saveAddresses(ctx context.Context, tx postgres.Transaction, result parserData.Result) error {
 	addresses := result.Context.Addresses()
 	if len(addresses) == 0 {
 		return nil
 	}
 
-	values := make([]string, 0)
+	values := make([]*models.Address, 0)
 	for _, address := range addresses {
-		if address.ClassID == nil {
-			values = append(values, fmt.Sprintf("(%d,NULL,%d,'\\x%x')", address.ID, address.Height, address.Hash))
-		} else {
-			values = append(values, fmt.Sprintf("(%d,%d,%d,'\\x%x')", address.ID, *address.ClassID, address.Height, address.Hash))
-		}
+		values = append(values, address)
 	}
 
-	_, err := tx.Exec(ctx, `INSERT INTO address (id, class_id, height, hash)
-	VALUES ?
-	ON CONFLICT (hash)
-	DO 
-	UPDATE SET class_id = excluded.class_id, height = excluded.height`, bun.Safe(strings.Join(values, ",")))
-	return err
+	return tx.SaveAddresses(ctx, values...)
 }
 
 func saveStorageDiff(ctx context.Context, tx storage.Transaction, result parserData.Result) error {
@@ -196,7 +185,7 @@ func (store *Store) saveInternals(
 	return nil
 }
 
-func (store *Store) saveProxies(ctx context.Context, tx storage.Transaction, proxies data.ProxyMap[*models.ProxyUpgrade]) error {
+func (store *Store) saveProxies(ctx context.Context, tx postgres.Transaction, proxies data.ProxyMap[*models.ProxyUpgrade]) error {
 	return proxies.Range(func(_ parserData.ProxyKey, value *models.ProxyUpgrade) (bool, error) {
 		store.cache.SetProxy(value.Hash, value.Selector, value.ToProxy())
 		if err := tx.Add(ctx, value); err != nil {
@@ -206,27 +195,20 @@ func (store *Store) saveProxies(ctx context.Context, tx storage.Transaction, pro
 	})
 }
 
-func saveProxy(ctx context.Context, tx storage.Transaction, proxy *models.ProxyUpgrade) (bool, error) {
+func saveProxy(ctx context.Context, tx postgres.Transaction, proxy *models.ProxyUpgrade) (bool, error) {
 	switch proxy.Action {
 	case models.ProxyActionAdd, models.ProxyActionUpdate:
-		if _, err := tx.Exec(ctx, `
-			INSERT INTO proxy (contract_id, hash, selector, entity_type, entity_id, entity_hash)
-			VALUES(?,?,?,?,?,?) 
-			ON CONFLICT (hash, selector)
-			DO 
-			UPDATE SET entity_type = excluded.entity_type, entity_id = excluded.entity_id, entity_hash = excluded.entity_hash, selector = excluded.selector`,
-			proxy.ContractID, proxy.Hash, proxy.Selector, proxy.EntityType, proxy.EntityID, proxy.EntityHash); err != nil {
+		if err := tx.SaveProxy(ctx, proxy.ToProxy()); err != nil {
 			return true, err
 		}
 	case models.ProxyActionDelete:
-		if _, err := tx.Exec(ctx, `DELETE FROM proxy WHERE hash = ? AND selector = ?`,
-			proxy.Hash, proxy.Selector); err != nil {
+		if err := tx.DeleteProxy(ctx, proxy.ToProxy()); err != nil {
 			return true, err
 		}
 	}
 	return false, nil
 }
-func saveTokens(ctx context.Context, tx storage.Transaction, tokens map[string]*models.Token) error {
+func saveTokens(ctx context.Context, tx postgres.Transaction, tokens map[string]*models.Token) error {
 	if len(tokens) == 0 {
 		return nil
 	}
@@ -236,17 +218,10 @@ func saveTokens(ctx context.Context, tx storage.Transaction, tokens map[string]*
 		arr = append(arr, token)
 	}
 
-	values := tx.Tx().NewValues(&arr).Column("first_height", "contract_id", "token_id", "type")
-	_, err := tx.Tx().NewInsert().Column("first_height", "contract_id", "token_id", "type").
-		With("_data", values).
-		Model((*models.Token)(nil)).
-		On("CONFLICT ON CONSTRAINT token_unique_id DO NOTHING").
-		TableExpr("_data").
-		Exec(ctx)
-	return err
+	return tx.SaveTokens(ctx, arr...)
 }
 
-func saveClasses(ctx context.Context, tx storage.Transaction, classes map[string]*models.Class) error {
+func saveClasses(ctx context.Context, tx postgres.Transaction, classes map[string]*models.Class) error {
 	if len(classes) == 0 {
 		return nil
 	}
@@ -256,14 +231,5 @@ func saveClasses(ctx context.Context, tx storage.Transaction, classes map[string
 		arr = append(arr, class)
 	}
 
-	values := tx.Tx().NewValues(&arr)
-	_, err := tx.Tx().NewInsert().
-		With("_data", values).
-		Model((*models.Class)(nil)).
-		On("CONFLICT (id) DO UPDATE").
-		TableExpr("_data").
-		Set("abi = excluded.abi").
-		Set("type = excluded.type").
-		Exec(ctx)
-	return err
+	return tx.SaveClasses(ctx, arr...)
 }

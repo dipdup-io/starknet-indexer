@@ -7,12 +7,12 @@ import (
 
 	"github.com/dipdup-io/starknet-go-api/pkg/encoding"
 	"github.com/dipdup-io/starknet-indexer/internal/storage"
+	"github.com/dipdup-io/starknet-indexer/internal/storage/postgres"
 	"github.com/dipdup-io/starknet-indexer/pkg/indexer/receiver"
 	sdk "github.com/dipdup-net/indexer-sdk/pkg/storage"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
-	"github.com/uptrace/bun"
 )
 
 var (
@@ -304,7 +304,7 @@ func (checker *statusChecker) getStatus(ctx context.Context, item acceptedOnL2) 
 }
 
 func (checker *statusChecker) update(ctx context.Context, height uint64, status storage.Status) error {
-	tx, err := checker.transactable.BeginTransaction(ctx)
+	tx, err := postgres.BeginTransaction(ctx, checker.transactable)
 	if err != nil {
 		return err
 	}
@@ -319,7 +319,7 @@ func (checker *statusChecker) update(ctx context.Context, height uint64, status 
 		&storage.Internal{},
 		&storage.Fee{},
 	} {
-		if _, err := tx.Exec(ctx, `update ? set status = ? where height = ?`, bun.Ident(model.TableName()), status, height); err != nil {
+		if err := tx.UpdateStatus(ctx, height, status, model); err != nil {
 			return tx.HandleError(ctx, err)
 		}
 	}
