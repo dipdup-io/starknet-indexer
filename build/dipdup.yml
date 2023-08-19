@@ -24,6 +24,7 @@ indexer:
 
 grpc:
   bind: ${GRPC_BIND:-127.0.0.1:7779}
+  log: true
 
 database:
   kind: postgres

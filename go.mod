@@ -2,15 +2,11 @@ module github.com/dipdup-io/starknet-indexer
 
 go 1.20
 
-// replace github.com/dipdup-io/starknet-go-api => /usr/local/go/src/github.com/dipdup-io/starknet-go-api
-
-// replace github.com/dipdup-net/indexer-sdk => /usr/local/go/src/github.com/dipdup-net/indexer-sdk
-
 require (
 	github.com/dipdup-io/starknet-go-api v0.0.0-20230818110656-b2736a55da83
 	github.com/dipdup-io/workerpool v0.0.3
 	github.com/dipdup-net/go-lib v0.3.0
-	github.com/dipdup-net/indexer-sdk v0.0.0-20230818110546-d0bb612ee65f
+	github.com/dipdup-net/indexer-sdk v0.0.0-20230819120445-392cbc4cfb65
 	github.com/go-testfixtures/testfixtures/v3 v3.9.0
 	github.com/goccy/go-json v0.10.2
 	github.com/karlseguin/ccache/v2 v2.0.8
@@ -29,16 +25,22 @@ require (
 	github.com/ClickHouse/ch-go v0.58.0 // indirect
 	github.com/ClickHouse/clickhouse-go/v2 v2.13.0 // indirect
 	github.com/andybalholm/brotli v1.0.5 // indirect
+	github.com/beorn7/perks v1.0.1 // indirect
+	github.com/cespare/xxhash/v2 v2.2.0 // indirect
 	github.com/go-faster/city v1.0.1 // indirect
 	github.com/go-faster/errors v0.6.1 // indirect
+	github.com/grpc-ecosystem/go-grpc-middleware/providers/prometheus v1.0.0-rc.0 // indirect
+	github.com/grpc-ecosystem/go-grpc-middleware/v2 v2.0.0-rc.5 // indirect
+	github.com/matttproud/golang_protobuf_extensions v1.0.4 // indirect
 	github.com/paulmach/orb v0.10.0 // indirect
 	github.com/pierrec/lz4/v4 v4.1.18 // indirect
+	github.com/prometheus/client_golang v1.16.0 // indirect
+	github.com/prometheus/client_model v0.3.0 // indirect
+	github.com/prometheus/common v0.42.0 // indirect
+	github.com/prometheus/procfs v0.10.1 // indirect
 	github.com/segmentio/asm v1.2.0 // indirect
 	go.opentelemetry.io/otel v1.16.0 // indirect
 	go.opentelemetry.io/otel/trace v1.16.0 // indirect
-)
-
-require (
 	dario.cat/mergo v1.0.0 // indirect
 	github.com/Azure/go-ansiterm v0.0.0-20230124172434-306776ec8161 // indirect
 	github.com/Microsoft/go-winio v0.6.1 // indirect
