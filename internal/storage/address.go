@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/dipdup-net/indexer-sdk/pkg/storage"
+	"github.com/uptrace/bun"
 )
 
 // IAddress -
@@ -14,7 +15,7 @@ type IAddress interface {
 
 	GetByHash(ctx context.Context, hash []byte) (Address, error)
 	GetAddresses(ctx context.Context, ids ...uint64) ([]Address, error)
-	GetIdsByHash(ctx context.Context, hash [][]byte) (ids []uint64, err error)
+	GetByHashes(ctx context.Context, hash [][]byte) ([]Address, error)
 }
 
 // AddressFilter -
@@ -26,15 +27,14 @@ type AddressFilter struct {
 
 // Address -
 type Address struct {
-	// nolint
-	tableName struct{} `pg:"address" comment:"Table with starknet and ethereum addresses."`
+	bun.BaseModel `bun:"address" comment:"Table with starknet and ethereum addresses."`
 
-	ID      uint64  `pg:"id,type:bigint,pk,notnull" comment:"Unique internal identity"`
-	ClassID *uint64 `pg:"class_id" comment:"Class identity. It is NULL for ethereum addresses."`
-	Height  uint64  `pg:",use_zero" comment:"Block number of the first address occurrence."`
-	Hash    []byte  `pg:",unique:address_hash" comment:"Address hash."`
+	ID      uint64  `bun:"id,type:bigint,pk,notnull" comment:"Unique internal identity"`
+	ClassID *uint64 `bun:"class_id" comment:"Class identity. It is NULL for ethereum addresses."`
+	Height  uint64  `comment:"Block number of the first address occurrence."`
+	Hash    []byte  `bun:",unique:address_hash" comment:"Address hash."`
 
-	Class Class `pg:"rel:has-one" hasura:"table:class,field:class_id,remote_field:id,type:oto,name:class"`
+	Class Class `bun:"rel:belongs-to,join:class_id=id" hasura:"table:class,field:class_id,remote_field:id,type:oto,name:class"`
 }
 
 // TableName -

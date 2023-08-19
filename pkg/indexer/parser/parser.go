@@ -46,6 +46,7 @@ func Parse(
 	cache *cache.Cache,
 	idGenerator *generator.IdGenerator,
 	blocks storage.IBlock,
+	addresses storage.IAddress,
 	proxies storage.IProxy,
 	result receiver.Result,
 ) (parserData.Result, error) {
@@ -70,7 +71,7 @@ func Parse(
 
 	blockCtx := parserData.NewBlockContext(block)
 
-	resolver := resolver.NewResolver(receiver, cache, idGenerator, blocks, proxies, blockCtx)
+	resolver := resolver.NewResolver(receiver, cache, idGenerator, blocks, addresses, proxies, blockCtx)
 
 	if err := resolver.ResolveStateUpdates(ctx, &block, result.StateUpdate); err != nil {
 		return parserData.Result{}, errors.Wrap(err, "state update parsing")

@@ -7,8 +7,8 @@ import (
 
 	models "github.com/dipdup-io/starknet-indexer/internal/storage"
 	"github.com/dipdup-net/indexer-sdk/pkg/storage"
-	"github.com/go-pg/pg/v10"
 	"github.com/rs/zerolog/log"
+	"github.com/uptrace/bun"
 )
 
 const rollbackQuery = `WITH deleted AS (DELETE FROM ? WHERE height > ? RETURNING *) SELECT count(*) FROM deleted;`
@@ -78,7 +78,7 @@ func (rm RollbackManager) Rollback(ctx context.Context, indexerName string, heig
 		&models.Transfer{},
 		&models.ProxyUpgrade{},
 	} {
-		deletedCount, err := tx.Exec(ctx, rollbackQuery, pg.Ident(model.TableName()), height)
+		deletedCount, err := tx.Exec(ctx, rollbackQuery, bun.Ident(model.TableName()), height)
 		if err != nil {
 			return tx.HandleError(ctx, err)
 		}
@@ -143,7 +143,7 @@ func (rm RollbackManager) rollbackProxy(ctx context.Context, height uint64, tx s
 					return err
 				}
 			case models.ProxyActionUpdate:
-				last, err := rm.proxyUpgrades.LastBefore(ctx, upgrades[i].Height)
+				last, err := rm.proxyUpgrades.LastBefore(ctx, upgrades[i].Hash, upgrades[i].Selector, upgrades[i].Height)
 				if err != nil {
 					if rm.proxyUpgrades.IsNoRows(err) {
 						if _, err = tx.Exec(ctx, `delete from proxy where selector = ? and hash = ?`, upgrades[i].Selector, upgrades[i].Hash); err != nil {
@@ -154,11 +154,20 @@ func (rm RollbackManager) rollbackProxy(ctx context.Context, height uint64, tx s
 					return err
 				}
 
-				if _, err := tx.Exec(ctx,
-					`update proxy set entity_type = ?, entity_id = ?, entity_hash = ? where selector = ? and hash = ?`,
-					last.EntityType, last.EntityID, last.EntityHash, last.Selector, last.Hash,
-				); err != nil {
-					return err
+				if upgrades[i].Selector == nil {
+					if _, err := tx.Exec(ctx,
+						`update proxy set entity_type = ?, entity_id = ?, entity_hash = ? where selector is NULL and hash = ?`,
+						last.EntityType, last.EntityID, last.EntityHash, last.Hash,
+					); err != nil {
+						return err
+					}
+				} else {
+					if _, err := tx.Exec(ctx,
+						`update proxy set entity_type = ?, entity_id = ?, entity_hash = ? where selector = ? and hash = ?`,
+						last.EntityType, last.EntityID, last.EntityHash, last.Selector, last.Hash,
+					); err != nil {
+						return err
+					}
 				}
 			case models.ProxyActionDelete:
 				if _, err = tx.Exec(ctx,
@@ -248,7 +257,7 @@ func (rm RollbackManager) rollbackTokenBalances(ctx context.Context, height uint
 		ON CONFLICT (owner_id, contract_id, token_id)
 		DO 
 		UPDATE SET balance = token_balance.balance + excluded.balance`,
-		pg.Safe(strings.Join(values, ",")),
+		bun.Safe(strings.Join(values, ",")),
 	)
 	return err
 }

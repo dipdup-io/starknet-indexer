@@ -5,13 +5,12 @@ import (
 
 	"github.com/dipdup-net/indexer-sdk/pkg/storage"
 	"github.com/shopspring/decimal"
+	"github.com/uptrace/bun"
 )
 
 // ITransfer -
 type ITransfer interface {
 	storage.Table[*Transfer]
-
-	Copiable[Transfer]
 	Filterable[Transfer, TransferFilter]
 }
 
@@ -28,17 +27,16 @@ type TransferFilter struct {
 
 // Transfer -
 type Transfer struct {
-	// nolint
-	tableName struct{} `pg:"transfer,partition_by:RANGE(time)"`
+	bun.BaseModel `bun:"transfer" comment:"Trandfer table" partition:"RANGE(time)"`
 
-	ID         uint64          `pg:",pk" comment:"Unique internal identity"`
-	Height     uint64          `pg:",use_zero" comment:"Block height"`
-	Time       time.Time       `pg:",pk" comment:"Block time"`
+	ID         uint64          `bun:",pk,autoincrement" comment:"Unique internal identity"`
+	Height     uint64          `comment:"Block height"`
+	Time       time.Time       `bun:",pk" comment:"Block time"`
 	ContractID uint64          `comment:"Token contract id"`
 	FromID     uint64          `comment:"Id address which transfer from"`
 	ToID       uint64          `comment:"Id address which transfer to"`
-	Amount     decimal.Decimal `pg:",type:numeric,use_zero" comment:"Amount of transfer"`
-	TokenID    decimal.Decimal `pg:",type:numeric,use_zero" comment:"Id token which was transferred"`
+	Amount     decimal.Decimal `bun:",type:numeric" comment:"Amount of transfer"`
+	TokenID    decimal.Decimal `bun:",type:numeric" comment:"Id token which was transferred"`
 
 	InvokeID        *uint64 `comment:"Parent invoke id"`
 	DeclareID       *uint64 `comment:"Parent declare id"`
@@ -48,10 +46,10 @@ type Transfer struct {
 	FeeID           *uint64 `comment:"Parent fee invocation id"`
 	InternalID      *uint64 `comment:"Parent internal transaction id"`
 
-	From     Address `pg:"rel:has-one" hasura:"table:address,field:from_id,remote_field:id,type:oto,name:from"`
-	To       Address `pg:"rel:has-one" hasura:"table:address,field:to_id,remote_field:id,type:oto,name:to"`
-	Contract Address `pg:"rel:has-one" hasura:"table:address,field:contract_id,remote_field:id,type:oto,name:contract"`
-	Token    Token   `pg:"-" hasura:"table:token,field:contract_id,remote_field:contract_id,type:oto,name:token"`
+	From     Address `bun:"rel:belongs-to" hasura:"table:address,field:from_id,remote_field:id,type:oto,name:from"`
+	To       Address `bun:"rel:belongs-to" hasura:"table:address,field:to_id,remote_field:id,type:oto,name:to"`
+	Contract Address `bun:"rel:belongs-to" hasura:"table:address,field:contract_id,remote_field:id,type:oto,name:contract"`
+	Token    Token   `bun:"-" hasura:"table:token,field:contract_id,remote_field:contract_id,type:oto,name:token"`
 }
 
 // TableName -
@@ -94,4 +92,34 @@ func (transfer Transfer) GetHeight() uint64 {
 // GetId -
 func (transfer Transfer) GetId() uint64 {
 	return transfer.ID
+}
+
+// Columns -
+func (Transfer) Columns() []string {
+	return []string{
+		"height", "time", "contract_id", "from_id",
+		"to_id", "amount", "token_id", "invoke_id",
+		"declare_id", "deploy_id", "deploy_account_id",
+		"l1_handler_id", "fee_id", "internal_id",
+	}
+}
+
+// Flat -
+func (transfer Transfer) Flat() []any {
+	return []any{
+		transfer.Height,
+		transfer.Time,
+		transfer.ContractID,
+		transfer.FromID,
+		transfer.ToID,
+		transfer.Amount,
+		transfer.TokenID,
+		transfer.InvokeID,
+		transfer.DeclareID,
+		transfer.DeployID,
+		transfer.DeployAccountID,
+		transfer.L1HandlerID,
+		transfer.FeeID,
+		transfer.InternalID,
+	}
 }

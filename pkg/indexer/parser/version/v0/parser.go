@@ -26,6 +26,8 @@ type Parser struct {
 	FeeParser        interfaces.FeeParser
 	TransferParser   interfaces.TransferParser
 	ProxyUpgrader    interfaces.ProxyUpgrader
+
+	blocks storage.IBlock
 }
 
 // NewWithParsers -
@@ -49,6 +51,8 @@ func NewWithParsers(
 		MessageParser:    messageParser,
 		TransferParser:   transferParser,
 		ProxyUpgrader:    proxyUpgrader,
+
+		blocks: blocks,
 	}
 }
 

@@ -2,6 +2,7 @@ package cache
 
 import (
 	"context"
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"time"
@@ -78,6 +79,11 @@ func (cache *Cache) GetAbiByClassHash(ctx context.Context, hash []byte) (abi.Abi
 		}
 
 		var a abi.Abi
+
+		if class.Abi == nil {
+			return a, sql.ErrNoRows
+		}
+
 		if err = json.Unmarshal(class.Abi, &a); err != nil {
 			return a, errors.Wrap(err, "GetAbiByClassHash: "+string(class.Abi))
 		}
@@ -126,13 +132,13 @@ func (cache *Cache) GetAddress(ctx context.Context, hash []byte) (storage.Addres
 	}
 
 	address := item.Value().(storage.Address)
-	if address.ClassID == nil {
-		address, err = cache.address.GetByHash(ctx, hash)
-		if err != nil {
-			return address, err
-		}
-		cache.Set(key, address, ttl)
-	}
+	// if address.ClassID == nil {
+	// 	address, err = cache.address.GetByHash(ctx, hash)
+	// 	if err != nil {
+	// 		return address, err
+	// 	}
+	// 	cache.Set(key, address, ttl)
+	// }
 
 	return address, nil
 }

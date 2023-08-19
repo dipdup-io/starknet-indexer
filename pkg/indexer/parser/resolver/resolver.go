@@ -17,6 +17,7 @@ var (
 // Resolver -
 type Resolver struct {
 	blocks       storage.IBlock
+	addresses    storage.IAddress
 	proxies      storage.IProxy
 	receiver     *receiver.Receiver
 	cache        *cache.Cache
@@ -30,6 +31,7 @@ func NewResolver(
 	cache *cache.Cache,
 	idGenerator *generator.IdGenerator,
 	blocks storage.IBlock,
+	addresses storage.IAddress,
 	proxies storage.IProxy,
 	blockContext *data.BlockContext,
 ) Resolver {
@@ -38,6 +40,7 @@ func NewResolver(
 		cache:        cache,
 		idGenerator:  idGenerator,
 		blocks:       blocks,
+		addresses:    addresses,
 		proxies:      proxies,
 		blockContext: blockContext,
 	}

@@ -6,7 +6,7 @@ import (
 	"github.com/dipdup-io/starknet-indexer/internal/storage"
 	"github.com/dipdup-net/go-lib/database"
 	"github.com/dipdup-net/indexer-sdk/pkg/storage/postgres"
-	"github.com/go-pg/pg/v10/orm"
+	"github.com/uptrace/bun"
 )
 
 // Declare -
@@ -15,32 +15,31 @@ type Declare struct {
 }
 
 // NewDeclare -
-func NewDeclare(db *database.PgGo) *Declare {
+func NewDeclare(db *database.Bun) *Declare {
 	return &Declare{
 		Table: postgres.NewTable[*storage.Declare](db),
 	}
 }
 
 // Filter -
-func (d *Declare) Filter(ctx context.Context, fltr []storage.DeclareFilter, opts ...storage.FilterOption) ([]storage.Declare, error) {
-	query := d.DB().ModelContext(ctx, (*storage.Declare)(nil))
+func (d *Declare) Filter(ctx context.Context, fltr []storage.DeclareFilter, opts ...storage.FilterOption) (result []storage.Declare, err error) {
+	query := d.DB().NewSelect().Model(&result)
 
-	query = query.WhereGroup(func(q1 *orm.Query) (*orm.Query, error) {
+	query = query.WhereGroup(" AND ", func(q1 *bun.SelectQuery) *bun.SelectQuery {
 		for i := range fltr {
-			q1 = q1.WhereOrGroup(func(q *orm.Query) (*orm.Query, error) {
+			q1 = q1.WhereGroup(" OR ", func(q *bun.SelectQuery) *bun.SelectQuery {
 				q = integerFilter(q, "declare.id", fltr[i].ID)
 				q = integerFilter(q, "declare.height", fltr[i].Height)
 				q = timeFilter(q, "declare.time", fltr[i].Time)
 				q = enumFilter(q, "declare.status", fltr[i].Status)
-				return enumFilter(q, "declare.version", fltr[i].Version), nil
+				return enumFilter(q, "declare.version", fltr[i].Version)
 			})
 		}
-		return q1, nil
+		return q1
 	})
 	query = optionsFilter(query, "declare", opts...)
 	query.Relation("Contract").Relation("Sender").Relation("Class")
 
-	var declares []storage.Declare
-	err := query.Select(&declares)
-	return declares, err
+	err = query.Scan(ctx)
+	return
 }

@@ -4,12 +4,14 @@ import (
 	"time"
 
 	"github.com/dipdup-net/indexer-sdk/pkg/storage"
+	"github.com/goccy/go-json"
+	"github.com/lib/pq"
+	"github.com/uptrace/bun"
 )
 
 // IDeploy -
 type IDeploy interface {
 	storage.Table[*Deploy]
-	Copiable[Deploy]
 	Filterable[Deploy, DeployFilter]
 }
 
@@ -25,29 +27,28 @@ type DeployFilter struct {
 
 // Deploy -
 type Deploy struct {
-	// nolint
-	tableName struct{} `pg:"deploy,partition_by:RANGE(time)" comment:"Table with deploy transactions"`
+	bun.BaseModel `bun:"deploy" comment:"Table with deploy transactions" partition:"RANGE(time)"`
 
-	ID                  uint64         `pg:"id,type:bigint,pk,notnull" comment:"Unique internal identity"`
-	Height              uint64         `pg:",use_zero" comment:"Block height"`
+	ID                  uint64         `bun:"id,type:bigint,pk,notnull" comment:"Unique internal identity"`
+	Height              uint64         `comment:"Block height"`
 	ClassID             uint64         `comment:"Class id"`
 	ContractID          uint64         `comment:"Contract address id"`
-	Position            int            `pg:",use_zero" comment:"Order in block"`
-	Time                time.Time      `pg:",pk" comment:"Time of block"`
-	Status              Status         `pg:",use_zero"`
+	Position            int            `comment:"Order in block"`
+	Time                time.Time      `bun:",pk" comment:"Time of block"`
+	Status              Status         ``
 	Hash                []byte         `comment:"Transaction hash"`
 	ContractAddressSalt []byte         `comment:"A random salt that determines the account address"`
-	ConstructorCalldata []string       `pg:",array" comment:"Raw constructor calldata"`
+	ConstructorCalldata []string       `bun:",array" comment:"Raw constructor calldata"`
 	ParsedCalldata      map[string]any `comment:"Calldata parsed according to contract ABI"`
 
-	Class     Class      `pg:"rel:has-one" hasura:"table:class,field:class_id,remote_field:id,type:oto,name:class"`
-	Contract  Address    `pg:"rel:has-one" hasura:"table:address,field:contract_id,remote_field:id,type:oto,name:contract"`
-	Internals []Internal `pg:"rel:has-many"`
-	Messages  []Message  `pg:"rel:has-many"`
-	Events    []Event    `pg:"rel:has-many"`
-	Transfers []Transfer `pg:"rel:has-many"`
-	Fee       *Fee       `pg:"rel:has-one"`
-	Token     *Token     `pg:"-"`
+	Class     Class      `bun:"rel:belongs-to" hasura:"table:class,field:class_id,remote_field:id,type:oto,name:class"`
+	Contract  Address    `bun:"rel:belongs-to" hasura:"table:address,field:contract_id,remote_field:id,type:oto,name:contract"`
+	Internals []Internal `bun:"rel:has-many"`
+	Messages  []Message  `bun:"rel:has-many"`
+	Events    []Event    `bun:"rel:has-many"`
+	Transfers []Transfer `bun:"rel:has-many"`
+	Fee       *Fee       `bun:"rel:belongs-to"`
+	Token     *Token     `bun:"-"`
 }
 
 // TableName -
@@ -63,4 +64,36 @@ func (d Deploy) GetHeight() uint64 {
 // GetId -
 func (d Deploy) GetId() uint64 {
 	return d.ID
+}
+
+// Columns -
+func (Deploy) Columns() []string {
+	return []string{
+		"id", "height", "class_id", "contract_id", "position",
+		"time", "status", "hash", "contract_address_salt",
+		"constructor_calldata", "parsed_calldata",
+	}
+}
+
+// Flat -
+func (d Deploy) Flat() []any {
+	data := []any{
+		d.ID,
+		d.Height,
+		d.ClassID,
+		d.ContractID,
+		d.Position,
+		d.Time,
+		d.Status,
+		d.Hash,
+		d.ContractAddressSalt,
+		pq.StringArray(d.ConstructorCalldata),
+	}
+	parsed, err := json.MarshalWithOption(d.ParsedCalldata, json.UnorderedMap(), json.DisableNormalizeUTF8())
+	if err != nil {
+		data = append(data, nil)
+	} else {
+		data = append(data, string(parsed))
+	}
+	return data
 }

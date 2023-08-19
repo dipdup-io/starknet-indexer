@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/dipdup-net/indexer-sdk/pkg/storage"
+	"github.com/uptrace/bun"
 )
 
 // IClass -
@@ -16,15 +17,14 @@ type IClass interface {
 
 // Class -
 type Class struct {
-	// nolint
-	tableName struct{} `pg:"class" comment:"Classes table"`
+	bun.BaseModel `bun:"class" comment:"Classes table"`
 
-	ID     uint64    `pg:"id,type:bigint,pk,notnull" comment:"Unique internal identity"`
-	Type   ClassType `pg:",use_zero" comment:"Class type. It’s a binary mask."`
-	Hash   []byte    `pg:",unique:class_hash" comment:"Class hash"`
-	Abi    Bytes     `pg:",type:bytea" comment:"Class abi in a raw"`
-	Height uint64    `pg:",use_zero" comment:"Block height of the first class occurance"`
-	Cairo  int       `pg:",default:0,type:SMALLINT" comment:"Cairo version of class"`
+	ID     uint64    `bun:"id,type:bigint,pk,notnull,nullzero" comment:"Unique internal identity"`
+	Type   ClassType `comment:"Class type. It’s a binary mask."`
+	Hash   []byte    `bun:",unique:class_hash" comment:"Class hash"`
+	Abi    Bytes     `bun:",type:bytea" comment:"Class abi in a raw"`
+	Height uint64    `comment:"Block height of the first class occurance"`
+	Cairo  int       `bun:",default:0,type:SMALLINT" comment:"Cairo version of class"`
 }
 
 // TableName -

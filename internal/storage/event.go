@@ -4,13 +4,14 @@ import (
 	"time"
 
 	"github.com/dipdup-net/indexer-sdk/pkg/storage"
+	"github.com/goccy/go-json"
+	"github.com/lib/pq"
+	"github.com/uptrace/bun"
 )
 
 // IEvent -
 type IEvent interface {
 	storage.Table[*Event]
-
-	Copiable[Event]
 	Filterable[Event, EventFilter]
 }
 
@@ -27,12 +28,11 @@ type EventFilter struct {
 
 // Event -
 type Event struct {
-	// nolint
-	tableName struct{} `pg:"event,partition_by:RANGE(time)" comment:"Table with events"`
+	bun.BaseModel `bun:"event" comment:"Table with events" partition:"RANGE(time)"`
 
-	ID     uint64    `pg:"id,type:bigint,pk,notnull" comment:"Unique internal identity"`
-	Height uint64    `pg:",use_zero" comment:"Block height"`
-	Time   time.Time `pg:",pk" comment:"Time of block"`
+	ID     uint64    `bun:"id,type:bigint,pk,notnull" comment:"Unique internal identity"`
+	Height uint64    `comment:"Block height"`
+	Time   time.Time `bun:",pk" comment:"Time of block"`
 
 	InvokeID        *uint64 `comment:"Parent invoke id"`
 	DeclareID       *uint64 `comment:"Parent declare id"`
@@ -45,13 +45,13 @@ type Event struct {
 	Order      uint64         `comment:"Order in block"`
 	ContractID uint64         `comment:"Contract address id"`
 	FromID     uint64         `comment:"From address id"`
-	Keys       []string       `pg:",array" comment:"Raw event keys"`
-	Data       []string       `pg:",array" comment:"Raw event data"`
+	Keys       []string       `bun:",array" comment:"Raw event keys"`
+	Data       []string       `bun:",array" comment:"Raw event data"`
 	Name       string         `comment:"Event name"`
 	ParsedData map[string]any `comment:"Event data parsed according to contract ABI"`
 
-	From     Address `pg:"rel:has-one" hasura:"table:address,field:from_id,remote_field:id,type:oto,name:from"`
-	Contract Address `pg:"rel:has-one" hasura:"table:address,field:contract_id,remote_field:id,type:oto,name:contract"`
+	From     Address `bun:"rel:belongs-to" hasura:"table:address,field:from_id,remote_field:id,type:oto,name:from"`
+	Contract Address `bun:"rel:belongs-to" hasura:"table:address,field:contract_id,remote_field:id,type:oto,name:contract"`
 }
 
 // TableName -
@@ -67,4 +67,44 @@ func (e Event) GetHeight() uint64 {
 // GetId -
 func (e Event) GetId() uint64 {
 	return e.ID
+}
+
+// Columns -
+func (Event) Columns() []string {
+	return []string{
+		"id", "height", "time", "invoke_id", "declare_id",
+		"deploy_id", "deploy_account_id", "l1_handler_id",
+		"fee_id", "internal_id", "order", "contract_id",
+		"from_id", "keys", "data", "name", "parsed_data",
+	}
+}
+
+// Flat -
+func (e Event) Flat() []any {
+	data := []any{
+		e.ID,
+		e.Height,
+		e.Time,
+		e.InvokeID,
+		e.DeclareID,
+		e.DeployID,
+		e.DeployAccountID,
+		e.L1HandlerID,
+		e.FeeID,
+		e.InternalID,
+		e.Order,
+		e.ContractID,
+		e.FromID,
+		pq.StringArray(e.Keys),
+		pq.StringArray(e.Data),
+		e.Name,
+	}
+
+	parsed, err := json.MarshalWithOption(e.ParsedData, json.UnorderedMap(), json.DisableNormalizeUTF8())
+	if err != nil {
+		data = append(data, nil)
+	} else {
+		data = append(data, string(parsed))
+	}
+	return data
 }

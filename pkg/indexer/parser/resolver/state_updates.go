@@ -50,6 +50,7 @@ func (resolver *Resolver) parseDeclaredContracts(ctx context.Context, block *sto
 }
 
 func (resolver *Resolver) parseDeployedContracts(ctx context.Context, block *storage.Block, contracts []data.DeployedContract) error {
+	addrs := make(map[data.Felt]storage.Class)
 	for i := range contracts {
 		class, err := resolver.cache.GetClassByHash(ctx, contracts[i].ClassHash.Bytes())
 		if err != nil {
@@ -59,23 +60,40 @@ func (resolver *Resolver) parseDeployedContracts(ctx context.Context, block *sto
 			}
 		}
 
-		hash := contracts[i].Address.Bytes()
-		if address, err := resolver.cache.GetAddress(ctx, hash); err == nil {
-			address.ClassID = &class.ID
-			resolver.addAddress(&address)
-			resolver.cache.SetAbiByAddress(class, hash)
-		} else {
-			address := storage.Address{
-				Hash:    hash,
-				ID:      resolver.idGenerator.NextAddressId(),
-				ClassID: &class.ID,
-				Height:  block.Height,
-			}
-			if err := resolver.FindAddress(ctx, &address); err != nil {
-				return err
-			}
-			resolver.cache.SetAddress(ctx, address)
+		key := data.NewFeltFromBytes(contracts[i].Address.Bytes())
+		addrs[key] = class
+	}
+
+	hash := make([][]byte, 0)
+	for felt := range addrs {
+		hash = append(hash, felt.Bytes())
+	}
+
+	addresses, err := resolver.addresses.GetByHashes(ctx, hash)
+	if err != nil {
+		return err
+	}
+
+	for i := range addresses {
+		h := data.NewFeltFromBytes(addresses[i].Hash)
+		if class, ok := addrs[h]; ok && addresses[i].ClassID == nil {
+			addresses[i].ClassID = &class.ID
+			resolver.addAddress(&addresses[i])
+			resolver.cache.SetAbiByAddress(class, addresses[i].Hash)
+			delete(addrs, h)
 		}
+	}
+
+	for h, class := range addrs {
+		id := class.ID
+		address := storage.Address{
+			Hash:    h.Bytes(),
+			ID:      resolver.idGenerator.NextAddressId(),
+			ClassID: &id,
+			Height:  block.Height,
+		}
+		resolver.addAddress(&address)
+		resolver.cache.SetAddress(ctx, address)
 	}
 
 	return nil
@@ -85,11 +103,12 @@ func (resolver *Resolver) parseStorageDiffs(ctx context.Context, block *storage.
 	endBlockProxies := resolver.blockContext.Proxies()
 	block.StorageDiffs = make([]storage.StorageDiff, 0)
 	for hash, updates := range diffs {
-		address := storage.Address{
-			Hash: hash.Bytes(),
-		}
-		if err := resolver.FindAddress(ctx, &address); err != nil {
+		address, err := resolver.FindAddressByHash(ctx, hash)
+		if err != nil {
 			return err
+		}
+		if address == nil {
+			continue
 		}
 
 		for i := range updates {

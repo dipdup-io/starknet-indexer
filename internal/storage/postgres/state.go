@@ -14,7 +14,7 @@ type State struct {
 }
 
 // NewState -
-func NewState(db *database.PgGo) *State {
+func NewState(db *database.Bun) *State {
 	return &State{
 		Table: postgres.NewTable[*storage.State](db),
 	}
@@ -22,6 +22,6 @@ func NewState(db *database.PgGo) *State {
 
 // ByName -
 func (s *State) ByName(ctx context.Context, name string) (state storage.State, err error) {
-	err = s.DB().ModelContext(ctx, &state).Where("name = ?", name).Select(&state)
+	err = s.DB().NewSelect().Model(&state).Where("name = ?", name).Scan(ctx)
 	return
 }

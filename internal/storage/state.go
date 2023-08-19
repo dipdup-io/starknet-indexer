@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/dipdup-net/indexer-sdk/pkg/storage"
+	"github.com/uptrace/bun"
 )
 
 // IState -
@@ -16,20 +17,19 @@ type IState interface {
 
 // State -
 type State struct {
-	// nolint
-	tableName struct{} `pg:"state"`
+	bun.BaseModel `bun:"state"`
 
-	ID         uint64    `comment:"Unique internal identity"`
-	Name       string    `pg:",unique:state_name"`
-	LastHeight uint64    `pg:",use_zero" comment:"Last block height"`
+	ID         uint64    `bun:",pk,autoincrement" comment:"Unique internal identity"`
+	Name       string    `bun:",unique:state_name"`
+	LastHeight uint64    `comment:"Last block height"`
 	LastTime   time.Time `comment:"Time of last block"`
 
-	InvokesCount        uint64 `pg:",use_zero" comment:"Total invokes count"`
-	DeploysCount        uint64 `pg:",use_zero" comment:"Total deploys count"`
-	DeployAccountsCount uint64 `pg:",use_zero" comment:"Total deploy accounts count"`
-	DeclaresCount       uint64 `pg:",use_zero" comment:"Total declares count"`
-	L1HandlersCount     uint64 `pg:",use_zero" comment:"Total l1 handlers count"`
-	TxCount             uint64 `pg:",use_zero" comment:"Total transactions count"`
+	InvokesCount        uint64 `comment:"Total invokes count"`
+	DeploysCount        uint64 `comment:"Total deploys count"`
+	DeployAccountsCount uint64 `comment:"Total deploy accounts count"`
+	DeclaresCount       uint64 `comment:"Total declares count"`
+	L1HandlersCount     uint64 `comment:"Total l1 handlers count"`
+	TxCount             uint64 `comment:"Total transactions count"`
 
 	LastClassID   uint64 `comment:"Last internal class id"`
 	LastAddressID uint64 `comment:"Last internal address id"`
