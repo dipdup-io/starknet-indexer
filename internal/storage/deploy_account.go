@@ -43,6 +43,7 @@ type DeployAccount struct {
 	Nonce               decimal.Decimal `bun:",type:numeric" comment:"The transaction nonce"`
 	ConstructorCalldata []string        `bun:",array" comment:"Raw constructor calldata"`
 	ParsedCalldata      map[string]any  `comment:"Calldata parsed according to contract ABI"`
+	Error               *string         `bun:"error" comment:"Reverted error"`
 
 	Class     Class      `bun:"rel:belongs-to" hasura:"table:class,field:class_id,remote_field:id,type:oto,name:class"`
 	Contract  Address    `bun:"rel:belongs-to" hasura:"table:address,field:contract_id,remote_field:id,type:oto,name:contract"`
@@ -74,6 +75,7 @@ func (DeployAccount) Columns() []string {
 		"id", "height", "class_id", "contract_id", "position",
 		"time", "status", "hash", "contract_address_salt",
 		"max_fee", "nonce", "constructor_calldata", "parsed_calldata",
+		"error",
 	}
 }
 
@@ -92,6 +94,7 @@ func (d DeployAccount) Flat() []any {
 		d.MaxFee,
 		d.Nonce,
 		pq.StringArray(d.ConstructorCalldata),
+		d.Error,
 	}
 	parsed, err := json.MarshalWithOption(d.ParsedCalldata, json.UnorderedMap(), json.DisableNormalizeUTF8())
 	if err != nil {

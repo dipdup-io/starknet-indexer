@@ -40,6 +40,7 @@ type Deploy struct {
 	ContractAddressSalt []byte         `comment:"A random salt that determines the account address"`
 	ConstructorCalldata []string       `bun:",array" comment:"Raw constructor calldata"`
 	ParsedCalldata      map[string]any `comment:"Calldata parsed according to contract ABI"`
+	Error               *string        `bun:"error" comment:"Reverted error"`
 
 	Class     Class      `bun:"rel:belongs-to" hasura:"table:class,field:class_id,remote_field:id,type:oto,name:class"`
 	Contract  Address    `bun:"rel:belongs-to" hasura:"table:address,field:contract_id,remote_field:id,type:oto,name:contract"`
@@ -71,7 +72,7 @@ func (Deploy) Columns() []string {
 	return []string{
 		"id", "height", "class_id", "contract_id", "position",
 		"time", "status", "hash", "contract_address_salt",
-		"constructor_calldata", "parsed_calldata",
+		"constructor_calldata", "parsed_calldata", "error",
 	}
 }
 
@@ -88,6 +89,7 @@ func (d Deploy) Flat() []any {
 		d.Hash,
 		d.ContractAddressSalt,
 		pq.StringArray(d.ConstructorCalldata),
+		d.Error,
 	}
 	parsed, err := json.MarshalWithOption(d.ParsedCalldata, json.UnorderedMap(), json.DisableNormalizeUTF8())
 	if err != nil {

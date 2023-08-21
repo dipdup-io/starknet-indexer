@@ -25,6 +25,11 @@ func (parser Parser) ParseDeploy(ctx context.Context, raw *data.Deploy, block st
 		ConstructorCalldata: raw.ConstructorCalldata,
 	}
 
+	if trace.RevertedError != "" {
+		tx.Status = storage.StatusReverted
+		tx.Error = &trace.RevertedError
+	}
+
 	if class, err := parser.Resolver.FindClassByHash(ctx, raw.ClassHash, tx.Height); err != nil {
 		return tx, nil, err
 	} else if class != nil {
@@ -49,7 +54,7 @@ func (parser Parser) ParseDeploy(ctx context.Context, raw *data.Deploy, block st
 		return tx, nil, err
 	}
 
-	if len(tx.ConstructorCalldata) > 0 {
+	if tx.Status != storage.StatusReverted && len(tx.ConstructorCalldata) > 0 {
 		tx.ParsedCalldata, err = decode.CalldataForConstructor(classAbi, tx.ConstructorCalldata)
 		if err != nil {
 			if !errors.Is(err, abi.ErrNoLenField) {

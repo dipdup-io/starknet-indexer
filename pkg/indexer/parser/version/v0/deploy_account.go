@@ -28,6 +28,11 @@ func (parser Parser) ParseDeployAccount(ctx context.Context, raw *data.DeployAcc
 		Nonce:               raw.Nonce.Decimal(),
 	}
 
+	if trace.RevertedError != "" {
+		tx.Status = storage.StatusReverted
+		tx.Error = &trace.RevertedError
+	}
+
 	if class, err := parser.Resolver.FindClassByHash(ctx, raw.ClassHash, tx.Height); err != nil {
 		return tx, nil, err
 	} else if class != nil {
@@ -56,7 +61,7 @@ func (parser Parser) ParseDeployAccount(ctx context.Context, raw *data.DeployAcc
 		return tx, nil, err
 	}
 
-	if len(tx.ConstructorCalldata) > 0 {
+	if tx.Status != storage.StatusReverted && len(tx.ConstructorCalldata) > 0 {
 		tx.ParsedCalldata, err = decode.CalldataForConstructor(classAbi, tx.ConstructorCalldata)
 		if err != nil {
 			if !errors.Is(err, abi.ErrNoLenField) {

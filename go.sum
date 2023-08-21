@@ -36,10 +36,16 @@ github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSs
 github.com/denisenkom/go-mssqldb v0.12.3 h1:pBSGx9Tq67pBOTLmxNuirNTeB8Vjmf886Kx+8Y+8shw=
 github.com/dipdup-io/starknet-go-api v0.0.0-20230818110656-b2736a55da83 h1:t0np+nBu2soYQIltZxwrBO5IqloVRbNrUhXd2jU9Bk4=
 github.com/dipdup-io/starknet-go-api v0.0.0-20230818110656-b2736a55da83/go.mod h1:Pbi1et2OC3ZWhzv/76nDg5C0/v4Mrj7YWkZPXcZFys0=
+github.com/dipdup-io/starknet-go-api v0.0.0-20230821101519-0c757a75bfab h1:+O5X/NoRJVp3TkojdzH/wfCDriDwOq6rnIhcH31WErM=
+github.com/dipdup-io/starknet-go-api v0.0.0-20230821101519-0c757a75bfab/go.mod h1:Pbi1et2OC3ZWhzv/76nDg5C0/v4Mrj7YWkZPXcZFys0=
+github.com/dipdup-io/starknet-go-api v0.0.0-20230821102124-e1e540059e1b h1:eTVo7C8WxKINzGY8oVrnufoAJyjjlbrWwZ9/9gF128k=
+github.com/dipdup-io/starknet-go-api v0.0.0-20230821102124-e1e540059e1b/go.mod h1:Pbi1et2OC3ZWhzv/76nDg5C0/v4Mrj7YWkZPXcZFys0=
 github.com/dipdup-io/workerpool v0.0.3 h1:+cnO0/J0e4UiJ0EBEDpvuhriSDVHlsPminGRU2Il+ZI=
 github.com/dipdup-io/workerpool v0.0.3/go.mod h1:m6YMqx7M+fORTyabHD/auKymBRpbDax0t1aPZ1i7GZA=
 github.com/dipdup-net/go-lib v0.3.0 h1:56OImCLIHyLL4Da7UI5H2xyTP65i2FUXSO6Gyxll460=
 github.com/dipdup-net/go-lib v0.3.0/go.mod h1:oBDOSsM/F8fEnmuDnaJ6QA/cHH4lne49ASbsh8WXDe4=
+github.com/dipdup-net/go-lib v0.3.2 h1:YOECsDekTUlabEPq1IqtDLzY/tw9xW7P9fGYBl6ckvg=
+github.com/dipdup-net/go-lib v0.3.2/go.mod h1:oBDOSsM/F8fEnmuDnaJ6QA/cHH4lne49ASbsh8WXDe4=
 github.com/dipdup-net/indexer-sdk v0.0.0-20230819120445-392cbc4cfb65 h1:jZ53iH1UhoBTtIj4pRUPz826EFIwr7KYUR7EkwokwPM=
 github.com/dipdup-net/indexer-sdk v0.0.0-20230819120445-392cbc4cfb65/go.mod h1:sZEbnuguFw8kxgD3iNLLHDq1DUDrXI6KcghNMcmNCS4=
 github.com/docker/distribution v2.8.2+incompatible h1:T3de5rq0dB1j30rp0sA2rER+m322EBzniBPB6ZIzuh8=

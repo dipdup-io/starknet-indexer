@@ -29,6 +29,11 @@ func (parser Parser) ParseInvokeV1(ctx context.Context, raw *data.Invoke, block 
 		Version:            1,
 	}
 
+	if trace.RevertedError != "" {
+		tx.Status = storage.StatusReverted
+		tx.Error = &trace.RevertedError
+	}
+
 	var contract data.Felt
 	switch {
 	case raw.ContractAddress != "":
@@ -46,7 +51,7 @@ func (parser Parser) ParseInvokeV1(ctx context.Context, raw *data.Invoke, block 
 		}
 	}
 
-	if len(tx.CallData) > 0 {
+	if tx.Status != storage.StatusReverted && len(tx.CallData) > 0 {
 		var found bool
 		contractAbi, err := parser.Cache.GetAbiByAddress(ctx, tx.Contract.Hash)
 		if err == nil {
@@ -72,61 +77,62 @@ func (parser Parser) ParseInvokeV1(ctx context.Context, raw *data.Invoke, block 
 		}
 	}
 
-	var (
-		proxyId     uint64
-		class       storage.Class
-		err         error
-		contractAbi abi.Abi
-	)
+	txCtx := parserData.NewTxContextFromInvoke(tx, 0)
 
-	if trace.FunctionInvocation != nil && trace.FunctionInvocation.ClassHash.Length() > 0 {
-		class, err = parser.Cache.GetClassByHash(ctx, trace.FunctionInvocation.ClassHash.Bytes())
-	} else {
-		class, err = parser.Cache.GetClassForAddress(ctx, tx.Contract.Hash)
-	}
-	if err != nil {
-		return tx, nil, errors.Wrap(err, "receive class hash")
-	}
+	if tx.Status != storage.StatusReverted {
+		var (
+			class       storage.Class
+			err         error
+			contractAbi abi.Abi
+		)
 
-	if class.Type.Is(storage.ClassTypeProxy) {
-		proxyId = tx.ContractID
-	}
-
-	txCtx := parserData.NewTxContextFromInvoke(tx, proxyId)
-
-	tx.Transfers, err = parser.TransferParser.ParseCalldata(ctx, txCtx, tx.Entrypoint, tx.ParsedCalldata)
-	if err != nil {
-		return tx, nil, errors.Wrap(err, "transfer parse")
-	}
-
-	if trace.FunctionInvocation != nil {
-		if len(trace.FunctionInvocation.Events) > 0 {
-			contractAbi, err = parser.Cache.GetAbiByAddress(ctx, tx.Contract.Hash)
-			if err != nil {
-				return tx, nil, errors.Wrapf(err, "get abi: %x", tx.Contract.Hash)
-			}
-			tx.Events, err = parseEvents(ctx, parser.EventParser, txCtx, contractAbi, trace.FunctionInvocation.Events)
-			if err != nil {
-				return tx, nil, errors.Wrap(err, "parse events")
-			}
-			tx.Transfers, err = parser.TransferParser.ParseEvents(ctx, txCtx, tx.Contract, tx.Events)
-			if err != nil {
-				return tx, nil, errors.Wrap(err, "TransferParser.ParseEvents")
-			}
-			if err := parser.ProxyUpgrader.Parse(ctx, txCtx, tx.Contract, tx.Events, tx.Entrypoint, tx.ParsedCalldata); err != nil {
-				return tx, nil, errors.Wrap(err, "ProxyUpgrader.Parse")
-			}
+		if trace.FunctionInvocation != nil && trace.FunctionInvocation.ClassHash.Length() > 0 {
+			class, err = parser.Cache.GetClassByHash(ctx, trace.FunctionInvocation.ClassHash.Bytes())
+		} else {
+			class, err = parser.Cache.GetClassForAddress(ctx, tx.Contract.Hash)
+		}
+		if err != nil {
+			return tx, nil, errors.Wrap(err, "receive class hash")
 		}
 
-		var err error
-		tx.Messages, err = parseMessages(ctx, parser.MessageParser, txCtx, trace.FunctionInvocation.Messages)
-		if err != nil {
-			return tx, nil, errors.Wrap(err, "parseMessages")
+		if class.Type.Is(storage.ClassTypeProxy) {
+			txCtx.ProxyId = tx.ContractID
 		}
 
-		tx.Internals, err = parseInternals(ctx, parser.InternalTxParser, txCtx, trace.FunctionInvocation.InternalCalls)
+		tx.Transfers, err = parser.TransferParser.ParseCalldata(ctx, txCtx, tx.Entrypoint, tx.ParsedCalldata)
 		if err != nil {
-			return tx, nil, err
+			return tx, nil, errors.Wrap(err, "transfer parse")
+		}
+
+		if trace.FunctionInvocation != nil {
+			if len(trace.FunctionInvocation.Events) > 0 {
+				contractAbi, err = parser.Cache.GetAbiByAddress(ctx, tx.Contract.Hash)
+				if err != nil {
+					return tx, nil, errors.Wrapf(err, "get abi: %x", tx.Contract.Hash)
+				}
+				tx.Events, err = parseEvents(ctx, parser.EventParser, txCtx, contractAbi, trace.FunctionInvocation.Events)
+				if err != nil {
+					return tx, nil, errors.Wrap(err, "parse events")
+				}
+				tx.Transfers, err = parser.TransferParser.ParseEvents(ctx, txCtx, tx.Contract, tx.Events)
+				if err != nil {
+					return tx, nil, errors.Wrap(err, "TransferParser.ParseEvents")
+				}
+				if err := parser.ProxyUpgrader.Parse(ctx, txCtx, tx.Contract, tx.Events, tx.Entrypoint, tx.ParsedCalldata); err != nil {
+					return tx, nil, errors.Wrap(err, "ProxyUpgrader.Parse")
+				}
+			}
+
+			var err error
+			tx.Messages, err = parseMessages(ctx, parser.MessageParser, txCtx, trace.FunctionInvocation.Messages)
+			if err != nil {
+				return tx, nil, errors.Wrap(err, "parseMessages")
+			}
+
+			tx.Internals, err = parseInternals(ctx, parser.InternalTxParser, txCtx, trace.FunctionInvocation.InternalCalls)
+			if err != nil {
+				return tx, nil, err
+			}
 		}
 	}
 

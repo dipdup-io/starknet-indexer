@@ -21,6 +21,11 @@ func (parser Parser) ParseDeclare(ctx context.Context, version data.Felt, raw *d
 		Nonce:  raw.Nonce.Decimal(),
 	}
 
+	if trace.RevertedError != "" {
+		tx.Status = storage.StatusReverted
+		tx.Error = &trace.RevertedError
+	}
+
 	var err error
 	tx.Version, err = version.Uint64()
 	if err != nil {

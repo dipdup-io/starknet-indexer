@@ -35,7 +35,7 @@ type L1Handler struct {
 	ID             uint64          `bun:"id,type:bigint,pk,notnull" comment:"Unique internal identity"`
 	Height         uint64          `comment:"Block height"`
 	Time           time.Time       `bun:",pk" comment:"Time of block"`
-	Status         Status          `comment:"Status in blockchain (unknown - 1 | not received - 2  | received - 3 | pending - 4 | rejected - 5 | accepted on l2 - 6 | accepted on l1 - 7 )"`
+	Status         Status          `comment:"Status in blockchain (unknown - 1 | not received - 2  | received - 3 | pending - 4 | rejected - 5 | accepted on l2 - 6 | accepted on l1 - 7 | reverted - 8)"`
 	Hash           []byte          `comment:"Transaction hash"`
 	ContractID     uint64          `comment:"Contract address id"`
 	Position       int             `comment:"Order in block"`
@@ -45,6 +45,7 @@ type L1Handler struct {
 	Nonce          decimal.Decimal `bun:",type:numeric" comment:"The transaction nonce"`
 	CallData       []string        `bun:",array" comment:"Raw calldata"`
 	ParsedCalldata map[string]any  `comment:"Calldata parsed according to contract ABI"`
+	Error          *string         `bun:"error" comment:"Reverted error"`
 
 	Contract  Address    `bun:"rel:belongs-to" hasura:"table:address,field:contract_id,remote_field:id,type:oto,name:contract"`
 	Internals []Internal `bun:"rel:has-many"`
@@ -74,7 +75,7 @@ func (L1Handler) Columns() []string {
 	return []string{
 		"id", "height", "time", "status", "hash", "contract_id",
 		"position", "selector", "entrypoint", "max_fee",
-		"nonce", "call_data", "parsed_calldata",
+		"nonce", "call_data", "parsed_calldata", "error",
 	}
 }
 
@@ -93,6 +94,7 @@ func (l1 L1Handler) Flat() []any {
 		l1.MaxFee,
 		l1.Nonce,
 		pq.StringArray(l1.CallData),
+		l1.Error,
 	}
 
 	parsed, err := json.MarshalWithOption(l1.ParsedCalldata, json.UnorderedMap(), json.DisableNormalizeUTF8())

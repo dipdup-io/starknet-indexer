@@ -47,6 +47,7 @@ type Invoke struct {
 	Nonce              decimal.Decimal `bun:",type:numeric" comment:"The transaction nonce"`
 	CallData           []string        `bun:",array" comment:"Raw calldata"`
 	ParsedCalldata     map[string]any  `comment:"Calldata parsed according to contract ABI"`
+	Error              *string         `bun:"error" comment:"Reverted error"`
 
 	Contract  Address    `bun:"rel:belongs-to" hasura:"table:address,field:contract_id,remote_field:id,type:oto,name:contract"`
 	Internals []Internal `bun:"rel:has-many"`
@@ -77,6 +78,7 @@ func (Invoke) Columns() []string {
 		"id", "height", "time", "status", "hash", "version",
 		"position", "contract_id", "entrypoint_selector",
 		"entrypoint", "max_fee", "nonce", "call_data", "parsed_calldata",
+		"error",
 	}
 }
 
@@ -96,6 +98,7 @@ func (i Invoke) Flat() []any {
 		i.MaxFee,
 		i.Nonce,
 		pq.StringArray(i.CallData),
+		i.Error,
 	}
 	parsed, err := json.MarshalWithOption(i.ParsedCalldata, json.UnorderedMap(), json.DisableNormalizeUTF8())
 	if err != nil {

@@ -39,6 +39,7 @@ type Declare struct {
 	Hash       []byte          `comment:"Transaction hash"`
 	MaxFee     decimal.Decimal `bun:",type:numeric" comment:"The maximum fee that the sender is willing to pay for the transaction"`
 	Nonce      decimal.Decimal `bun:",type:numeric" comment:"The transaction nonce"`
+	Error      *string         `bun:"error" comment:"Reverted error"`
 
 	Class     Class      `bun:"rel:belongs-to" hasura:"table:class,field:class_id,remote_field:id,type:oto,name:class"`
 	Sender    Address    `bun:"rel:belongs-to" hasura:"table:address,field:sender_id,remote_field:id,type:oto,name:sender"`
@@ -70,7 +71,7 @@ func (Declare) Columns() []string {
 	return []string{
 		"id", "height", "class_id", "version", "position",
 		"sender_id", "contract_id", "time", "status", "hash",
-		"max_fee", "nonce",
+		"max_fee", "nonce", "error",
 	}
 }
 
@@ -89,5 +90,6 @@ func (d Declare) Flat() []any {
 		d.Hash,
 		d.MaxFee,
 		d.Nonce,
+		d.Error,
 	}
 }

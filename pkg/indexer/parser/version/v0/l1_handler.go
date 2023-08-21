@@ -27,6 +27,11 @@ func (parser Parser) ParseL1Handler(ctx context.Context, raw *data.L1Handler, bl
 		Nonce:    raw.Nonce.Decimal(),
 	}
 
+	if trace.RevertedError != "" {
+		tx.Status = storage.StatusReverted
+		tx.Error = &trace.RevertedError
+	}
+
 	if address, err := parser.Resolver.FindAddressByHash(ctx, raw.ContractAddress); err != nil {
 		return tx, nil, err
 	} else if address != nil {
@@ -39,16 +44,17 @@ func (parser Parser) ParseL1Handler(ctx context.Context, raw *data.L1Handler, bl
 		contractAbi abi.Abi
 		err         error
 		proxyId     uint64
+		needDecode  = helpers.NeedDecode(tx.Status, tx.CallData, trace.FunctionInvocation)
 	)
 
-	if helpers.NeedDecode(tx.CallData, trace.FunctionInvocation) {
+	if needDecode {
 		contractAbi, err = parser.Cache.GetAbiByAddress(ctx, tx.Contract.Hash)
 		if err != nil {
 			return tx, nil, err
 		}
 	}
 
-	if len(tx.CallData) > 0 {
+	if needDecode && len(tx.CallData) > 0 {
 		if _, ok := contractAbi.GetL1HandlerBySelector(encoding.EncodeHex(tx.Selector)); !ok {
 			class, err := parser.Cache.GetClassById(ctx, *tx.Contract.ClassID)
 			if err != nil {

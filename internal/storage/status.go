@@ -13,6 +13,7 @@ const (
 	StatusRejected
 	StatusAcceptedOnL2
 	StatusAcceptedOnL1
+	StatusReverted
 )
 
 // NewStatus -
@@ -30,6 +31,8 @@ func NewStatus(value string) Status {
 		return StatusAcceptedOnL2
 	case data.StatusAcceptedOnL1:
 		return StatusAcceptedOnL1
+	case data.StatusReverted:
+		return StatusReverted
 	default:
 		return StatusUnknown
 	}
@@ -50,6 +53,8 @@ func (s Status) String() string {
 		return data.StatusAcceptedOnL2
 	case StatusAcceptedOnL1:
 		return data.StatusAcceptedOnL1
+	case StatusReverted:
+		return data.StatusReverted
 	default:
 		return Unknown
 	}

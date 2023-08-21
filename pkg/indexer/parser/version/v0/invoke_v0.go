@@ -34,6 +34,11 @@ func (parser Parser) ParseInvokeV0(ctx context.Context, raw *data.Invoke, block 
 		Internals: make([]storage.Internal, 0),
 	}
 
+	if trace.RevertedError != "" {
+		tx.Status = storage.StatusReverted
+		tx.Error = &trace.RevertedError
+	}
+
 	var contract data.Felt
 	switch {
 	case raw.ContractAddress != "":
@@ -55,9 +60,10 @@ func (parser Parser) ParseInvokeV0(ctx context.Context, raw *data.Invoke, block 
 		contractAbi abi.Abi
 		err         error
 		proxyId     uint64
+		needDecode  = helpers.NeedDecode(tx.Status, tx.CallData, trace.FunctionInvocation)
 	)
 
-	if helpers.NeedDecode(tx.CallData, trace.FunctionInvocation) {
+	if needDecode {
 		contractAbi, err = parser.Cache.GetAbiByAddress(ctx, tx.Contract.Hash)
 		if err != nil {
 			return tx, nil, err
@@ -89,13 +95,13 @@ func (parser Parser) ParseInvokeV0(ctx context.Context, raw *data.Invoke, block 
 		}
 	}
 
-	isExecute := bytes.Equal(tx.EntrypointSelector, encoding.ExecuteEntrypointSelector)
-	_, hasExecute := contractAbi.Functions[encoding.ExecuteEntrypoint]
+	if needDecode && len(tx.CallData) > 0 {
+		isExecute := bytes.Equal(tx.EntrypointSelector, encoding.ExecuteEntrypointSelector)
+		_, hasExecute := contractAbi.Functions[encoding.ExecuteEntrypoint]
 
-	isChangeModules := bytes.Equal(tx.EntrypointSelector, encoding.ChangeModuleEntrypointSelector)
-	_, hasChangeModules := contractAbi.Functions[encoding.ChangeModulesEntrypoint]
+		isChangeModules := bytes.Equal(tx.EntrypointSelector, encoding.ChangeModuleEntrypointSelector)
+		_, hasChangeModules := contractAbi.Functions[encoding.ChangeModulesEntrypoint]
 
-	if len(tx.CallData) > 0 {
 		switch {
 		case isExecute && !hasExecute:
 			tx.Entrypoint = encoding.ChangeModulesEntrypoint
@@ -115,9 +121,11 @@ func (parser Parser) ParseInvokeV0(ctx context.Context, raw *data.Invoke, block 
 
 	txCtx := parserData.NewTxContextFromInvoke(tx, proxyId)
 
-	tx.Transfers, err = parser.TransferParser.ParseCalldata(ctx, txCtx, tx.Entrypoint, tx.ParsedCalldata)
-	if err != nil {
-		return tx, nil, err
+	if needDecode && len(tx.CallData) > 0 {
+		tx.Transfers, err = parser.TransferParser.ParseCalldata(ctx, txCtx, tx.Entrypoint, tx.ParsedCalldata)
+		if err != nil {
+			return tx, nil, err
+		}
 	}
 
 	if trace.FunctionInvocation != nil {
