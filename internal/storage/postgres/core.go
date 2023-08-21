@@ -140,6 +140,9 @@ func createIndices(ctx context.Context, conn *database.Bun) error {
 		if _, err := tx.ExecContext(ctx, `CREATE INDEX IF NOT EXISTS invoke_height_idx ON invoke USING BRIN (height)`); err != nil {
 			return err
 		}
+		if _, err := tx.ExecContext(ctx, `CREATE INDEX IF NOT EXISTS invoke_contract_id_idx ON invoke (contract_id)`); err != nil {
+			return err
+		}
 
 		// Declare
 		if _, err := tx.ExecContext(ctx, `CREATE INDEX IF NOT EXISTS declare_height_idx ON declare USING BRIN (height)`); err != nil {
