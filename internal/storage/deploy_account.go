@@ -94,13 +94,12 @@ func (d DeployAccount) Flat() []any {
 		d.MaxFee,
 		d.Nonce,
 		pq.StringArray(d.ConstructorCalldata),
-		d.Error,
 	}
 	parsed, err := json.MarshalWithOption(d.ParsedCalldata, json.UnorderedMap(), json.DisableNormalizeUTF8())
 	if err != nil {
-		data = append(data, nil)
+		data = append(data, nil, d.Error)
 	} else {
-		data = append(data, string(parsed))
+		data = append(data, string(parsed), d.Error)
 	}
 	return data
 }

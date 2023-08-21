@@ -94,14 +94,13 @@ func (l1 L1Handler) Flat() []any {
 		l1.MaxFee,
 		l1.Nonce,
 		pq.StringArray(l1.CallData),
-		l1.Error,
 	}
 
 	parsed, err := json.MarshalWithOption(l1.ParsedCalldata, json.UnorderedMap(), json.DisableNormalizeUTF8())
 	if err != nil {
-		data = append(data, nil)
+		data = append(data, nil, l1.Error)
 	} else {
-		data = append(data, string(parsed))
+		data = append(data, string(parsed), l1.Error)
 	}
 	return data
 }
