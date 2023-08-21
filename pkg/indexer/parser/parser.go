@@ -32,7 +32,7 @@ func createParser(
 	case "0.9.1",
 		"0.10.0", "0.10.1", "0.10.2", "0.10.3",
 		"0.11.0", "0.11.0.2", "0.11.1", "0.11.2",
-		"0.12.0", "0.12.1":
+		"0.12.0", "0.12.1", "0.12.2":
 		return v0.New(resolver, cache, blocks), nil
 	default:
 		return nil, errors.Errorf("unknown starknet version: %s", *version)
