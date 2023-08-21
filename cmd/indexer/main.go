@@ -92,15 +92,10 @@ func main() {
 	}
 
 	if cfg.Hasura != nil {
-		models := make([]any, len(storage.Models))
-		for i := range storage.Models {
-			models[i] = storage.Models[i]
-		}
-
 		if err := hasura.Create(ctx, hasura.GenerateArgs{
 			Config:         cfg.Hasura,
 			DatabaseConfig: cfg.Database,
-			Models:         models,
+			Models:         storage.ModelsAny,
 			Views:          views,
 		}); err != nil {
 			log.Panic().Err(err).Msg("hasura initialization")
