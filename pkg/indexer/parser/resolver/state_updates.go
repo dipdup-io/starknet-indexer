@@ -28,6 +28,60 @@ func (resolver *Resolver) ResolveStateUpdates(ctx context.Context, block *storag
 		return err
 	}
 
+	if err := resolver.parseReplaceClasses(ctx, block, upd.StateDiff.ReplacedClasses); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (resolver *Resolver) parseReplaceClasses(ctx context.Context, block *storage.Block, replaced []data.ReplacedClass) error {
+	addrs := make(map[data.Felt]storage.Class)
+	for i := range replaced {
+		class, err := resolver.cache.GetClassByHash(ctx, replaced[i].ClassHash.Bytes())
+		if err != nil {
+			class, err = resolver.parseClassFromFelt(ctx, replaced[i].ClassHash, block.Height)
+			if err != nil {
+				return errors.Wrap(err, replaced[i].ClassHash.String())
+			}
+		}
+
+		key := data.NewFeltFromBytes(replaced[i].Address.Bytes())
+		addrs[key] = class
+	}
+
+	hash := make([][]byte, 0)
+	for felt := range addrs {
+		hash = append(hash, felt.Bytes())
+	}
+
+	addresses, err := resolver.addresses.GetByHashes(ctx, hash)
+	if err != nil {
+		return err
+	}
+
+	for i := range addresses {
+		h := data.NewFeltFromBytes(addresses[i].Hash)
+		if class, ok := addrs[h]; ok {
+			addresses[i].ClassID = &class.ID
+			resolver.addAddress(&addresses[i])
+			resolver.cache.SetAbiByAddress(class, addresses[i].Hash)
+			delete(addrs, h)
+		}
+	}
+
+	for h, class := range addrs {
+		id := class.ID
+		address := storage.Address{
+			Hash:    h.Bytes(),
+			ID:      resolver.idGenerator.NextAddressId(),
+			ClassID: &id,
+			Height:  block.Height,
+		}
+		resolver.addAddress(&address)
+		resolver.cache.SetAddress(ctx, address)
+	}
+
 	return nil
 }
 
