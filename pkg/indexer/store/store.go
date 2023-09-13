@@ -83,7 +83,7 @@ func (store *Store) Save(
 		return tx.HandleError(ctx, err)
 	}
 
-	if err := saveClassReplaces(ctx, tx, result.Context.ClassReplaces()); err != nil {
+	if err := saveClassReplaces(ctx, tx, store.cache, result.Context.ClassReplaces()); err != nil {
 		return tx.HandleError(ctx, err)
 	}
 
@@ -238,7 +238,7 @@ func saveClasses(ctx context.Context, tx postgres.Transaction, classes map[strin
 	return tx.SaveClasses(ctx, arr...)
 }
 
-func saveClassReplaces(ctx context.Context, tx postgres.Transaction, replaces map[string]*models.ClassReplace) error {
+func saveClassReplaces(ctx context.Context, tx postgres.Transaction, cache *cache.Cache, replaces map[string]*models.ClassReplace) error {
 	if len(replaces) == 0 {
 		return nil
 	}
@@ -246,6 +246,8 @@ func saveClassReplaces(ctx context.Context, tx postgres.Transaction, replaces ma
 	arr := make([]*models.ClassReplace, 0)
 	for _, replace := range replaces {
 		arr = append(arr, replace)
+		cache.SetAbiByAddress(replace.NextClass, replace.Contract.Hash)
+		cache.SetAddress(ctx, replace.Contract)
 	}
 
 	return tx.SaveClassReplaces(ctx, arr...)
