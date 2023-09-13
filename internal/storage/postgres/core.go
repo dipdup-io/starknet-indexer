@@ -145,9 +145,15 @@ func createIndices(ctx context.Context, conn *database.Bun) error {
 		if _, err := tx.ExecContext(ctx, `CREATE INDEX IF NOT EXISTS invoke_contract_id_idx ON invoke (contract_id)`); err != nil {
 			return err
 		}
+		if _, err := tx.ExecContext(ctx, `CREATE INDEX IF NOT EXISTS invoke_status_idx ON invoke (status)`); err != nil {
+			return err
+		}
 
 		// Declare
 		if _, err := tx.ExecContext(ctx, `CREATE INDEX IF NOT EXISTS declare_height_idx ON declare USING BRIN (height)`); err != nil {
+			return err
+		}
+		if _, err := tx.ExecContext(ctx, `CREATE INDEX IF NOT EXISTS declare_status_idx ON declare (status)`); err != nil {
 			return err
 		}
 
@@ -155,14 +161,23 @@ func createIndices(ctx context.Context, conn *database.Bun) error {
 		if _, err := tx.ExecContext(ctx, `CREATE INDEX IF NOT EXISTS deploy_height_idx ON deploy USING BRIN (height)`); err != nil {
 			return err
 		}
+		if _, err := tx.ExecContext(ctx, `CREATE INDEX IF NOT EXISTS deploy_status_idx ON deploy (status)`); err != nil {
+			return err
+		}
 
 		// DeployAccount
 		if _, err := tx.ExecContext(ctx, `CREATE INDEX IF NOT EXISTS deploy_account_height_idx ON deploy_account USING BRIN (height)`); err != nil {
 			return err
 		}
+		if _, err := tx.ExecContext(ctx, `CREATE INDEX IF NOT EXISTS deploy_account_status_idx ON deploy_account (status)`); err != nil {
+			return err
+		}
 
 		// L1 handler
 		if _, err := tx.ExecContext(ctx, `CREATE INDEX IF NOT EXISTS l1_handler_height_idx ON l1_handler USING BRIN (height)`); err != nil {
+			return err
+		}
+		if _, err := tx.ExecContext(ctx, `CREATE INDEX IF NOT EXISTS l1_handler_status_idx ON l1_handler (status)`); err != nil {
 			return err
 		}
 
@@ -176,6 +191,9 @@ func createIndices(ctx context.Context, conn *database.Bun) error {
 			return err
 		}
 		if _, err := tx.ExecContext(ctx, `CREATE INDEX IF NOT EXISTS internal_tx_hash_idx ON internal_tx (hash)`); err != nil {
+			return err
+		}
+		if _, err := tx.ExecContext(ctx, `CREATE INDEX IF NOT EXISTS internal_tx_status_idx ON internal_tx (status)`); err != nil {
 			return err
 		}
 
