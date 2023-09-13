@@ -59,6 +59,7 @@ func (resolver *Resolver) parseReplaceClasses(ctx context.Context, block *storag
 			ContractId:  addr.ID,
 			NextClassId: class.ID,
 			Height:      block.Height,
+			NextClass:   class,
 		}
 		if addr.ClassID != nil {
 			replace.PrevClassId = *addr.ClassID
@@ -195,6 +196,8 @@ func (resolver *Resolver) ReplaceAddressClass(ctx context.Context) error {
 		}
 		addr.ClassID = &replace.NextClassId
 		resolver.addAddress(addr)
+		resolver.cache.SetAbiByAddress(replace.NextClass, addr.Hash)
+		resolver.cache.SetAddress(ctx, *addr)
 	}
 	return nil
 }
