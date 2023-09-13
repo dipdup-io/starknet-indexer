@@ -83,6 +83,10 @@ func (store *Store) Save(
 		return tx.HandleError(ctx, err)
 	}
 
+	if err := saveClassReplaces(ctx, tx, result.Context.ClassReplaces()); err != nil {
+		return tx.HandleError(ctx, err)
+	}
+
 	if err := store.saveProxies(ctx, tx, result.Context.Proxies()); err != nil {
 		return tx.HandleError(ctx, err)
 	}
@@ -232,4 +236,17 @@ func saveClasses(ctx context.Context, tx postgres.Transaction, classes map[strin
 	}
 
 	return tx.SaveClasses(ctx, arr...)
+}
+
+func saveClassReplaces(ctx context.Context, tx postgres.Transaction, replaces map[string]*models.ClassReplace) error {
+	if len(replaces) == 0 {
+		return nil
+	}
+
+	arr := make([]*models.ClassReplace, 0)
+	for _, replace := range replaces {
+		arr = append(arr, replace)
+	}
+
+	return tx.SaveClassReplaces(ctx, arr...)
 }

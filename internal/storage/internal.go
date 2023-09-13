@@ -9,7 +9,7 @@ import (
 	"github.com/uptrace/bun"
 )
 
-// IInternal -
+//go:generate mockgen -source=$GOFILE -destination=mock/$GOFILE -package=mock -typed
 type IInternal interface {
 	storage.Table[*Internal]
 	Filterable[Internal, InternalFilter]

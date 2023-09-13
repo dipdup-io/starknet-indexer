@@ -125,3 +125,16 @@ func (t Transaction) UpdateStatus(ctx context.Context, height uint64, status mod
 		Exec(ctx)
 	return err
 }
+
+// SaveClassReplaces -
+func (t Transaction) SaveClassReplaces(ctx context.Context, replaces ...*models.ClassReplace) error {
+	if len(replaces) == 0 {
+		return nil
+	}
+
+	_, err := t.Tx().NewInsert().
+		Model(&replaces).
+		Returning("id").
+		Exec(ctx)
+	return err
+}

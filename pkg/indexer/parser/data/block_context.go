@@ -11,6 +11,7 @@ type BlockContext struct {
 	tokens          map[string]*storage.Token
 	endBlockProxies ProxyMap[*storage.ProxyUpgrade]
 	contextProxies  ProxyMap[*storage.ProxyUpgrade]
+	classReplaces   map[string]*storage.ClassReplace
 }
 
 // NewBlockContext -
@@ -22,6 +23,7 @@ func NewBlockContext(block storage.Block) *BlockContext {
 		tokens:          make(map[string]*storage.Token),
 		endBlockProxies: NewProxyMap[*storage.ProxyUpgrade](),
 		contextProxies:  NewProxyMap[*storage.ProxyUpgrade](),
+		classReplaces:   make(map[string]*storage.ClassReplace),
 	}
 }
 
@@ -53,4 +55,9 @@ func (blockCtx *BlockContext) Proxies() ProxyMap[*storage.ProxyUpgrade] {
 // CurrentProxies -
 func (blockCtx *BlockContext) CurrentProxies() ProxyMap[*storage.ProxyUpgrade] {
 	return blockCtx.contextProxies
+}
+
+// ClassReplaces -
+func (blockCtx *BlockContext) ClassReplaces() map[string]*storage.ClassReplace {
+	return blockCtx.classReplaces
 }

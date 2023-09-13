@@ -1,0 +1,5 @@
+- id: 1
+  contract_id: 2
+  prev_class_id: 2
+  next_class_id: 1
+  height: 1

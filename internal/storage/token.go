@@ -27,7 +27,7 @@ type TokenFilter struct {
 	Type     EnumStringFilter
 }
 
-// IToken -
+//go:generate mockgen -source=$GOFILE -destination=mock/$GOFILE -package=mock -typed
 type IToken interface {
 	storage.Table[*Token]
 	Filterable[Token, TokenFilter]

@@ -29,6 +29,7 @@ type Storage struct {
 	Event         models.IEvent
 	Address       models.IAddress
 	Class         models.IClass
+	ClassReplaces models.IClassReplace
 	StorageDiff   models.IStorageDiff
 	Proxy         models.IProxy
 	ProxyUpgrade  models.IProxyUpgrade
@@ -62,6 +63,7 @@ func Create(ctx context.Context, cfg config.Database) (Storage, error) {
 		Event:         NewEvent(strg.Connection()),
 		Address:       NewAddress(strg.Connection()),
 		Class:         NewClass(strg.Connection()),
+		ClassReplaces: NewClassReplace(strg.Connection()),
 		StorageDiff:   NewStorageDiff(strg.Connection()),
 		Proxy:         NewProxy(strg.Connection()),
 		ProxyUpgrade:  NewProxyUpgrade(strg.Connection()),
@@ -74,7 +76,7 @@ func Create(ctx context.Context, cfg config.Database) (Storage, error) {
 		PartitionManager: database.NewPartitionManager(strg.Connection(), database.PartitionByMonth),
 	}
 
-	s.RollbackManager = NewRollbackManager(s.Transactable, s.State, s.Blocks, s.ProxyUpgrade, s.Transfer)
+	s.RollbackManager = NewRollbackManager(s.Transactable, s.State, s.Blocks, s.ProxyUpgrade, s.ClassReplaces, s.Transfer)
 
 	return s, nil
 }

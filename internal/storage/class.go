@@ -7,7 +7,7 @@ import (
 	"github.com/uptrace/bun"
 )
 
-// IClass -
+//go:generate mockgen -source=$GOFILE -destination=mock/$GOFILE -package=mock -typed
 type IClass interface {
 	storage.Table[*Class]
 

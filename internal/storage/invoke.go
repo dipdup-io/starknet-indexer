@@ -10,7 +10,7 @@ import (
 	"github.com/uptrace/bun"
 )
 
-// IInvoke -
+//go:generate mockgen -source=$GOFILE -destination=mock/$GOFILE -package=mock -typed
 type IInvoke interface {
 	storage.Table[*Invoke]
 	Filterable[Invoke, InvokeFilter]

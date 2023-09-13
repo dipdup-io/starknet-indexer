@@ -31,3 +31,6 @@ lint:
 
 test:
 	go test ./...
+
+generate:
+	go generate -v ./internal/storage

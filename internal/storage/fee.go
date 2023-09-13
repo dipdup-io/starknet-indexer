@@ -9,7 +9,7 @@ import (
 	"github.com/uptrace/bun"
 )
 
-// IFee -
+//go:generate mockgen -source=$GOFILE -destination=mock/$GOFILE -package=mock -typed
 type IFee interface {
 	storage.Table[*Fee]
 	Filterable[Fee, FeeFilter]

@@ -9,7 +9,7 @@ import (
 	"github.com/uptrace/bun"
 )
 
-// IDeploy -
+//go:generate mockgen -source=$GOFILE -destination=mock/$GOFILE -package=mock -typed
 type IDeploy interface {
 	storage.Table[*Deploy]
 	Filterable[Deploy, DeployFilter]

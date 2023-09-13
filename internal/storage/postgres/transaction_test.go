@@ -343,6 +343,64 @@ func (s *TransactionTest) TestUpdateStatus() {
 	}
 }
 
+func (s *TransactionTest) TestSaveClassReplaces() {
+	ctx, ctxCancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer ctxCancel()
+
+	db, err := sql.Open("postgres", s.psqlContainer.GetDSN())
+	s.Require().NoError(err)
+
+	fixtures, err := testfixtures.New(
+		testfixtures.Database(db),
+		testfixtures.Dialect("postgres"),
+		testfixtures.Files("fixtures/class_replace.yml"),
+	)
+	s.Require().NoError(err)
+	s.Require().NoError(fixtures.Load())
+	s.Require().NoError(db.Close())
+
+	tx, err := BeginTransaction(ctx, s.storage.Transactable)
+	s.Require().NoError(err)
+	defer tx.Close(ctx)
+
+	replaces := []*storage.ClassReplace{
+		{
+			Height:      10,
+			ContractId:  1,
+			PrevClassId: 1,
+			NextClassId: 4,
+		},
+		{
+			Height:      10,
+			ContractId:  2,
+			PrevClassId: 2,
+			NextClassId: 4,
+		},
+	}
+
+	err = tx.SaveClassReplaces(ctx, replaces...)
+	s.Require().NoError(err)
+
+	err = tx.Flush(ctx)
+	s.Require().NoError(err)
+
+	response, err := s.storage.ClassReplaces.List(ctx, 2, 0, sdk.SortOrderDesc)
+	s.Require().NoError(err)
+	s.Require().Len(response, 2)
+
+	s.Require().EqualValues(10002, response[0].ID)
+	s.Require().EqualValues(10, response[0].Height)
+	s.Require().EqualValues(2, response[0].ContractId)
+	s.Require().EqualValues(2, response[0].PrevClassId)
+	s.Require().EqualValues(4, response[0].NextClassId)
+
+	s.Require().EqualValues(10001, response[1].ID)
+	s.Require().EqualValues(10, response[1].Height)
+	s.Require().EqualValues(1, response[1].ContractId)
+	s.Require().EqualValues(1, response[1].PrevClassId)
+	s.Require().EqualValues(4, response[1].NextClassId)
+}
+
 func TestSuiteTransaction_Run(t *testing.T) {
 	suite.Run(t, new(TransactionTest))
 }
