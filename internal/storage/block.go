@@ -8,7 +8,7 @@ import (
 	"github.com/uptrace/bun"
 )
 
-// IBlock -
+//go:generate mockgen -source=$GOFILE -destination=mock/$GOFILE -package=mock -typed
 type IBlock interface {
 	storage.Table[*Block]
 

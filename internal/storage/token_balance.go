@@ -9,7 +9,7 @@ import (
 	"github.com/uptrace/bun"
 )
 
-// ITokenBalance -
+//go:generate mockgen -source=$GOFILE -destination=mock/$GOFILE -package=mock -typed
 type ITokenBalance interface {
 	storage.Table[*TokenBalance]
 	Filterable[TokenBalance, TokenBalanceFilter]

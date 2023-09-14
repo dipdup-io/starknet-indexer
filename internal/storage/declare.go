@@ -8,7 +8,7 @@ import (
 	"github.com/uptrace/bun"
 )
 
-// IDeclare -
+//go:generate mockgen -source=$GOFILE -destination=mock/$GOFILE -package=mock -typed
 type IDeclare interface {
 	storage.Table[*Declare]
 	Filterable[Declare, DeclareFilter]

@@ -55,7 +55,7 @@ func NewClassType(interfaces ...string) ClassType {
 			ct.Set(ClassTypeERC721Metadata)
 		case "erc721_receiver":
 			ct.Set(ClassTypeERC721Receiver)
-		case "proxy":
+		case "proxy", "proxy_l1":
 			ct.Set(ClassTypeProxy)
 		case "erc1155":
 			ct.Set(ClassTypeERC1155)

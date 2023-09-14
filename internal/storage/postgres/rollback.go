@@ -19,6 +19,7 @@ type RollbackManager struct {
 	blocks        models.IBlock
 	proxyUpgrades models.IProxyUpgrade
 	transfers     models.ITransfer
+	classReplaces models.IClassReplace
 	transactable  storage.Transactable
 }
 
@@ -28,6 +29,7 @@ func NewRollbackManager(
 	state models.IState,
 	blocks models.IBlock,
 	proxyUpgrades models.IProxyUpgrade,
+	classReplaces models.IClassReplace,
 	transfers models.ITransfer,
 ) RollbackManager {
 	return RollbackManager{
@@ -36,6 +38,7 @@ func NewRollbackManager(
 		blocks:        blocks,
 		proxyUpgrades: proxyUpgrades,
 		transfers:     transfers,
+		classReplaces: classReplaces,
 	}
 }
 
@@ -61,6 +64,10 @@ func (rm RollbackManager) Rollback(ctx context.Context, indexerName string, heig
 		return tx.HandleError(ctx, err)
 	}
 
+	if err := rm.rollbackReplaceClass(ctx, height, tx); err != nil {
+		return tx.HandleError(ctx, err)
+	}
+
 	for _, model := range []storage.Model{
 		&models.Address{},
 		&models.Class{},
@@ -77,6 +84,7 @@ func (rm RollbackManager) Rollback(ctx context.Context, indexerName string, heig
 		&models.Fee{},
 		&models.Transfer{},
 		&models.ProxyUpgrade{},
+		&models.ClassReplace{},
 	} {
 		deletedCount, err := tx.Exec(ctx, rollbackQuery, bun.Ident(model.TableName()), height)
 		if err != nil {
@@ -260,4 +268,25 @@ func (rm RollbackManager) rollbackTokenBalances(ctx context.Context, height uint
 		bun.Safe(strings.Join(values, ",")),
 	)
 	return err
+}
+
+func (rm RollbackManager) rollbackReplaceClass(ctx context.Context, height uint64, tx storage.Transaction) error {
+	replaces, err := rm.classReplaces.ByHeight(ctx, height)
+	if err != nil {
+		return err
+	}
+	if len(replaces) == 0 {
+		return nil
+	}
+
+	for i := range replaces {
+		_, err = tx.Tx().NewUpdate().Model((*models.Address)(nil)).
+			Where("id = ?", replaces[i].ContractId).
+			Set("class_id = ?", replaces[i].PrevClassId).
+			Exec(ctx)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }

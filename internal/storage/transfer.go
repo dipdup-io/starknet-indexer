@@ -8,7 +8,7 @@ import (
 	"github.com/uptrace/bun"
 )
 
-// ITransfer -
+//go:generate mockgen -source=$GOFILE -destination=mock/$GOFILE -package=mock -typed
 type ITransfer interface {
 	storage.Table[*Transfer]
 	Filterable[Transfer, TransferFilter]

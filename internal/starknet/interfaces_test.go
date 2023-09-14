@@ -2,12 +2,11 @@ package starknet
 
 import (
 	"os"
-	"reflect"
 	"testing"
 
 	"github.com/dipdup-io/starknet-go-api/pkg/abi"
 	"github.com/goccy/go-json"
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestInterfaces(t *testing.T) {
@@ -20,17 +19,14 @@ func TestInterfaces(t *testing.T) {
 		{
 			name:    "load interfaces",
 			dir:     "../../build/interfaces",
-			wantLen: 12,
+			wantLen: 13,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			got, err := Interfaces(tt.dir)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("Interfaces() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			assert.Len(t, got, tt.wantLen, "interfaces count")
+			require.NoError(t, err)
+			require.Len(t, got, tt.wantLen, "interfaces count")
 		})
 	}
 }
@@ -42,13 +38,13 @@ func TestFindInterfaces(t *testing.T) {
 		want     []string
 	}{
 		{
-			name:     "find interfaces",
+			name:     "find interfaces 1",
 			filename: "./test_classes/0x71429d7850e4421236ed7e4f58b7778fc0e0c01b8770335ba4140bcb13733e9.json",
 			want: []string{
-				"proxy",
+				"proxy", "proxy_l1",
 			},
 		}, {
-			name:     "find interfaces",
+			name:     "find interfaces 2",
 			filename: "./test_classes/0x0702025b02d838976cf33dd7deec76b27a111d331b6093f2e7137e31c2f6ffd4.json",
 			want: []string{
 				"erc1155",
@@ -56,35 +52,22 @@ func TestFindInterfaces(t *testing.T) {
 		},
 	}
 
-	if _, err := Interfaces("../../build/interfaces"); err != nil {
-		t.Errorf("can't load interafces: %s", err)
-		return
-	}
+	_, err := Interfaces("../../build/interfaces")
+	require.NoError(t, err)
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			f, err := os.Open(tt.filename)
-			if err != nil {
-				t.Errorf("can't open file: %s", err)
-				return
-			}
+			require.NoError(t, err)
 			defer f.Close()
 
 			var a abi.Abi
-			if err := json.NewDecoder(f).Decode(&a); err != nil {
-				t.Errorf("can't decode abi^ %s", err)
-				return
-			}
+			err = json.NewDecoder(f).Decode(&a)
+			require.NoError(t, err)
 
 			got, err := FindInterfaces(a)
-			if err != nil {
-				t.Errorf("can't find interface: %s", err)
-				return
-			}
-
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("invalid interfaces set")
-			}
+			require.NoError(t, err)
+			require.ElementsMatch(t, tt.want, got)
 		})
 	}
 }

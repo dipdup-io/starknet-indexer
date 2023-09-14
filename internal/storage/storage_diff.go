@@ -7,7 +7,7 @@ import (
 	"github.com/uptrace/bun"
 )
 
-// IStorageDiff -
+//go:generate mockgen -source=$GOFILE -destination=mock/$GOFILE -package=mock -typed
 type IStorageDiff interface {
 	storage.Table[*StorageDiff]
 	Filterable[StorageDiff, StorageDiffFilter]

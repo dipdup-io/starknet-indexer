@@ -10,7 +10,7 @@ import (
 	"github.com/uptrace/bun"
 )
 
-// IL1Handler -
+//go:generate mockgen -source=$GOFILE -destination=mock/$GOFILE -package=mock -typed
 type IL1Handler interface {
 	storage.Table[*L1Handler]
 	Filterable[L1Handler, L1HandlerFilter]

@@ -157,6 +157,10 @@ func Parse(
 	block.DeployAccountCount = len(block.DeployAccount)
 	block.L1HandlerCount = len(block.L1Handler)
 
+	if err := resolver.ReplaceAddressClass(ctx); err != nil {
+		return parserData.Result{}, errors.Errorf("replace address class: %s", err)
+	}
+
 	return parserData.Result{
 		Block:   block,
 		Context: blockCtx,

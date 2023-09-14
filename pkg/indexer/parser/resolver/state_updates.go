@@ -36,7 +36,10 @@ func (resolver *Resolver) ResolveStateUpdates(ctx context.Context, block *storag
 }
 
 func (resolver *Resolver) parseReplaceClasses(ctx context.Context, block *storage.Block, replaced []data.ReplacedClass) error {
-	addrs := make(map[data.Felt]storage.Class)
+	if len(replaced) == 0 {
+		return nil
+	}
+
 	for i := range replaced {
 		class, err := resolver.cache.GetClassByHash(ctx, replaced[i].ClassHash.Bytes())
 		if err != nil {
@@ -46,40 +49,25 @@ func (resolver *Resolver) parseReplaceClasses(ctx context.Context, block *storag
 			}
 		}
 
-		key := data.NewFeltFromBytes(replaced[i].Address.Bytes())
-		addrs[key] = class
-	}
-
-	hash := make([][]byte, 0)
-	for felt := range addrs {
-		hash = append(hash, felt.Bytes())
-	}
-
-	addresses, err := resolver.addresses.GetByHashes(ctx, hash)
-	if err != nil {
-		return err
-	}
-
-	for i := range addresses {
-		h := data.NewFeltFromBytes(addresses[i].Hash)
-		if class, ok := addrs[h]; ok {
-			addresses[i].ClassID = &class.ID
-			resolver.addAddress(&addresses[i])
-			resolver.cache.SetAbiByAddress(class, addresses[i].Hash)
-			delete(addrs, h)
+		addr, err := resolver.addresses.GetByHash(ctx, replaced[i].Address.Bytes())
+		if err != nil {
+			return errors.Wrap(err, replaced[i].Address.String())
 		}
-	}
 
-	for h, class := range addrs {
-		id := class.ID
-		address := storage.Address{
-			Hash:    h.Bytes(),
-			ID:      resolver.idGenerator.NextAddressId(),
-			ClassID: &id,
-			Height:  block.Height,
+		key := data.NewFeltFromBytes(addr.Hash).String()
+		replace := &storage.ClassReplace{
+			ContractId:  addr.ID,
+			NextClassId: class.ID,
+			Height:      block.Height,
+			NextClass:   class,
+			Contract:    addr,
 		}
-		resolver.addAddress(&address)
-		resolver.cache.SetAddress(ctx, address)
+		if addr.ClassID != nil {
+			replace.PrevClassId = *addr.ClassID
+		}
+
+		replaces := resolver.blockContext.ClassReplaces()
+		replaces[key] = replace
 	}
 
 	return nil
@@ -198,5 +186,17 @@ func (resolver *Resolver) parseStorageDiffs(ctx context.Context, block *storage.
 		}
 	}
 	block.StorageDiffCount = len(block.StorageDiffs)
+	return nil
+}
+
+func (resolver *Resolver) ReplaceAddressClass(ctx context.Context) error {
+	for _, replace := range resolver.blockContext.ClassReplaces() {
+		addr, err := resolver.addresses.GetByID(ctx, replace.ContractId)
+		if err != nil {
+			return errors.Wrapf(err, "replace class id for address: %d", replace.ContractId)
+		}
+		addr.ClassID = &replace.NextClassId
+		resolver.addAddress(addr)
+	}
 	return nil
 }
