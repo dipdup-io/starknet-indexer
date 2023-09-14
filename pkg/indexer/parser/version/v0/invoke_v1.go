@@ -57,23 +57,16 @@ func (parser Parser) ParseInvokeV1(ctx context.Context, raw *data.Invoke, block 
 		if err == nil {
 			if _, found = contractAbi.GetFunctionBySelector(encoding.EncodeHex(encoding.ExecuteEntrypointSelector)); found {
 				parsed, _, err := decode.CalldataBySelector(contractAbi, tx.EntrypointSelector, tx.CallData)
-				if err != nil {
-					if !errors.Is(err, abi.ErrNoLenField) && !errors.Is(err, abi.ErrTooShortCallData) {
-						return tx, nil, errors.Wrap(err, "custom __execute__ function")
-					}
+				if err == nil {
+					tx.ParsedCalldata = parsed
 				}
-				tx.ParsedCalldata = parsed
 			}
 		}
 
 		if !found {
-			parsed, err := abi.DecodeExecuteCallData(tx.CallData)
-			if err != nil {
-				if !errors.Is(err, abi.ErrNoLenField) && !errors.Is(err, abi.ErrTooShortCallData) {
-					return tx, nil, errors.Wrap(err, "default __execute__ function")
-				}
+			if parsed, err := abi.DecodeExecuteCallData(tx.CallData); err == nil {
+				tx.ParsedCalldata = parsed
 			}
-			tx.ParsedCalldata = parsed
 		}
 	}
 
