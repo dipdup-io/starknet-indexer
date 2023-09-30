@@ -69,6 +69,13 @@ func Parse(
 		L1Handler:     make([]storage.L1Handler, 0),
 	}
 
+	if len(result.Block.Transactions) != len(result.Trace.Traces) {
+		return parserData.Result{}, errors.Errorf("invalid data length")
+	}
+	if len(result.Block.Transactions) != len(result.Block.Receipts) {
+		return parserData.Result{}, errors.Errorf("invalid data length")
+	}
+
 	blockCtx := parserData.NewBlockContext(block)
 
 	resolver := resolver.NewResolver(receiver, cache, idGenerator, blocks, addresses, proxies, blockCtx)
