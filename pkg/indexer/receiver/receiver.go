@@ -42,7 +42,9 @@ func NewReceiver(cfg config.Config) *Receiver {
 	if cfg.Sequencer.Rps > 0 {
 		opts = append(opts, starknet.WithRateLimit(cfg.Sequencer.Rps))
 	}
-	if cfg.CacheDir != "" {
+
+	log.Info().Bool("enabled", cfg.Cache).Str("dir", cfg.CacheDir).Msg("rpc response caching")
+	if cfg.Cache && cfg.CacheDir != "" {
 		opts = append(opts, starknet.WithCacheInFS(cfg.CacheDir))
 	}
 

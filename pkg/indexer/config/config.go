@@ -11,6 +11,7 @@ type Config struct {
 	ClassInterfacesDir string    `yaml:"class_interfaces_dir" validate:"required,dir"`
 	BridgedTokensFile  string    `yaml:"bridged_tokens_file" validate:"required,file"`
 	CacheDir           string    `yaml:"cache_dir" validate:"omitempty,dir"`
+	Cache              bool      `yaml:"cache" validate:"omitempty"`
 }
 
 // Node -
