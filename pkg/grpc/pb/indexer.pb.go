@@ -417,7 +417,7 @@ type JsonSchema struct {
 
 	Functions    []*JsonSchemaItem `protobuf:"bytes,1,rep,name=functions,proto3" json:"functions,omitempty"`                     // list of functions json schema
 	L1Handlers   []*JsonSchemaItem `protobuf:"bytes,2,rep,name=l1_handlers,json=l1Handlers,proto3" json:"l1_handlers,omitempty"` // list of l1 handlers json schema
-	Constructors []*JsonSchemaItem `protobuf:"bytes,3,rep,name=constructors,proto3" json:"constructors,omitempty"`               // // list of contructors json schema
+	Constructors []*JsonSchemaItem `protobuf:"bytes,3,rep,name=constructors,proto3" json:"constructors,omitempty"`               // // list of constructors json schema
 	Events       []*JsonSchemaItem `protobuf:"bytes,4,rep,name=events,proto3" json:"events,omitempty"`                           // list of events json schema
 	Structs      []*JsonSchemaItem `protobuf:"bytes,5,rep,name=structs,proto3" json:"structs,omitempty"`                         // list of declared structures json schema
 }

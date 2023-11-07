@@ -23,7 +23,7 @@ type Class struct {
 	Type   ClassType `comment:"Class type. It’s a binary mask."`
 	Hash   []byte    `bun:",unique:class_hash" comment:"Class hash"`
 	Abi    Bytes     `bun:",type:bytea" comment:"Class abi in a raw"`
-	Height uint64    `comment:"Block height of the first class occurance"`
+	Height uint64    `comment:"Block height of the first class occurrence"`
 	Cairo  int       `bun:",default:0,type:SMALLINT" comment:"Cairo version of class"`
 }
 

@@ -82,7 +82,7 @@ message Bytes {
 message JsonSchema {
     repeated JsonSchemaItem functions = 1; // list of functions json schema
     repeated JsonSchemaItem l1_handlers = 2; // list of l1 handlers json schema
-    repeated JsonSchemaItem constructors = 3; // // list of contructors json schema
+    repeated JsonSchemaItem constructors = 3; // // list of constructors json schema
     repeated JsonSchemaItem events = 4; // list of events json schema
     repeated JsonSchemaItem structs = 5; // list of declared structures json schema
 }

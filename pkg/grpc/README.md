@@ -808,7 +808,7 @@ Json schema entity
 | ----- | ---- | ----- | ----------- |
 | functions | [JsonSchemaItem](#proto-JsonSchemaItem) | repeated | list of functions json schema |
 | l1_handlers | [JsonSchemaItem](#proto-JsonSchemaItem) | repeated | list of l1 handlers json schema |
-| constructors | [JsonSchemaItem](#proto-JsonSchemaItem) | repeated | list of contructors json schema |
+| constructors | [JsonSchemaItem](#proto-JsonSchemaItem) | repeated | list of constructors json schema |
 | events | [JsonSchemaItem](#proto-JsonSchemaItem) | repeated | list of events json schema |
 | structs | [JsonSchemaItem](#proto-JsonSchemaItem) | repeated | list of declared structures json schema |
 

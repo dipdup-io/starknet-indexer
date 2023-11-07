@@ -36,8 +36,8 @@ type ProxyUpgrade struct {
 	EntityType EntityType  `comment:"Entity type behind proxy (0 - class | 1 - contract)"`
 	EntityID   uint64      `comment:":Entity id behind proxy"`
 	EntityHash []byte      `comment:":Entity hash behind proxy"`
-	Height     uint64      `comment:":Height when event occured"`
-	Action     ProxyAction `comment:":Action which occured with proxy (0 - add | 1 - update | 2 - delete)"`
+	Height     uint64      `comment:":Height when event occurred"`
+	Action     ProxyAction `comment:":Action which occurred with proxy (0 - add | 1 - update | 2 - delete)"`
 }
 
 // NewUpgradeFromProxy -
