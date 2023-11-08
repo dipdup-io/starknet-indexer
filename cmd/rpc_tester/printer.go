@@ -13,7 +13,7 @@ import (
 
 // Printer -
 type Printer struct {
-	*printer.Printer
+	printer.Printer
 
 	eventCounters map[string]*atomic.Uint64
 

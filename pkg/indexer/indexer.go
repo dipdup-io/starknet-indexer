@@ -21,7 +21,6 @@ import (
 	"github.com/dipdup-net/indexer-sdk/pkg/modules"
 	sdk "github.com/dipdup-net/indexer-sdk/pkg/storage"
 	"github.com/pkg/errors"
-	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 )
 
@@ -32,9 +31,10 @@ const (
 
 // Indexer -
 type Indexer struct {
-	cfg     config.Config
-	outputs map[string]*modules.Output
-	queue   map[uint64]receiver.Result
+	modules.BaseModule
+
+	cfg   config.Config
+	queue map[uint64]receiver.Result
 
 	address        models.IAddress
 	blocks         models.IBlock
@@ -61,10 +61,7 @@ type Indexer struct {
 	rollbackRerun chan struct{}
 	rollbackWait  *sync.WaitGroup
 
-	log zerolog.Logger
-
 	txWriteMutex *sync.Mutex
-	wg           *sync.WaitGroup
 }
 
 // New - creates new indexer entity
@@ -73,10 +70,8 @@ func New(
 	storage postgres.Storage,
 ) *Indexer {
 	indexer := &Indexer{
-		cfg: cfg,
-		outputs: map[string]*modules.Output{
-			OutputBlocks: modules.NewOutput(OutputBlocks),
-		},
+		BaseModule:      modules.New("indexer"),
+		cfg:             cfg,
 		queue:           make(map[uint64]receiver.Result),
 		stateRepo:       storage.State,
 		address:         storage.Address,
@@ -94,13 +89,12 @@ func New(
 		cache:           cache.New(storage.Address, storage.Class, storage.Proxy),
 		receiver:        receiver.NewReceiver(cfg),
 		rollbackManager: storage.RollbackManager,
-		log:             log.With().Str("module", "indexer").Logger(),
 		rollback:        make(chan struct{}, 1),
 		rollbackRerun:   make(chan struct{}, 1),
 		txWriteMutex:    new(sync.Mutex),
 		rollbackWait:    new(sync.WaitGroup),
-		wg:              new(sync.WaitGroup),
 	}
+	indexer.CreateOutput(OutputBlocks)
 
 	indexer.idGenerator = generator.NewIdGenerator(storage.Address, storage.Class, indexer.cache, indexer.state.Current())
 	indexer.store = store.New(
@@ -129,9 +123,9 @@ func New(
 
 // Start -
 func (indexer *Indexer) Start(ctx context.Context) {
-	indexer.log.Info().Msg("starting indexer...")
+	indexer.Log.Info().Msg("starting indexer...")
 	if err := indexer.init(ctx); err != nil {
-		indexer.log.Err(err).Msg("state initializing error")
+		indexer.Log.Err(err).Msg("state initializing error")
 		return
 	}
 
@@ -140,15 +134,12 @@ func (indexer *Indexer) Start(ctx context.Context) {
 	indexer.statusChecker.Start(ctx)
 
 	if err := indexer.fixClassAbi(ctx); err != nil {
-		indexer.log.Err(err).Msg("recovering class abi error")
+		indexer.Log.Err(err).Msg("recovering class abi error")
 		return
 	}
 
-	indexer.wg.Add(1)
-	go indexer.saveBlocks(ctx)
-
-	indexer.wg.Add(1)
-	go indexer.sync(ctx)
+	indexer.G.GoCtx(ctx, indexer.saveBlocks)
+	indexer.G.GoCtx(ctx, indexer.sync)
 }
 
 // Name -
@@ -161,8 +152,8 @@ func (indexer *Indexer) Name() string {
 
 // Close -
 func (indexer *Indexer) Close() error {
-	indexer.wg.Wait()
-	indexer.log.Info().Msgf("closing...")
+	indexer.G.Wait()
+	indexer.Log.Info().Msgf("closing...")
 
 	if err := indexer.statusChecker.Close(); err != nil {
 		return err
@@ -227,7 +218,7 @@ func (indexer *Indexer) getNewBlocks(ctx context.Context) error {
 	}
 
 	for head > indexer.state.Height() {
-		indexer.log.Info().
+		indexer.Log.Info().
 			Uint64("indexer_block", indexer.state.Height()).
 			Uint64("node_block", head).
 			Msg("syncing...")
@@ -271,15 +262,13 @@ func (indexer *Indexer) getNewBlocks(ctx context.Context) error {
 		}
 	}
 
-	indexer.log.Info().Uint64("height", indexer.state.Height()).Msg("synced")
+	indexer.Log.Info().Uint64("height", indexer.state.Height()).Msg("synced")
 	return nil
 }
 
 func (indexer *Indexer) sync(ctx context.Context) {
-	defer indexer.wg.Done()
-
 	if err := indexer.getNewBlocks(ctx); err != nil {
-		indexer.log.Err(err).Msg("getNewBlocks")
+		indexer.Log.Err(err).Msg("getNewBlocks")
 	}
 
 	ticker := time.NewTicker(time.Second * 30)
@@ -293,19 +282,17 @@ func (indexer *Indexer) sync(ctx context.Context) {
 			return
 		case <-ticker.C:
 			if err := indexer.getNewBlocks(ctx); err != nil {
-				indexer.log.Err(err).Msg("getNewBlocks")
+				indexer.Log.Err(err).Msg("getNewBlocks")
 			}
 		case <-indexer.rollbackRerun:
 			if err := indexer.getNewBlocks(ctx); err != nil {
-				indexer.log.Err(err).Msg("getNewBlocks")
+				indexer.Log.Err(err).Msg("getNewBlocks")
 			}
 		}
 	}
 }
 
 func (indexer *Indexer) saveBlocks(ctx context.Context) {
-	defer indexer.wg.Done()
-
 	var zeroBlock bool
 
 	for {
@@ -319,7 +306,7 @@ func (indexer *Indexer) saveBlocks(ctx context.Context) {
 			if indexer.state.Height() == 0 && !zeroBlock {
 				if data, ok := indexer.queue[0]; ok {
 					if err := indexer.handleBlock(ctx, data); err != nil {
-						indexer.log.Err(err).Msg("handle block")
+						indexer.Log.Err(err).Msg("handle block")
 					}
 					zeroBlock = true
 				} else {
@@ -339,7 +326,7 @@ func (indexer *Indexer) saveBlocks(ctx context.Context) {
 						if errors.Is(err, context.Canceled) {
 							return
 						}
-						indexer.log.Err(err).Stack().Msg("handle reorg")
+						indexer.Log.Err(err).Stack().Msg("handle reorg")
 						time.Sleep(time.Second * 3)
 					}
 
@@ -351,7 +338,7 @@ func (indexer *Indexer) saveBlocks(ctx context.Context) {
 						if errors.Is(err, context.Canceled) {
 							return
 						}
-						indexer.log.Err(err).Stack().Msg("handle block")
+						indexer.Log.Err(err).Stack().Msg("handle block")
 						time.Sleep(time.Second * 3)
 					}
 					if next%25 == 0 {
@@ -435,7 +422,7 @@ func (indexer *Indexer) handleBlock(ctx context.Context, result receiver.Result)
 
 	delete(indexer.queue, result.Block.BlockNumber)
 
-	l := indexer.log.Info().
+	l := indexer.Log.Info().
 		Uint64("height", result.Block.BlockNumber).
 		Int("tx_count", parseResult.Block.TxCount).
 		Time("block_time", parseResult.Block.Time).

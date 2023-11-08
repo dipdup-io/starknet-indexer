@@ -13,6 +13,9 @@ starknet_id:
 loot_survivor:
 	cd cmd/rpc_tester && go run . -c ../../cmd/rpc_tester/loot_survivor.yml
 
+blocks:
+	cd cmd/rpc_tester && go run . -c ../../cmd/rpc_tester/blocks.yml
+
 build-proto:
 	protoc \
 		-I=${GOPATH}/src \

@@ -2,7 +2,6 @@ package grpc
 
 import (
 	"context"
-	"sync"
 	"time"
 
 	"github.com/dipdup-io/starknet-indexer/pkg/grpc/pb"
@@ -10,13 +9,12 @@ import (
 	"github.com/dipdup-net/indexer-sdk/pkg/modules/grpc"
 	grpcSDK "github.com/dipdup-net/indexer-sdk/pkg/modules/grpc"
 	generalPB "github.com/dipdup-net/indexer-sdk/pkg/modules/grpc/pb"
-	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
 )
 
-// outputs names
 const (
 	OutputMessages = "messages"
+	ModuleName     = "layer1_grpc_client"
 )
 
 // Stream -
@@ -37,74 +35,43 @@ func NewStream(stream *grpcSDK.Stream[pb.Subscription], request *pb.SubscribeReq
 
 // Client -
 type Client struct {
-	grpc *grpcSDK.Client
-
-	output  *modules.Output
+	modules.BaseModule
+	grpc    *grpcSDK.Client
 	streams map[uint64]*Stream
 
 	service   pb.IndexerServiceClient
 	reconnect chan uint64
-
-	wg *sync.WaitGroup
 }
 
 // NewClient -
 func NewClient(cfg ClientConfig) *Client {
-	return &Client{
-		grpc:      grpcSDK.NewClient(cfg.ServerAddress),
-		output:    modules.NewOutput(OutputMessages),
-		streams:   make(map[uint64]*Stream),
-		reconnect: make(chan uint64, 16),
-		wg:        new(sync.WaitGroup),
+	client := &Client{
+		BaseModule: modules.New(ModuleName),
+		grpc:       grpcSDK.NewClient(cfg.ServerAddress),
+		streams:    make(map[uint64]*Stream),
+		reconnect:  make(chan uint64, 16),
 	}
+	client.CreateOutput(OutputMessages)
+	return client
 }
 
 // NewClientWithServerAddress -
 func NewClientWithServerAddress(address string) *Client {
-	return &Client{
-		grpc:      grpcSDK.NewClient(address),
-		output:    modules.NewOutput(OutputMessages),
-		streams:   make(map[uint64]*Stream),
-		reconnect: make(chan uint64, 16),
-		wg:        new(sync.WaitGroup),
+	client := &Client{
+		BaseModule: modules.New(ModuleName),
+		grpc:       grpcSDK.NewClient(address),
+		streams:    make(map[uint64]*Stream),
+		reconnect:  make(chan uint64, 16),
 	}
-}
-
-// Name -
-func (client *Client) Name() string {
-	return "layer1_grpc_client"
-}
-
-// Input -
-func (client *Client) Input(name string) (*modules.Input, error) {
-	return nil, errors.Wrap(modules.ErrUnknownInput, name)
-}
-
-// Output -
-func (client *Client) Output(name string) (*modules.Output, error) {
-	if name != OutputMessages {
-		return nil, errors.Wrap(modules.ErrUnknownOutput, name)
-	}
-	return client.output, nil
-}
-
-// AttachTo -
-func (client *Client) AttachTo(name string, input *modules.Input) error {
-	output, err := client.Output(name)
-	if err != nil {
-		return err
-	}
-	output.Attach(input)
-	return nil
+	client.CreateOutput(OutputMessages)
+	return client
 }
 
 // Start -
 func (client *Client) Start(ctx context.Context) {
 	client.grpc.Start(ctx)
 	client.service = pb.NewIndexerServiceClient(client.grpc.Connection())
-
-	client.wg.Add(1)
-	go client.reconnectThread(ctx)
+	client.G.GoCtx(ctx, client.reconnectThread)
 }
 
 // Connect -
@@ -114,7 +81,7 @@ func (client *Client) Connect(ctx context.Context, opts ...grpcSDK.ConnectOption
 
 // Close - closes client
 func (client *Client) Close() error {
-	client.wg.Wait()
+	client.G.Wait()
 
 	for id, stream := range client.streams {
 		unsubscribeCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
@@ -144,8 +111,6 @@ func (client *Client) Reconnect() <-chan uint64 {
 }
 
 func (client *Client) reconnectThread(ctx context.Context) {
-	defer client.wg.Done()
-
 	for {
 		select {
 		case <-ctx.Done():
@@ -171,8 +136,9 @@ func (client *Client) subscribe(ctx context.Context, req *pb.SubscribeRequest) (
 	}
 	grpcStream := grpc.NewStream[pb.Subscription](stream)
 
-	client.wg.Add(1)
-	go client.handleMessage(ctx, grpcStream)
+	client.G.GoCtx(ctx, func(ctx context.Context) {
+		client.handleMessage(ctx, grpcStream)
+	})
 
 	id, err := grpcStream.Subscribe(ctx)
 	return id, grpcStream, err
@@ -199,8 +165,6 @@ func (client *Client) sendToOutput(name string, data any) error {
 }
 
 func (client *Client) handleMessage(ctx context.Context, stream *grpcSDK.Stream[pb.Subscription]) {
-	defer client.wg.Done()
-
 	for {
 		select {
 		case <-stream.Context().Done():
