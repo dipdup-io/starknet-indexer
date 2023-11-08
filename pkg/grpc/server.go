@@ -2,7 +2,6 @@ package grpc
 
 import (
 	"context"
-	"sync"
 	"time"
 
 	"github.com/dipdup-io/starknet-indexer/internal/storage"
@@ -12,8 +11,6 @@ import (
 	"github.com/dipdup-io/starknet-indexer/pkg/indexer"
 	"github.com/dipdup-net/indexer-sdk/pkg/modules"
 	grpcSDK "github.com/dipdup-net/indexer-sdk/pkg/modules/grpc"
-	"github.com/pkg/errors"
-	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 )
 
@@ -24,16 +21,13 @@ const (
 
 // Server -
 type Server struct {
-	*grpcSDK.Server
+	GRPC *grpcSDK.Server
+	modules.BaseModule
 	pb.UnimplementedIndexerServiceServer
 
 	db postgres.Storage
 
-	input         *modules.Input
 	subscriptions *grpcSDK.Subscriptions[*subscriptions.Message, *pb.Subscription]
-	log           zerolog.Logger
-
-	wg *sync.WaitGroup
 }
 
 // NewServer -
@@ -46,32 +40,31 @@ func NewServer(
 		return nil, err
 	}
 
-	return &Server{
-		Server:        server,
+	s := &Server{
+		GRPC:          server,
 		db:            db,
-		input:         modules.NewInput(InputBlocks),
+		BaseModule:    modules.New("layer1_grpc_server"),
 		subscriptions: grpcSDK.NewSubscriptions[*subscriptions.Message, *pb.Subscription](),
-		log:           log.With().Str("module", "grpc_server").Logger(),
+	}
+	s.CreateInput(InputBlocks)
 
-		wg: new(sync.WaitGroup),
-	}, nil
+	return s, nil
 }
 
 // Start -
 func (module *Server) Start(ctx context.Context) {
-	pb.RegisterIndexerServiceServer(module.Server.Server(), module)
+	pb.RegisterIndexerServiceServer(module.GRPC.Server(), module)
 
-	module.Server.Start(ctx)
+	module.GRPC.Start(ctx)
 
-	module.wg.Add(1)
-	go module.listen(ctx)
+	module.G.GoCtx(ctx, module.listen)
 }
 
 func (module *Server) listen(ctx context.Context) {
-	defer module.wg.Done()
-
 	ticker := time.NewTicker(time.Second * 15)
 	defer ticker.Stop()
+
+	input := module.MustInput(InputBlocks)
 
 	for {
 		select {
@@ -79,14 +72,14 @@ func (module *Server) listen(ctx context.Context) {
 			return
 		case <-ticker.C:
 
-		case msg, ok := <-module.input.Listen():
+		case msg, ok := <-input.Listen():
 			if !ok {
 				return
 			}
 			if message, ok := msg.(*indexer.IndexerMessage); ok {
 				module.blockHandler(ctx, message)
 			} else {
-				module.log.Warn().Msgf("unknown message type: %T", msg)
+				module.Log.Warn().Msgf("unknown message type: %T", msg)
 			}
 		}
 	}
@@ -280,34 +273,7 @@ func (module *Server) notifyAboutAddress(address *storage.Address) {
 
 // Close -
 func (module *Server) Close() error {
-	module.wg.Wait()
+	module.G.Wait()
 
-	if err := module.input.Close(); err != nil {
-		return err
-	}
-
-	return module.Server.Close()
-}
-
-// Input -
-func (module *Server) Input(name string) (*modules.Input, error) {
-	if name != InputBlocks {
-		return nil, errors.Wrap(modules.ErrUnknownInput, name)
-	}
-	return module.input, nil
-}
-
-// Output -
-func (module *Server) Output(name string) (*modules.Output, error) {
-	return nil, errors.Wrap(modules.ErrUnknownOutput, name)
-}
-
-// AttachTo -
-func (module *Server) AttachTo(name string, input *modules.Input) error {
-	return errors.Wrap(modules.ErrUnknownOutput, name)
-}
-
-// Name -
-func (module *Server) Name() string {
-	return "layer1_grpc_server"
+	return module.GRPC.Close()
 }

@@ -1,0 +1,9 @@
+version: 0.0.1
+
+log_level: ${LOG_LEVEL:-info}
+
+grpc:
+  server_address: ${GRPC_BIND:-127.0.0.1:7779}
+  subscriptions:
+    blocks:
+      head: true

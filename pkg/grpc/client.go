@@ -80,6 +80,15 @@ func (client *Client) Input(name string) (*modules.Input, error) {
 	return nil, errors.Wrap(modules.ErrUnknownInput, name)
 }
 
+// MustInput -
+func (client *Client) MustInput(name string) *modules.Input {
+	input, err := client.Input(name)
+	if err != nil {
+		panic(err)
+	}
+	return input
+}
+
 // Output -
 func (client *Client) Output(name string) (*modules.Output, error) {
 	if name != OutputMessages {
@@ -88,9 +97,22 @@ func (client *Client) Output(name string) (*modules.Output, error) {
 	return client.output, nil
 }
 
-// AttachTo -
-func (client *Client) AttachTo(name string, input *modules.Input) error {
+// MustOutput -
+func (client *Client) MustOutput(name string) *modules.Output {
 	output, err := client.Output(name)
+	if err != nil {
+		panic(err)
+	}
+	return output
+}
+
+// AttachTo -
+func (client *Client) AttachTo(outputModule modules.Module, outputName, inputName string) error {
+	output, err := outputModule.Output(outputName)
+	if err != nil {
+		return err
+	}
+	input, err := client.Input(inputName)
 	if err != nil {
 		return err
 	}

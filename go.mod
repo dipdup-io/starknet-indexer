@@ -4,9 +4,9 @@ go 1.20
 
 require (
 	github.com/dipdup-io/starknet-go-api v0.0.0-20230912113406-c699cdbd6582
-	github.com/dipdup-io/workerpool v0.0.3
+	github.com/dipdup-io/workerpool v0.0.4
 	github.com/dipdup-net/go-lib v0.3.3
-	github.com/dipdup-net/indexer-sdk v0.0.0-20230819120445-392cbc4cfb65
+	github.com/dipdup-net/indexer-sdk v0.0.4
 	github.com/go-testfixtures/testfixtures/v3 v3.9.0
 	github.com/goccy/go-json v0.10.2
 	github.com/karlseguin/ccache/v2 v2.0.8
@@ -18,7 +18,7 @@ require (
 	github.com/stretchr/testify v1.8.4
 	github.com/uptrace/bun v1.1.14
 	go.uber.org/mock v0.2.0
-	google.golang.org/grpc v1.57.0
+	google.golang.org/grpc v1.57.1
 	google.golang.org/protobuf v1.31.0
 )
 
@@ -36,7 +36,7 @@ require (
 	github.com/cpuguy83/dockercfg v0.3.1 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/docker/distribution v2.8.2+incompatible // indirect
-	github.com/docker/docker v24.0.5+incompatible // indirect
+	github.com/docker/docker v24.0.7+incompatible // indirect
 	github.com/docker/go-connections v0.4.0 // indirect
 	github.com/docker/go-units v0.5.0 // indirect
 	github.com/gabriel-vasile/mimetype v1.4.2 // indirect
@@ -98,7 +98,7 @@ require (
 	go.opentelemetry.io/otel v1.16.0 // indirect
 	go.opentelemetry.io/otel/trace v1.16.0 // indirect
 	golang.org/x/crypto v0.14.0 // indirect
-	golang.org/x/exp v0.0.0-20230510235704-dd950f8aeaea // indirect
+	golang.org/x/exp v0.0.0-20230515195305-f3d0a9c9a5cc // indirect
 	golang.org/x/mod v0.12.0 // indirect
 	golang.org/x/net v0.17.0 // indirect
 	golang.org/x/sys v0.13.0 // indirect

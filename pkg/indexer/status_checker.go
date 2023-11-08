@@ -2,13 +2,13 @@ package indexer
 
 import (
 	"context"
-	"sync"
 	"time"
 
 	"github.com/dipdup-io/starknet-go-api/pkg/encoding"
 	"github.com/dipdup-io/starknet-indexer/internal/storage"
 	"github.com/dipdup-io/starknet-indexer/internal/storage/postgres"
 	"github.com/dipdup-io/starknet-indexer/pkg/indexer/receiver"
+	"github.com/dipdup-io/workerpool"
 	sdk "github.com/dipdup-net/indexer-sdk/pkg/storage"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
@@ -68,7 +68,7 @@ type statusChecker struct {
 	transactable   sdk.Transactable
 	receiver       *receiver.Receiver
 	log            zerolog.Logger
-	wg             *sync.WaitGroup
+	g              workerpool.Group
 }
 
 func newStatusChecker(
@@ -92,19 +92,16 @@ func newStatusChecker(
 		l1Handlers:     l1Handlers,
 		transactable:   transactable,
 		log:            log.With().Str("module", "status_checker").Logger(),
-		wg:             new(sync.WaitGroup),
+		g:              workerpool.NewGroup(),
 	}
 }
 
 // Start -
 func (checker *statusChecker) Start(ctx context.Context) {
-	checker.wg.Add(1)
-	go checker.start(ctx)
+	checker.g.GoCtx(ctx, checker.start)
 }
 
 func (checker *statusChecker) start(ctx context.Context) {
-	defer checker.wg.Done()
-
 	if err := checker.init(ctx); err != nil {
 		checker.log.Err(err).Msg("checker init")
 		return
@@ -131,7 +128,7 @@ func (checker *statusChecker) start(ctx context.Context) {
 
 // Close -
 func (checker *statusChecker) Close() error {
-	checker.wg.Wait()
+	checker.g.Wait()
 	return nil
 }
 
