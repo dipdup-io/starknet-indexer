@@ -1,7 +1,7 @@
 # ---------------------------------------------------------------------
 #  The first stage container, for building the application
 # ---------------------------------------------------------------------
-FROM golang:1.20-alpine as builder
+FROM golang:1.21.2-alpine as builder
 
 ENV CGO_ENABLED=0
 ENV GO111MODULE=on
@@ -10,17 +10,17 @@ ENV GOOS=linux
 RUN apk --no-cache add ca-certificates
 RUN apk add --update git musl-dev gcc build-base
 
-RUN mkdir -p $GOPATH/src/github.com/dipdup-io/straknet-indexer/
+RUN mkdir -p $GOPATH/src/github.com/dipdup-io/starknet-indexer/
 
-COPY ./go.* $GOPATH/src/github.com/dipdup-io/straknet-indexer/
-WORKDIR $GOPATH/src/github.com/dipdup-io/straknet-indexer
+COPY ./go.* $GOPATH/src/github.com/dipdup-io/starknet-indexer/
+WORKDIR $GOPATH/src/github.com/dipdup-io/starknet-indexer
 RUN go mod download
 
 COPY cmd/indexer cmd/indexer
 COPY internal internal
 COPY pkg pkg
 
-WORKDIR $GOPATH/src/github.com/dipdup-io/straknet-indexer/cmd/indexer/
+WORKDIR $GOPATH/src/github.com/dipdup-io/starknet-indexer/cmd/indexer/
 RUN go build -a -o /go/bin/indexer .
 
 # ---------------------------------------------------------------------
@@ -28,7 +28,7 @@ RUN go build -a -o /go/bin/indexer .
 # ---------------------------------------------------------------------
 FROM scratch
 
-WORKDIR /app/straknet-indexer/
+WORKDIR /app/starknet-indexer/
 
 COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 COPY --from=builder /go/bin/indexer /go/bin/indexer

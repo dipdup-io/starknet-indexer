@@ -21,11 +21,11 @@ const (
 
 // Server -
 type Server struct {
-	GRPC *grpcSDK.Server
 	modules.BaseModule
 	pb.UnimplementedIndexerServiceServer
 
-	db postgres.Storage
+	GRPC *grpcSDK.Server
+	db   postgres.Storage
 
 	subscriptions *grpcSDK.Subscriptions[*subscriptions.Message, *pb.Subscription]
 }

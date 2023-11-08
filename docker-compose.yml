@@ -2,7 +2,7 @@ version: "3.6"
 
 services:
   indexer:
-    image: ghcr.io/dipdup-io/starknet-indexer:master
+    image: ghcr.io/dipdup-io/starknet-indexer:${TAG:-master}
     build:
         dockerfile: build/Dockerfile
         context: .
@@ -16,7 +16,7 @@ services:
     depends_on:
       - db
       - hasura
-    logging: &straknet-dipdup-logging
+    logging: &starknet-indexer-logging
       options:
         max-size: 10m
         max-file: "5"
@@ -27,21 +27,21 @@ services:
     image: postgres:15
     restart: always
     volumes:
-      - db:/var/lib/postgres/data
+      - db:/var/lib/postgresql/data
       - /etc/postgresql/postgresql.conf:/etc/postgresql/postgresql.conf
     ports:
-      - 127.0.0.1:5432:5432
+      - 127.0.0.1:${POSTGRES_PORT:-5432}:5432
     environment:
       - POSTGRES_HOST=${POSTGRES_HOST:-db}
       - POSTGRES_USER=${POSTGRES_USER:-dipdup}
       - POSTGRES_DB=${POSTGRES_DB:-starknet}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-changeme}
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U dipdup -d starknet"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-dipdup} -d ${POSTGRES_DB:-starknet}"]
       interval: 10s
       timeout: 5s
       retries: 5
-    logging: *straknet-dipdup-logging
+    logging: *starknet-indexer-logging
     command:
       - "postgres"
       - "-c"
@@ -59,7 +59,7 @@ services:
       - HASURA_GRAPHQL_ENABLED_LOG_TYPES=startup, http-log, webhook-log, websocket-log, query-log
       - HASURA_GRAPHQL_ADMIN_SECRET=${ADMIN_SECRET:-changeme}
       - HASURA_GRAPHQL_UNAUTHORIZED_ROLE=user
-    logging: *straknet-dipdup-logging
+    logging: *starknet-indexer-logging
 
 volumes:
   db:
