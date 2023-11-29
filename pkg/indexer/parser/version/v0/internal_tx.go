@@ -176,13 +176,7 @@ func (parser InternalTxParser) Parse(ctx context.Context, txCtx parserData.TxCon
 			}
 
 			if err != nil {
-				switch {
-				case (errors.Is(err, abi.ErrNoLenField) || errors.Is(err, abi.ErrTooShortCallData)):
-				case errors.Is(err, decode.ErrUnknownSelector):
-					log.Err(err).Hex("tx_hash", tx.Hash).Msg("can't decode calldata")
-				default:
-					return tx, err
-				}
+				log.Err(err).Hex("tx_hash", tx.Hash).Msg("can't decode calldata")
 			}
 		}
 
