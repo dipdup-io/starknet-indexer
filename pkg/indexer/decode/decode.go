@@ -22,7 +22,7 @@ func CalldataBySelector(contractAbi abi.Abi, selector []byte, calldata []string)
 		return nil, function.Name, nil
 	}
 
-	parsed, err := abi.DecodeFunctionCallData(calldata, *function, contractAbi.Structs)
+	parsed, err := abi.DecodeFunctionCallData(calldata, *function, contractAbi.Structs, contractAbi.Enums)
 	return parsed, function.Name, err
 }
 
@@ -36,7 +36,7 @@ func CalldataForConstructor(classAbi abi.Abi, calldata []string) (map[string]any
 		}
 	}
 
-	return abi.DecodeFunctionCallData(calldata, *function, classAbi.Structs)
+	return abi.DecodeFunctionCallData(calldata, *function, classAbi.Structs, classAbi.Enums)
 }
 
 // CalldataForL1Handler -
@@ -50,7 +50,7 @@ func CalldataForL1Handler(contractAbi abi.Abi, selector []byte, calldata []strin
 		return nil, function.Name, nil
 	}
 
-	parsed, err := abi.DecodeFunctionCallData(calldata, *function, contractAbi.Structs)
+	parsed, err := abi.DecodeFunctionCallData(calldata, *function, contractAbi.Structs, contractAbi.Enums)
 	return parsed, function.Name, err
 }
 
@@ -64,7 +64,7 @@ func Event(contractAbi abi.Abi, keys []string, data []string) (map[string]any, s
 	if !ok {
 		return nil, "", nil
 	}
-	parsed, err := abi.DecodeEventData(data, *event, contractAbi.Structs)
+	parsed, err := abi.DecodeEventData(data, *event, contractAbi.Structs, contractAbi.Enums)
 	return parsed, event.Name, err
 }
 
@@ -79,7 +79,7 @@ func ResultForFunction(contractAbi abi.Abi, data []string, selector []byte) (map
 		return nil, errors.Wrapf(ErrUnknownSelector, "function %x", selector)
 	}
 
-	return abi.DecodeFunctionResult(data, *function, contractAbi.Structs)
+	return abi.DecodeFunctionResult(data, *function, contractAbi.Structs, contractAbi.Enums)
 }
 
 // ResultForL1Handler -
@@ -93,7 +93,7 @@ func ResultForL1Handler(contractAbi abi.Abi, data []string, selector []byte) (ma
 		return nil, errors.Wrapf(ErrUnknownSelector, "l1_handler %x", selector)
 	}
 
-	return abi.DecodeFunctionResult(data, *function, contractAbi.Structs)
+	return abi.DecodeFunctionResult(data, *function, contractAbi.Structs, contractAbi.Enums)
 }
 
 // ResultForConstructor -
@@ -107,7 +107,7 @@ func ResultForConstructor(contractAbi abi.Abi, data []string, selector []byte) (
 		return nil, errors.Wrapf(ErrUnknownSelector, "constructor %x", selector)
 	}
 
-	return abi.DecodeFunctionResult(data, *function, contractAbi.Structs)
+	return abi.DecodeFunctionResult(data, *function, contractAbi.Structs, contractAbi.Enums)
 }
 
 // Result -
