@@ -32,7 +32,8 @@ func createParser(
 	case "0.9.1",
 		"0.10.0", "0.10.1", "0.10.2", "0.10.3",
 		"0.11.0", "0.11.0.2", "0.11.1", "0.11.2",
-		"0.12.0", "0.12.1", "0.12.2", "0.12.3":
+		"0.12.0", "0.12.1", "0.12.2", "0.12.3",
+		"0.13.0":
 		return v0.New(resolver, cache, blocks), nil
 	default:
 		return nil, errors.Errorf("unknown starknet version: %s", *version)
@@ -102,6 +103,8 @@ func Parse(
 				invoke, fee, err = p.ParseInvokeV0(ctx, typed, block, result.Trace.Traces[i], result.Block.Receipts[i])
 			case starknetData.Version1:
 				invoke, fee, err = p.ParseInvokeV1(ctx, typed, block, result.Trace.Traces[i], result.Block.Receipts[i])
+			case starknetData.Version3:
+				invoke, fee, err = p.ParseInvokeV3(ctx, typed, block, result.Trace.Traces[i], result.Block.Receipts[i])
 			default:
 				return parserData.Result{}, errors.Errorf("unknown invoke version: %s", result.Block.Transactions[i].Version)
 			}

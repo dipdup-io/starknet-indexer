@@ -17,6 +17,7 @@ type Parser interface {
 	ParseDeploy(ctx context.Context, raw *starknetData.Deploy, block storage.Block, trace sequencer.Trace, receipts sequencer.Receipt) (storage.Deploy, *storage.Fee, error)
 	ParseInvokeV0(ctx context.Context, raw *starknetData.Invoke, block storage.Block, trace sequencer.Trace, receipts sequencer.Receipt) (storage.Invoke, *storage.Fee, error)
 	ParseInvokeV1(ctx context.Context, raw *starknetData.Invoke, block storage.Block, trace sequencer.Trace, receipts sequencer.Receipt) (storage.Invoke, *storage.Fee, error)
+	ParseInvokeV3(ctx context.Context, raw *starknetData.Invoke, block storage.Block, trace sequencer.Trace, receipts sequencer.Receipt) (storage.Invoke, *storage.Fee, error)
 	ParseL1Handler(ctx context.Context, raw *starknetData.L1Handler, block storage.Block, trace sequencer.Trace, receipts sequencer.Receipt) (storage.L1Handler, *storage.Fee, error)
 }
 
