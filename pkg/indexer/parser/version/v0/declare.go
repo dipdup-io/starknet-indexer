@@ -7,10 +7,11 @@ import (
 	"github.com/dipdup-io/starknet-go-api/pkg/sequencer"
 	"github.com/dipdup-io/starknet-indexer/internal/storage"
 	parserData "github.com/dipdup-io/starknet-indexer/pkg/indexer/parser/data"
+	"github.com/dipdup-io/starknet-indexer/pkg/indexer/receiver"
 )
 
 // ParseDeclare -
-func (parser Parser) ParseDeclare(ctx context.Context, version data.Felt, raw *data.Declare, block storage.Block, trace sequencer.Trace, receipts sequencer.Receipt) (storage.Declare, *storage.Fee, error) {
+func (parser Parser) ParseDeclare(ctx context.Context, version data.Felt, raw *data.Declare, block storage.Block, receiverTx receiver.Transaction, trace sequencer.Trace) (storage.Declare, *storage.Fee, error) {
 	tx := storage.Declare{
 		ID:     parser.Resolver.NextTxId(),
 		Height: block.Height,
@@ -102,7 +103,7 @@ func (parser Parser) ParseDeclare(ctx context.Context, version data.Felt, raw *d
 			return tx, fee, nil
 		}
 	} else {
-		transfer, err := parser.FeeParser.ParseActualFee(ctx, txCtx, receipts.ActualFee)
+		transfer, err := parser.FeeParser.ParseActualFee(ctx, txCtx, receiverTx.ActualFee)
 		if err != nil {
 			return tx, nil, nil
 		}

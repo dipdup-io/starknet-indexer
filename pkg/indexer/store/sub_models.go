@@ -6,6 +6,7 @@ import (
 	models "github.com/dipdup-io/starknet-indexer/internal/storage"
 	"github.com/dipdup-io/starknet-indexer/internal/storage/postgres"
 	"github.com/dipdup-net/indexer-sdk/pkg/storage"
+	"github.com/lib/pq"
 )
 
 const copyThreashold = 25
@@ -106,17 +107,26 @@ func bulkSaveWithCopy[M models.CopiableModel](ctx context.Context, tx storage.Tr
 	case len(arr) == 0:
 		return nil
 	case len(arr) < copyThreashold:
-		data := make([]any, len(arr))
-		for i := range arr {
-			data[i] = &arr[i]
-		}
-		return tx.BulkSave(ctx, data)
+		_, err := tx.Tx().NewInsert().Model(&arr).Exec(ctx)
+		return err
 	default:
 		tableName := arr[0].TableName()
-		data := make([]storage.Copiable, len(arr))
-		for i := range arr {
-			data[i] = arr[i]
+
+		stmt, err := tx.Tx().PrepareContext(ctx, pq.CopyIn(tableName, arr[0].Columns()...))
+		if err != nil {
+			return err
 		}
-		return tx.CopyFrom(ctx, tableName, data)
+
+		for i := range arr {
+			if _, err := stmt.ExecContext(ctx, arr[i].Flat()...); err != nil {
+				return err
+			}
+		}
+
+		if _, err := stmt.ExecContext(ctx); err != nil {
+			return err
+		}
+
+		return stmt.Close()
 	}
 }

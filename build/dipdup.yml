@@ -1,31 +1,27 @@
-version: 0.0.1
+version: 0.0.2
 
 log_level: ${LOG_LEVEL:-info}
 
 indexer:
   name: ${INDEXER_NAME:-dipdup_starknet_indexer}
-  
-  sequencer:
-    feeder_gateway: ${STARKNET_SEQUENCER_FEEDER_GATEWAY:-https://alpha-mainnet.starknet.io/feeder_gateway}
-    gateway: ${STARKNET_SEQUENCER_GATEWAY:-https://alpha-mainnet.starknet.io/gateway}
-    requests_per_second: ${STARKNET_SEQUENCER_RPS:-3}
-
-  node:
-    url: ${STARKNET_NODE_URL}
-    requests_per_second: ${STARKNET_NODE_RPS:-5}
-
+  datasource: ${INDEXER_DATASOURCE:-sequencer}
   threads_count: ${INDEXER_THREADS_COUNT:-10}
   start_level: ${INDEXER_START_LEVEL:-0}
   timeout: ${INDEXER_REQUEST_TIMEOUT:-10}
-  requests_per_second: ${STARKNET_RPS:-2}
   class_interfaces_dir: ${INDEXER_CLASS_INTERFACES_DIR:-./interfaces/}
   bridged_tokens_file: ${INDEXER_BRIDGED_TOKENS_FILE:-mainnet.json}
-  cache_dir: ${INDEXER_CACHE_DIR}
-  cache: ${CACHE_ENABLED:-false}
 
 grpc:
   bind: ${GRPC_BIND:-127.0.0.1:7779}
   log: true
+
+datasources:
+  node:
+    url: ${STARKNET_NODE_URL}
+    rps: ${STARKNET_NODE_RPS:-5}
+  sequencer:
+    url: ${STARKNET_SEQUENCER_FEEDER_GATEWAY:-https://alpha-mainnet.starknet.io/feeder_gateway}
+    rps: ${STARKNET_SEQUENCER_RPS:-3}
 
 database:
   kind: postgres

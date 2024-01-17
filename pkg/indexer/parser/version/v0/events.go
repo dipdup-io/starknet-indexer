@@ -65,6 +65,14 @@ func (parser EventParser) Parse(ctx context.Context, txCtx data.TxContext, contr
 		model.Keys[i] = event.Keys[i].String()
 	}
 
+	for i := 0; i < len(event.Data); i++ {
+		model.Data[i] = event.Data[i].String()
+	}
+
+	for i := 0; i < len(event.Keys); i++ {
+		model.Keys[i] = event.Keys[i].String()
+	}
+
 	if address, err := parser.resolver.FindAddressByHash(ctx, starknetData.Felt(event.FromAddress)); err != nil {
 		return model, err
 	} else if address != nil {

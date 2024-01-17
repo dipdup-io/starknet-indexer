@@ -103,7 +103,12 @@ func main() {
 		}
 	}
 
-	indexerModule := indexer.New(cfg.Indexer, postgres)
+	indexerModule, err := indexer.New(cfg.Indexer, postgres, cfg.DataSources)
+	if err != nil {
+		log.Panic().Err(err).Msg("creating indexer module")
+		cancel()
+		return
+	}
 
 	grpcModule, err := grpc.NewServer(
 		cfg.GRPC, postgres,

@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/dipdup-io/starknet-go-api/pkg/data"
-	"github.com/dipdup-io/starknet-go-api/pkg/sequencer"
 	"github.com/dipdup-io/starknet-indexer/internal/starknet"
 	models "github.com/dipdup-io/starknet-indexer/internal/storage"
 	"github.com/dipdup-io/starknet-indexer/internal/storage/postgres"
@@ -18,6 +17,7 @@ import (
 	"github.com/dipdup-io/starknet-indexer/pkg/indexer/parser/generator"
 	"github.com/dipdup-io/starknet-indexer/pkg/indexer/receiver"
 	"github.com/dipdup-io/starknet-indexer/pkg/indexer/store"
+	ddConfig "github.com/dipdup-net/go-lib/config"
 	"github.com/dipdup-net/indexer-sdk/pkg/modules"
 	sdk "github.com/dipdup-net/indexer-sdk/pkg/storage"
 	"github.com/pkg/errors"
@@ -68,7 +68,8 @@ type Indexer struct {
 func New(
 	cfg config.Config,
 	storage postgres.Storage,
-) *Indexer {
+	datasource map[string]ddConfig.DataSource,
+) (*Indexer, error) {
 	indexer := &Indexer{
 		BaseModule:      modules.New("indexer"),
 		cfg:             cfg,
@@ -87,13 +88,18 @@ func New(
 		proxy:           storage.Proxy,
 		state:           newState(nil),
 		cache:           cache.New(storage.Address, storage.Class, storage.Proxy),
-		receiver:        receiver.NewReceiver(cfg),
 		rollbackManager: storage.RollbackManager,
 		rollback:        make(chan struct{}, 1),
 		rollbackRerun:   make(chan struct{}, 1),
 		txWriteMutex:    new(sync.Mutex),
 		rollbackWait:    new(sync.WaitGroup),
 	}
+	rcvr, err := receiver.NewReceiver(cfg, datasource)
+	if err != nil {
+		return nil, err
+	}
+	indexer.receiver = rcvr
+
 	indexer.CreateOutput(OutputBlocks)
 
 	indexer.idGenerator = generator.NewIdGenerator(storage.Address, storage.Class, indexer.cache, indexer.state.Current())
@@ -118,7 +124,7 @@ func New(
 		storage.Transactable,
 	)
 
-	return indexer
+	return indexer, nil
 }
 
 // Start -
@@ -301,7 +307,7 @@ func (indexer *Indexer) saveBlocks(ctx context.Context) {
 			return
 
 		case result := <-indexer.receiver.Results():
-			indexer.queue[result.Block.BlockNumber] = result
+			indexer.queue[result.Block.Height] = result
 
 			if indexer.state.Height() == 0 && !zeroBlock {
 				if data, ok := indexer.queue[0]; ok {
@@ -354,7 +360,7 @@ func (indexer *Indexer) saveBlocks(ctx context.Context) {
 	}
 }
 
-func (indexer *Indexer) handleReorg(ctx context.Context, newBlock sequencer.Block) (bool, error) {
+func (indexer *Indexer) handleReorg(ctx context.Context, newBlock receiver.Block) (bool, error) {
 	lastBlock, err := indexer.blocks.Last(ctx)
 	if err != nil {
 		if indexer.blocks.IsNoRows(err) {
@@ -363,13 +369,12 @@ func (indexer *Indexer) handleReorg(ctx context.Context, newBlock sequencer.Bloc
 		return false, err
 	}
 
-	parentHash := data.Felt(newBlock.ParentHash).Bytes()
-	if bytes.Equal(lastBlock.Hash, parentHash) {
+	if bytes.Equal(lastBlock.Hash, newBlock.ParentHash) {
 		return false, nil
 	}
 
 	log.Warn().
-		Str("parent_hash_of_new_block", newBlock.ParentHash).
+		Hex("parent_hash_of_new_block", newBlock.ParentHash).
 		Hex("indexer_head_block_hash", lastBlock.Hash).
 		Msg("rollback detected by parent hash")
 
@@ -420,16 +425,16 @@ func (indexer *Indexer) handleBlock(ctx context.Context, result receiver.Result)
 		indexer.statusChecker.addBlock(parseResult.Block)
 	}
 
-	delete(indexer.queue, result.Block.BlockNumber)
+	delete(indexer.queue, result.Block.Height)
 
 	l := indexer.Log.Info().
-		Uint64("height", result.Block.BlockNumber).
+		Uint64("height", result.Block.Height).
 		Int("tx_count", parseResult.Block.TxCount).
 		Time("block_time", parseResult.Block.Time).
 		Int64("process_time_in_ms", time.Since(start).Milliseconds()).
 		Int64("save_time_in_ms", saveTime)
-	if result.Block.StarknetVersion != nil {
-		l.Str("version", *result.Block.StarknetVersion)
+	if result.Block.Version != nil && *result.Block.Version != "" {
+		l.Str("version", *result.Block.Version)
 	}
 	l.Msg("indexed")
 

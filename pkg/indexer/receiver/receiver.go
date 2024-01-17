@@ -2,31 +2,30 @@ package receiver
 
 import (
 	"context"
-	"errors"
 	"sync"
 	"time"
 
 	starknetData "github.com/dipdup-io/starknet-go-api/pkg/data"
-	starknetRpc "github.com/dipdup-io/starknet-go-api/pkg/rpc"
 	starknet "github.com/dipdup-io/starknet-go-api/pkg/sequencer"
 	"github.com/dipdup-io/starknet-indexer/internal/storage"
 	"github.com/dipdup-io/starknet-indexer/pkg/indexer/config"
 	"github.com/dipdup-io/workerpool"
+	ddConfig "github.com/dipdup-net/go-lib/config"
+	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 )
 
 // Result -
 type Result struct {
-	Block       starknet.Block
-	Trace       starknet.TraceResponse
+	Block       Block
+	Traces      []starknet.Trace
 	StateUpdate starknetData.StateUpdate
 }
 
 // Receiver -
 type Receiver struct {
-	api          starknet.API
-	rpc          *starknetRpc.API
+	api          API
 	result       chan Result
 	pool         *workerpool.Pool[uint64]
 	processing   map[uint64]struct{}
@@ -37,18 +36,19 @@ type Receiver struct {
 }
 
 // NewReceiver -
-func NewReceiver(cfg config.Config) *Receiver {
-	opts := make([]starknet.ApiOption, 0)
-	if cfg.Sequencer.Rps > 0 {
-		opts = append(opts, starknet.WithRateLimit(cfg.Sequencer.Rps))
+func NewReceiver(cfg config.Config, ds map[string]ddConfig.DataSource) (*Receiver, error) {
+	dsCfg, ok := ds[cfg.Datasource]
+	if !ok {
+		return nil, errors.Errorf("unknown datasource name: %s", cfg.Datasource)
 	}
 
-	log.Info().Bool("enabled", cfg.Cache).Str("dir", cfg.CacheDir).Msg("rpc response caching")
-	if cfg.Cache && cfg.CacheDir != "" {
-		opts = append(opts, starknet.WithCacheInFS(cfg.CacheDir))
+	var api API
+	switch cfg.Datasource {
+	case "node":
+		api = NewNode(dsCfg)
+	case "sequencer":
+		api = NewFeeder(dsCfg)
 	}
-
-	api := starknet.NewAPI(cfg.Sequencer.Gateway, cfg.Sequencer.FeederGateway, opts...)
 
 	receiver := &Receiver{
 		api:          api,
@@ -60,18 +60,13 @@ func NewReceiver(cfg config.Config) *Receiver {
 		wg:           new(sync.WaitGroup),
 	}
 
-	if cfg.Node != nil && cfg.Node.Url != "" {
-		rpc := starknetRpc.NewAPI(cfg.Node.Url, starknetRpc.WithRateLimit(cfg.Node.Rps))
-		receiver.rpc = &rpc
-	}
-
 	if receiver.timeout == 0 {
 		receiver.timeout = 10 * time.Second
 	}
 
 	receiver.pool = workerpool.NewPool(receiver.worker, cfg.ThreadsCount)
 
-	return receiver
+	return receiver, nil
 }
 
 // Close -
@@ -105,7 +100,7 @@ func (r *Receiver) worker(ctx context.Context, height uint64) {
 		default:
 		}
 
-		response, err := r.api.GetBlock(ctx, blockId, false)
+		response, err := r.api.GetBlock(ctx, blockId)
 		if err != nil {
 			if errors.Is(err, context.Canceled) {
 				return
@@ -134,7 +129,7 @@ func (r *Receiver) worker(ctx context.Context, height uint64) {
 			time.Sleep(time.Second)
 			continue
 		}
-		result.Trace = response
+		result.Traces = response
 		break
 	}
 
@@ -185,21 +180,7 @@ func (r *Receiver) Head(ctx context.Context) (uint64, error) {
 	requestCtx, cancel := context.WithTimeout(ctx, r.timeout)
 	defer cancel()
 
-	if r.rpc != nil {
-		response, err := r.rpc.BlockNumber(requestCtx)
-		if err != nil {
-			return 0, err
-		}
-		return response.Result, nil
-	}
-
-	response, err := r.api.GetBlock(requestCtx, starknetData.BlockID{
-		String: starknetData.Latest,
-	}, true)
-	if err != nil {
-		return 0, err
-	}
-	return response.BlockNumber, nil
+	return r.api.Head(requestCtx)
 }
 
 // GetClass -
@@ -207,11 +188,7 @@ func (r *Receiver) GetClass(ctx context.Context, hash string) (starknetData.Clas
 	requestCtx, cancel := context.WithTimeout(ctx, r.timeout)
 	defer cancel()
 
-	blockId := starknetData.BlockID{
-		String: starknetData.Latest,
-	}
-
-	return r.api.GetClassByHash(requestCtx, blockId, hash)
+	return r.api.GetClass(requestCtx, hash)
 }
 
 // TransactionStatus -
@@ -219,12 +196,7 @@ func (r *Receiver) TransactionStatus(ctx context.Context, hash string) (storage.
 	requestCtx, cancel := context.WithTimeout(ctx, r.timeout)
 	defer cancel()
 
-	response, err := r.api.GetTransactionStatus(requestCtx, hash)
-	if err != nil {
-		return storage.StatusUnknown, err
-	}
-
-	return storage.NewStatus(response.Status), nil
+	return r.api.TransactionStatus(requestCtx, hash)
 }
 
 // GetBlockStatus -
@@ -232,23 +204,7 @@ func (r *Receiver) GetBlockStatus(ctx context.Context, height uint64) (storage.S
 	requestCtx, cancel := context.WithTimeout(ctx, r.timeout)
 	defer cancel()
 
-	blockId := starknetData.BlockID{
-		Number: &height,
-	}
-
-	if r.rpc != nil {
-		response, err := r.rpc.GetBlockWithTxHashes(requestCtx, blockId)
-		if err != nil {
-			return storage.StatusUnknown, err
-		}
-		return storage.NewStatus(response.Result.Status), nil
-	}
-
-	response, err := r.api.GetBlock(requestCtx, blockId, false)
-	if err != nil {
-		return storage.StatusUnknown, err
-	}
-	return storage.NewStatus(response.Status), nil
+	return r.api.GetBlockStatus(requestCtx, height)
 }
 
 // Results -
@@ -264,14 +220,6 @@ func (r *Receiver) QueueSize() int {
 func (r *Receiver) getStateUpdate(ctx context.Context, blockId starknetData.BlockID) (starknetData.StateUpdate, error) {
 	requestCtx, cancel := context.WithTimeout(ctx, r.timeout)
 	defer cancel()
-
-	if r.rpc != nil {
-		response, err := r.rpc.GetStateUpdate(requestCtx, blockId)
-		if err != nil {
-			return starknetData.StateUpdate{}, err
-		}
-		return response.Result.ToStateUpdate(), nil
-	}
 
 	return r.api.GetStateUpdate(requestCtx, blockId)
 }
