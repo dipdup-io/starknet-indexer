@@ -119,8 +119,8 @@ func (parser FeeParser) ParseInvocation(ctx context.Context, txCtx data.TxContex
 		CallType:       storage.NewCallType(feeInvocation.CallType),
 		EntrypointType: storage.NewEntrypointType(feeInvocation.EntrypointType),
 		Selector:       feeInvocation.Selector.Bytes(),
-		Result:         feeInvocation.Result,
-		Calldata:       feeInvocation.Calldata,
+		Result:         make([]string, len(feeInvocation.Result)),
+		Calldata:       make([]string, len(feeInvocation.Calldata)),
 
 		DeclareID:       txCtx.DeclareID,
 		DeployID:        txCtx.DeployID,
@@ -131,6 +131,12 @@ func (parser FeeParser) ParseInvocation(ctx context.Context, txCtx data.TxContex
 		Events:    make([]storage.Event, 0),
 		Messages:  make([]storage.Message, 0),
 		Internals: make([]storage.Internal, 0),
+	}
+	for i := range feeInvocation.Result {
+		tx.Result[i] = feeInvocation.Result[i].String()
+	}
+	for i := range feeInvocation.Calldata {
+		tx.Calldata[i] = feeInvocation.Calldata[i].String()
 	}
 
 	if class, err := parser.resolver.FindClassByHash(ctx, feeInvocation.ClassHash, tx.Height); err != nil {
@@ -210,7 +216,7 @@ func (parser FeeParser) ParseInvocation(ctx context.Context, txCtx data.TxContex
 	if len(feeInvocation.Calldata) > 0 && len(tx.Selector) > 0 {
 		if isExecute && !hasExecute {
 			tx.Entrypoint = encoding.ExecuteEntrypoint
-			tx.ParsedCalldata, err = abi.DecodeExecuteCallData(feeInvocation.Calldata)
+			tx.ParsedCalldata, err = abi.DecodeExecuteCallData(tx.Calldata)
 		} else {
 			tx.ParsedCalldata, tx.Entrypoint, err = decode.CalldataBySelector(contractAbi, tx.Selector, tx.Calldata)
 		}

@@ -46,8 +46,8 @@ func (parser EventParser) Parse(ctx context.Context, txCtx data.TxContext, contr
 		Height:          txCtx.Height,
 		Time:            txCtx.Time,
 		Order:           event.Order,
-		Data:            event.Data,
-		Keys:            event.Keys,
+		Data:            make([]string, len(event.Data)),
+		Keys:            make([]string, len(event.Keys)),
 		ContractID:      txCtx.ContractId,
 		Contract:        txCtx.Contract,
 		DeclareID:       txCtx.DeclareID,
@@ -57,6 +57,12 @@ func (parser EventParser) Parse(ctx context.Context, txCtx data.TxContext, contr
 		L1HandlerID:     txCtx.L1HandlerID,
 		FeeID:           txCtx.FeeID,
 		InternalID:      txCtx.InternalID,
+	}
+	for i := range event.Data {
+		model.Data[i] = event.Data[i].String()
+	}
+	for i := range event.Keys {
+		model.Keys[i] = event.Keys[i].String()
 	}
 
 	if address, err := parser.resolver.FindAddressByHash(ctx, starknetData.Felt(event.FromAddress)); err != nil {
