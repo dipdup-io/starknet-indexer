@@ -31,7 +31,7 @@ func (parser MessageParser) Parse(ctx context.Context, txCtx parserData.TxContex
 		Time:            txCtx.Time,
 		Order:           msg.Order,
 		Selector:        msg.Selector.String(),
-		Payload:         msg.Payload,
+		Payload:         make([]string, len(msg.Payload)),
 		Nonce:           msg.Nonce.Decimal(),
 		ContractID:      txCtx.ContractId,
 		DeclareID:       txCtx.DeclareID,
@@ -41,6 +41,9 @@ func (parser MessageParser) Parse(ctx context.Context, txCtx parserData.TxContex
 		L1HandlerID:     txCtx.L1HandlerID,
 		FeeID:           txCtx.FeeID,
 		InternalID:      txCtx.InternalID,
+	}
+	for i := range msg.Payload {
+		message.Payload[i] = msg.Payload[i].String()
 	}
 	if txCtx.ProxyId > 0 {
 		message.ContractID = txCtx.ProxyId

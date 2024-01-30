@@ -105,7 +105,7 @@ func (r *Receiver) worker(ctx context.Context, height uint64) {
 		default:
 		}
 
-		response, err := r.api.GetBlock(ctx, blockId)
+		response, err := r.api.GetBlock(ctx, blockId, false)
 		if err != nil {
 			if errors.Is(err, context.Canceled) {
 				return
@@ -195,7 +195,7 @@ func (r *Receiver) Head(ctx context.Context) (uint64, error) {
 
 	response, err := r.api.GetBlock(requestCtx, starknetData.BlockID{
 		String: starknetData.Latest,
-	})
+	}, true)
 	if err != nil {
 		return 0, err
 	}
@@ -244,7 +244,7 @@ func (r *Receiver) GetBlockStatus(ctx context.Context, height uint64) (storage.S
 		return storage.NewStatus(response.Result.Status), nil
 	}
 
-	response, err := r.api.GetBlock(requestCtx, blockId)
+	response, err := r.api.GetBlock(requestCtx, blockId, false)
 	if err != nil {
 		return storage.StatusUnknown, err
 	}

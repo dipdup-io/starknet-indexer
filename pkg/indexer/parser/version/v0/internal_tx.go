@@ -61,8 +61,8 @@ func (parser InternalTxParser) Parse(ctx context.Context, txCtx parserData.TxCon
 		CallType:       storage.NewCallType(internal.CallType),
 		EntrypointType: storage.NewEntrypointType(internal.EntrypointType),
 		Selector:       internal.Selector.Bytes(),
-		Result:         internal.Result,
-		Calldata:       internal.Calldata,
+		Result:         make([]string, len(internal.Result)),
+		Calldata:       make([]string, len(internal.Calldata)),
 
 		DeclareID:       txCtx.DeclareID,
 		DeployID:        txCtx.DeployID,
@@ -74,6 +74,12 @@ func (parser InternalTxParser) Parse(ctx context.Context, txCtx parserData.TxCon
 		Events:    make([]storage.Event, 0),
 		Messages:  make([]storage.Message, 0),
 		Internals: make([]storage.Internal, 0),
+	}
+	for i := range internal.Result {
+		tx.Result[i] = internal.Result[i].String()
+	}
+	for i := range internal.Calldata {
+		tx.Calldata[i] = internal.Calldata[i].String()
 	}
 
 	if class, err := parser.Resolver.FindClassByHash(ctx, internal.ClassHash, tx.Height); err != nil {
@@ -167,12 +173,12 @@ func (parser InternalTxParser) Parse(ctx context.Context, txCtx parserData.TxCon
 			switch {
 			case isExecute && !has:
 				tx.Entrypoint = encoding.ExecuteEntrypoint
-				tx.ParsedCalldata, err = abi.DecodeExecuteCallData(internal.Calldata)
+				tx.ParsedCalldata, err = abi.DecodeExecuteCallData(tx.Calldata)
 			case isChangeModules && !has:
 				tx.Entrypoint = encoding.ChangeModulesEntrypoint
-				tx.ParsedCalldata, err = abi.DecodeChangeModulesCallData(internal.Calldata)
+				tx.ParsedCalldata, err = abi.DecodeChangeModulesCallData(tx.Calldata)
 			default:
-				tx.ParsedCalldata, tx.Entrypoint, err = decode.InternalCalldata(contractAbi, tx.Selector, internal.Calldata, tx.EntrypointType)
+				tx.ParsedCalldata, tx.Entrypoint, err = decode.InternalCalldata(contractAbi, tx.Selector, tx.Calldata, tx.EntrypointType)
 			}
 
 			if err != nil {
@@ -184,9 +190,9 @@ func (parser InternalTxParser) Parse(ctx context.Context, txCtx parserData.TxCon
 			switch {
 			case isExecute && !has:
 			case isChangeModules && !has:
-				tx.ParsedResult, err = abi.DecodeChangeModulesResult(internal.Result)
+				tx.ParsedResult, err = abi.DecodeChangeModulesResult(tx.Result)
 			default:
-				tx.ParsedResult, err = decode.Result(contractAbi, internal.Result, tx.Selector, tx.EntrypointType)
+				tx.ParsedResult, err = decode.Result(contractAbi, tx.Result, tx.Selector, tx.EntrypointType)
 			}
 			if err != nil {
 				switch {
