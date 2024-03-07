@@ -31,7 +31,7 @@ func NewNode(cfg config.DataSource) *Node {
 }
 
 func (n *Node) GetBlock(ctx context.Context, blockId starknetData.BlockID) (block Block, err error) {
-	response, err := n.api.GetBlockWithTxs(ctx, blockId)
+	response, err := n.api.GetBlockWithReceipts(ctx, blockId)
 	if err != nil {
 		return
 	}
@@ -47,11 +47,11 @@ func (n *Node) GetBlock(ctx context.Context, blockId starknetData.BlockID) (bloc
 	block.Transactions = make([]Transaction, len(response.Result.Transactions))
 
 	for i := range response.Result.Transactions {
-		block.Transactions[i].Hash = response.Result.Transactions[i].TransactionHash
-		block.Transactions[i].Type = response.Result.Transactions[i].Type
-		block.Transactions[i].Version = response.Result.Transactions[i].Version
-		block.Transactions[i].Body = response.Result.Transactions[i].Body
-		// TODO: resolve actual fee | block.Transactions[i].ActualFee = ""
+		block.Transactions[i].Hash = response.Result.Transactions[i].Transaction.TransactionHash
+		block.Transactions[i].Type = response.Result.Transactions[i].Transaction.Type
+		block.Transactions[i].Version = response.Result.Transactions[i].Transaction.Version
+		block.Transactions[i].Body = response.Result.Transactions[i].Transaction.Body
+		block.Transactions[i].ActualFee = response.Result.Transactions[i].Receipt.ActualFee.Amount
 	}
 
 	return
