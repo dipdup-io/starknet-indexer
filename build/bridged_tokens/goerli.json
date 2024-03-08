@@ -1,0 +1,125 @@
+[
+    {
+        "name": "Wrapped BTC",
+        "symbol": "WBTC",
+        "decimals": 8,
+        "l1_token_address": "0xC04B0d3107736C32e19F1c62b2aF67BE61d63a05",
+        "l2_token_address": "0x12d537dc323c439dc65c976fad242d5610d27cfb5f31689a0a319b8be7f3d56",
+        "l1_bridge_address": "0xf29aE3446Ce4688fCc792b232C21D1B9581E7baC",
+        "l2_bridge_address": "0x72eeb90833bae233a9585f2fa9afc99c187f0a3a82693becd6a4d700b37fc6b"
+    },
+    {
+        "name": "USD Coin",
+        "symbol": "USDC",
+        "decimals": 6,
+        "l1_token_address": "0x07865c6e87b9f70255377e024ace6630c1eaa37f",
+        "l2_bridge_address": "0x001d5b64feabc8ac7c839753994f469704c6fabdd45c8fe6d26ed57b5eb79057",
+        "l2_token_address": "0x005a643907b9a4bc6a55e9069c4fd5fd1f5c79a22470690f75556c4736e34426",
+        "l1_bridge_address": "0xBA9cE9F22A3Cfa7Fcb5c31f6B2748b1e72C06204"
+    },
+    {
+        "name": "Tether USD",
+        "symbol": "USDT",
+        "decimals": 6,
+        "l1_token_address": "0x509Ee0d083DdF8AC028f2a56731412edD63223B9",
+        "l2_token_address": "0x386e8d061177f19b3b485c20e31137e6f6bc497cc635ccdfcab96fadf5add6a",
+        "l1_bridge_address": "0xA1f590F18b23EFece02804704E5006E91348C997",
+        "l2_bridge_address": "0x71d54658ca3c6ccd84ff958adb7498b2e71ba008e29b643983221ed2bd71b69"
+    },
+    {
+        "name": "SelfService",
+        "symbol": "SLF",
+        "decimals": 6,
+        "token_address": "0xd44BB808bfE43095dBb94c83077766382D63952a",
+        "l2_bridge_address": "0x00fd2a9843c19436542e0ac7fc7b5cbf1d0b69fc2abea6d68591e46a5ca2d75a",
+        "l2_token_address": "0x07a39a50bf689e9430fc81fba0f4d46e245e1657e77455548ed7e32c808cfc10",
+        "l1_bridge_address": "0x160e7631f22035149A01420cADD1012267551181"
+    },
+    {
+        "name": "Ether",
+        "symbol": "ETH",
+        "decimals": 18,
+        "l1_token_address": "0x0000000000000000000000000000000000000000",
+        "l2_token_address": "0x049d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7",
+        "l1_bridge_address": "0xc3511006C04EF1d78af4C8E0e74Ec18A6E64Ff9e",
+        "l2_bridge_address": "0x073314940630fd6dcda0d772d4c972c4e0a9946bef9dabf4ef84eda8ef542b82"
+    },
+    {
+        "name": "DAI",
+        "symbol": "DAI",
+        "decimals": 18,
+        "l1_token_address": "0x11fE4B6AE13d2a6055C8D9cF65c55bac32B5d844",
+        "l2_bridge_address": "0x057b7fe4e59d295de5e7955c373023514ede5b972e872e9aa5dcdf563f5cfacb",
+        "l2_token_address": "0x03e85bfbb8e2a42b7bead9e88e9a1b19dbccf661471061807292120462396ec9",
+        "l1_bridge_address": "0xaB00D7EE6cFE37cCCAd006cEC4Db6253D7ED3a22"
+    },
+    {
+        "name": "Wrapped liquid staked Ether 2.0",
+        "symbol": "wstETH",
+        "decimals": 18,
+        "l1_token_address": "0x6320cD32aA674d2898A68ec82e869385Fc5f7E2f",
+        "l1_bridge_address": "0x190c98506a5396A30CA759A139F3Fb59EF519A5D",
+        "l2_bridge_address": "0x0399a6011b666888d647665fd65d6dcc7c2690c72d4c4454cae987f19f6ef609",
+        "l2_token_address": "0x0335bc6e1cf6d9527da4f8044c505906ad6728aeeddfba8d7000b01b32ffe66b"
+    },
+    {
+        "name": "Rocket Pool ETH",
+        "symbol": "rETH",
+        "decimals": 18,
+        "l1_token_address": "0x178E141a0E3b34152f73Ff610437A7bf9B83267A",
+        "l1_bridge_address": "0xD2ef821C56B20a7451dbbEd1ec003De6C44F8dC0",
+        "l2_bridge_address": "0x00214e168720c6eed858066bea070afa828512e83edcfc28846f0e87221f77f6",
+        "l2_token_address":  "0x002133188109385fedaac0b1bf9de1134e271b88efcd21e2ea0dac460639fbe2"
+    },
+    {
+        "name": "LUSD Stablecoin",
+        "symbol": "LUSD",
+        "decimals": 18,
+        "l1_token_address": "0x76ea225E132609D387464e11ce5EFA1764A3799B",
+        "l2_bridge_address": "0x02edc855e8e45fa1826d53a144c080fd41bb33f9468190cf60089f45cbc3c223",
+        "l2_token_address": "0x025731f5f9629ff74d1c5f787ad1ea0ebb9157210047f6c9e3a974f771550cf4",
+        "l1_bridge_address": "0xc2AFba3f4f6a88Ad738aa0e9cf746B38370415a4"
+    },
+    {
+        "name": "R Stablecoin",
+        "symbol": "R",
+        "decimals": 18,
+        "l1_token_address": "0x9b41fE4EE4F23507953CCA339A4eC27eAc9e02b8",
+        "l2_bridge_address": "0x060fbf0392c84eae8bf3d5a79e29e6f250933fabeab00cef13c8f1a68c1cca6f",
+        "l2_token_address": "0x02c479575aa7399ca4757927c02a71334ff6f1b12693fa9043cf9f49b83d0000",
+        "l1_bridge_address": "0xe2969b9d9de178cccc7199234d3e0543da3a7733"
+    },
+    {
+        "name": "Uniswap",
+        "symbol": "UNI",
+        "decimals": 18,
+        "l1_token_address": "0x1f9840a85d5af5bf1d1762f925bdaddc4201f984",
+        "l2_bridge_address": "0x05f1299e76372f9b7f3d6b4be58c67af8eb27af040bf288206f38e6d5afd0abd",
+        "l2_token_address": "0x02a19c5ec71efb0022cae7db810d71280e3fccd2b7b7503c87bcb851089e0f34",
+        "l1_bridge_address": "0xc0c0eB9eeb90243C3FE4e562F12Ff01e8fE8Ff03"
+    },
+    {
+        "name": "Starknet Token",
+        "symbol": "STRK",
+        "decimals": 18,
+        "l1_token_address": "0xCa14007Eff0dB1f8135f4C25B34De49AB0d42766",
+        "l2_token_address": "0x04718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d",
+        "l1_bridge_address": "0x988bb31B3246004e636bbCA7A40ae723f9511808",
+        "l2_bridge_address": "0x0594c1582459ea03f77deaf9eb7e3917d6994a03c13405ba42867f83d85f085d",
+        "l2_locking_contract": "0x01a881a75bb478cedfd4d3ea19d2a4564350d78ea463a5287833526a416d5e31"
+    },
+    {
+        "name": "Starknet Voting Token",
+        "symbol": "vSTRK",
+        "decimals": 18,
+        "l2_token_address": "0x01a881a75bb478cedfd4d3ea19d2a4564350d78ea463a5287833526a416d5e31",
+        "l2_locked_token": "0x04718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d"
+    },
+    {
+        "name": "MultiBridge",
+        "StarkgateManager": "0x5C04F89A136749b7e4d0E427B606241a0A41B32f",
+        "StarkgateRegistry": "0xEc05a1EEc2fC769F44A87Be2CD7f0CC2BF3730AB",
+        "StarknetTokenBridge": "0x25E569e0652EB8A6265bAf6D7C146E901f59554C",
+        "l2_token_bridge": "0x0627582c893c1506750d28a40a2e781031554c16544ff7b390c117978bc03de7"
+    }
+]

@@ -12,6 +12,7 @@ import (
 	"github.com/dipdup-io/starknet-go-api/pkg/sequencer"
 	"github.com/dipdup-io/starknet-indexer/internal/storage"
 	"github.com/dipdup-net/go-lib/config"
+	"github.com/pkg/errors"
 )
 
 type Node struct {
@@ -52,6 +53,23 @@ func (n *Node) GetBlock(ctx context.Context, blockId starknetData.BlockID) (bloc
 		block.Transactions[i].Version = response.Result.Transactions[i].Transaction.Version
 		block.Transactions[i].Body = response.Result.Transactions[i].Transaction.Body
 		block.Transactions[i].ActualFee = response.Result.Transactions[i].Receipt.ActualFee.Amount
+
+		switch block.Transactions[i].Type {
+		case starknetData.TransactionTypeDeploy:
+			if deploy, ok := block.Transactions[i].Body.(*starknetData.Deploy); ok {
+				deploy.ContractAddress = starknetData.Felt(response.Result.Transactions[i].Receipt.ContractAddress)
+			} else {
+				return block, errors.Errorf("invalid invoke transaction type: expected Deploy (non-pointer)")
+			}
+		case starknetData.TransactionTypeDeployAccount:
+			if deploy, ok := block.Transactions[i].Body.(*starknetData.DeployAccount); ok {
+				deploy.ContractAddress = starknetData.Felt(response.Result.Transactions[i].Receipt.ContractAddress)
+			} else {
+				return block, errors.Errorf("invalid invoke transaction type: expected DeployAccount (non-pointer)")
+			}
+		default:
+			continue
+		}
 	}
 
 	return
