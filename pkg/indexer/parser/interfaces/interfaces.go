@@ -8,17 +8,18 @@ import (
 	"github.com/dipdup-io/starknet-go-api/pkg/sequencer"
 	"github.com/dipdup-io/starknet-indexer/internal/storage"
 	"github.com/dipdup-io/starknet-indexer/pkg/indexer/parser/data"
+	"github.com/dipdup-io/starknet-indexer/pkg/indexer/receiver"
 )
 
 // Parser -
 type Parser interface {
-	ParseDeclare(ctx context.Context, version starknetData.Felt, raw *starknetData.Declare, block storage.Block, trace sequencer.Trace, receipts sequencer.Receipt) (storage.Declare, *storage.Fee, error)
-	ParseDeployAccount(ctx context.Context, raw *starknetData.DeployAccount, block storage.Block, trace sequencer.Trace, receipts sequencer.Receipt) (storage.DeployAccount, *storage.Fee, error)
-	ParseDeploy(ctx context.Context, raw *starknetData.Deploy, block storage.Block, trace sequencer.Trace, receipts sequencer.Receipt) (storage.Deploy, *storage.Fee, error)
-	ParseInvokeV0(ctx context.Context, raw *starknetData.Invoke, block storage.Block, trace sequencer.Trace, receipts sequencer.Receipt) (storage.Invoke, *storage.Fee, error)
-	ParseInvokeV1(ctx context.Context, raw *starknetData.Invoke, block storage.Block, trace sequencer.Trace, receipts sequencer.Receipt) (storage.Invoke, *storage.Fee, error)
-	ParseInvokeV3(ctx context.Context, raw *starknetData.Invoke, block storage.Block, trace sequencer.Trace, receipts sequencer.Receipt) (storage.Invoke, *storage.Fee, error)
-	ParseL1Handler(ctx context.Context, raw *starknetData.L1Handler, block storage.Block, trace sequencer.Trace, receipts sequencer.Receipt) (storage.L1Handler, *storage.Fee, error)
+	ParseDeclare(ctx context.Context, version starknetData.Felt, raw *starknetData.Declare, block storage.Block, receiverTx receiver.Transaction, trace sequencer.Trace) (storage.Declare, *storage.Fee, error)
+	ParseDeployAccount(ctx context.Context, raw *starknetData.DeployAccount, block storage.Block, receiverTx receiver.Transaction, trace sequencer.Trace) (storage.DeployAccount, *storage.Fee, error)
+	ParseDeploy(ctx context.Context, raw *starknetData.Deploy, block storage.Block, receiverTx receiver.Transaction, trace sequencer.Trace) (storage.Deploy, *storage.Fee, error)
+	ParseInvokeV0(ctx context.Context, raw *starknetData.Invoke, block storage.Block, receiverTx receiver.Transaction, trace sequencer.Trace) (storage.Invoke, *storage.Fee, error)
+	ParseInvokeV1(ctx context.Context, raw *starknetData.Invoke, block storage.Block, receiverTx receiver.Transaction, trace sequencer.Trace) (storage.Invoke, *storage.Fee, error)
+	ParseInvokeV3(ctx context.Context, raw *starknetData.Invoke, block storage.Block, receiverTx receiver.Transaction, trace sequencer.Trace) (storage.Invoke, *storage.Fee, error)
+	ParseL1Handler(ctx context.Context, raw *starknetData.L1Handler, block storage.Block, receiverTx receiver.Transaction, trace sequencer.Trace) (storage.L1Handler, *storage.Fee, error)
 }
 
 // InternalTxParser -

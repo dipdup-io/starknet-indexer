@@ -3,7 +3,7 @@ module github.com/dipdup-io/starknet-indexer
 go 1.21
 
 require (
-	github.com/dipdup-io/starknet-go-api v0.0.0-20240130002112-e07f784ea34e
+	github.com/dipdup-io/starknet-go-api v0.0.0-20240307134453-42ca4ba88776
 	github.com/dipdup-io/workerpool v0.0.4
 	github.com/dipdup-net/go-lib v0.3.3
 	github.com/dipdup-net/indexer-sdk v0.0.4
@@ -80,7 +80,7 @@ require (
 	github.com/morikuni/aec v1.0.0 // indirect
 	github.com/opencontainers/go-digest v1.0.0 // indirect
 	github.com/opencontainers/image-spec v1.1.0-rc4 // indirect
-	github.com/opencontainers/runc v1.1.9 // indirect
+	github.com/opencontainers/runc v1.1.12 // indirect
 	github.com/paulmach/orb v0.10.0 // indirect
 	github.com/pierrec/lz4/v4 v4.1.18 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect

@@ -75,11 +75,12 @@ func (parser InternalTxParser) Parse(ctx context.Context, txCtx parserData.TxCon
 		Messages:  make([]storage.Message, 0),
 		Internals: make([]storage.Internal, 0),
 	}
-	for i := range internal.Result {
-		tx.Result[i] = internal.Result[i].String()
-	}
-	for i := range internal.Calldata {
+	for i := 0; i < len(internal.Calldata); i++ {
 		tx.Calldata[i] = internal.Calldata[i].String()
+	}
+
+	for i := 0; i < len(internal.Result); i++ {
+		tx.Result[i] = internal.Result[i].String()
 	}
 
 	if class, err := parser.Resolver.FindClassByHash(ctx, internal.ClassHash, tx.Height); err != nil {
@@ -169,7 +170,7 @@ func (parser InternalTxParser) Parse(ctx context.Context, txCtx parserData.TxCon
 			}
 		}
 
-		if len(internal.Calldata) > 0 && !isUnknownProxy {
+		if len(tx.Calldata) > 0 && !isUnknownProxy {
 			switch {
 			case isExecute && !has:
 				tx.Entrypoint = encoding.ExecuteEntrypoint

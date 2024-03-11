@@ -46,7 +46,7 @@ type Invoke struct {
 	MaxFee             decimal.Decimal `bun:",type:numeric" comment:"The maximum fee that the sender is willing to pay for the transaction"`
 	Nonce              decimal.Decimal `bun:",type:numeric" comment:"The transaction nonce"`
 	CallData           []string        `bun:",array" comment:"Raw calldata"`
-	ParsedCalldata     map[string]any  `comment:"Calldata parsed according to contract ABI"`
+	ParsedCalldata     map[string]any  `bun:",nullzero" comment:"Calldata parsed according to contract ABI"`
 	Error              *string         `bun:"error" comment:"Reverted error"`
 
 	Contract  Address    `bun:"rel:belongs-to" hasura:"table:address,field:contract_id,remote_field:id,type:oto,name:contract"`
@@ -98,12 +98,14 @@ func (i Invoke) Flat() []any {
 		i.MaxFee,
 		i.Nonce,
 		pq.StringArray(i.CallData),
+		nil,
+		i.Error,
 	}
-	parsed, err := json.MarshalWithOption(i.ParsedCalldata, json.UnorderedMap(), json.DisableNormalizeUTF8())
-	if err != nil {
-		data = append(data, nil, i.Error)
-	} else {
-		data = append(data, string(parsed), i.Error)
+	if i.ParsedCalldata != nil {
+		parsed, err := json.MarshalWithOption(i.ParsedCalldata, json.UnorderedMap(), json.DisableNormalizeUTF8())
+		if err == nil {
+			data[13] = string(parsed)
+		}
 	}
 
 	return data

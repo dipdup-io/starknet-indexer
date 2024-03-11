@@ -10,11 +10,12 @@ import (
 	"github.com/dipdup-io/starknet-indexer/internal/storage"
 	"github.com/dipdup-io/starknet-indexer/pkg/indexer/decode"
 	parserData "github.com/dipdup-io/starknet-indexer/pkg/indexer/parser/data"
+	"github.com/dipdup-io/starknet-indexer/pkg/indexer/receiver"
 	"github.com/pkg/errors"
 )
 
 // ParseInvokeV1 -
-func (parser Parser) ParseInvokeV3(ctx context.Context, raw *data.Invoke, block storage.Block, trace sequencer.Trace, receipts sequencer.Receipt) (storage.Invoke, *storage.Fee, error) {
+func (parser Parser) ParseInvokeV3(ctx context.Context, raw *data.Invoke, block storage.Block, receiverTx receiver.Transaction, trace sequencer.Trace) (storage.Invoke, *storage.Fee, error) {
 	tx := storage.Invoke{
 		ID:                 parser.Resolver.NextTxId(),
 		Height:             block.Height,
@@ -138,7 +139,7 @@ func (parser Parser) ParseInvokeV3(ctx context.Context, raw *data.Invoke, block 
 			return tx, fee, nil
 		}
 	} else {
-		transfer, err := parser.FeeParser.ParseActualFee(ctx, txCtx, receipts.ActualFee)
+		transfer, err := parser.FeeParser.ParseActualFee(ctx, txCtx, receiverTx.ActualFee)
 		if err != nil {
 			return tx, nil, nil
 		}

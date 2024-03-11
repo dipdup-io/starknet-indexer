@@ -58,8 +58,8 @@ type Internal struct {
 	Entrypoint     string         `comment:"Entrypoint name"`
 	Result         []string       `bun:",array" comment:"Raw result"`
 	Calldata       []string       `bun:",array" comment:"Raw calldata"`
-	ParsedCalldata map[string]any `comment:"Calldata parsed according to contract ABI"`
-	ParsedResult   map[string]any `comment:"Result parsed according to contract ABI"`
+	ParsedCalldata map[string]any `bun:",nullzero" comment:"Calldata parsed according to contract ABI"`
+	ParsedResult   map[string]any `bun:",nullzero" comment:"Result parsed according to contract ABI"`
 
 	Class     Class      `bun:"rel:belongs-to" hasura:"table:class,field:class_id,remote_field:id,type:oto,name:class"`
 	Caller    Address    `bun:"rel:belongs-to" hasura:"table:address,field:caller_id,remote_field:id,type:oto,name:caller"`
@@ -120,20 +120,22 @@ func (i Internal) Flat() []any {
 		i.Entrypoint,
 		pq.StringArray(i.Calldata),
 		pq.StringArray(i.Result),
+		nil,
+		nil,
 	}
 
-	parsed, err := json.MarshalWithOption(i.ParsedCalldata, json.UnorderedMap(), json.DisableNormalizeUTF8())
-	if err != nil {
-		data = append(data, nil)
-	} else {
-		data = append(data, string(parsed))
+	if i.ParsedCalldata != nil {
+		parsed, err := json.MarshalWithOption(i.ParsedCalldata, json.UnorderedMap(), json.DisableNormalizeUTF8())
+		if err == nil {
+			data[20] = string(parsed)
+		}
 	}
 
-	result, err := json.MarshalWithOption(i.ParsedResult, json.UnorderedMap(), json.DisableNormalizeUTF8())
-	if err != nil {
-		data = append(data, nil)
-	} else {
-		data = append(data, string(result))
+	if i.ParsedResult != nil {
+		result, err := json.MarshalWithOption(i.ParsedResult, json.UnorderedMap(), json.DisableNormalizeUTF8())
+		if err == nil {
+			data[21] = string(result)
+		}
 	}
 	return data
 }

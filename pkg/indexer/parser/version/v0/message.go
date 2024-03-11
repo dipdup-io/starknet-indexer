@@ -42,7 +42,7 @@ func (parser MessageParser) Parse(ctx context.Context, txCtx parserData.TxContex
 		FeeID:           txCtx.FeeID,
 		InternalID:      txCtx.InternalID,
 	}
-	for i := range msg.Payload {
+	for i := 0; i < len(msg.Payload); i++ {
 		message.Payload[i] = msg.Payload[i].String()
 	}
 	if txCtx.ProxyId > 0 {

@@ -132,11 +132,11 @@ func (parser FeeParser) ParseInvocation(ctx context.Context, txCtx data.TxContex
 		Messages:  make([]storage.Message, 0),
 		Internals: make([]storage.Internal, 0),
 	}
-	for i := range feeInvocation.Result {
-		tx.Result[i] = feeInvocation.Result[i].String()
-	}
-	for i := range feeInvocation.Calldata {
+	for i := 0; i < len(feeInvocation.Calldata); i++ {
 		tx.Calldata[i] = feeInvocation.Calldata[i].String()
+	}
+	for i := 0; i < len(feeInvocation.Result); i++ {
+		tx.Result[i] = feeInvocation.Result[i].String()
 	}
 
 	if class, err := parser.resolver.FindClassByHash(ctx, feeInvocation.ClassHash, tx.Height); err != nil {
@@ -213,7 +213,7 @@ func (parser FeeParser) ParseInvocation(ctx context.Context, txCtx data.TxContex
 		}
 	}
 
-	if len(feeInvocation.Calldata) > 0 && len(tx.Selector) > 0 {
+	if len(tx.Calldata) > 0 && len(tx.Selector) > 0 {
 		if isExecute && !hasExecute {
 			tx.Entrypoint = encoding.ExecuteEntrypoint
 			tx.ParsedCalldata, err = abi.DecodeExecuteCallData(tx.Calldata)

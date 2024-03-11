@@ -2,11 +2,8 @@ package parser
 
 import (
 	"context"
-	"time"
 
-	"github.com/dipdup-io/starknet-go-api/pkg/data"
 	starknetData "github.com/dipdup-io/starknet-go-api/pkg/data"
-	"github.com/dipdup-io/starknet-go-api/pkg/encoding"
 	"github.com/dipdup-io/starknet-indexer/internal/storage"
 	"github.com/dipdup-io/starknet-indexer/pkg/indexer/cache"
 	parserData "github.com/dipdup-io/starknet-indexer/pkg/indexer/parser/data"
@@ -24,7 +21,7 @@ func createParser(
 	cache *cache.Cache,
 	blocks storage.IBlock,
 ) (interfaces.Parser, error) {
-	if version == nil {
+	if version == nil || *version == "" {
 		return v0.New(resolver, cache, blocks), nil
 	}
 
@@ -52,15 +49,15 @@ func Parse(
 	result receiver.Result,
 ) (parserData.Result, error) {
 	block := storage.Block{
-		ID:               result.Block.BlockNumber + 1,
-		Height:           result.Block.BlockNumber,
-		Time:             time.Unix(result.Block.Timestamp, 0).UTC(),
-		Hash:             data.Felt(result.Block.BlockHash).Bytes(),
-		ParentHash:       data.Felt(result.Block.ParentHash).Bytes(),
-		NewRoot:          encoding.MustDecodeHex(result.Block.NewRoot),
-		SequencerAddress: encoding.MustDecodeHex(result.Block.SequencerAddress),
-		Version:          result.Block.StarknetVersion,
-		Status:           storage.NewStatus(result.Block.Status),
+		ID:               result.Block.Height + 1,
+		Height:           result.Block.Height,
+		Time:             result.Block.Time,
+		Hash:             result.Block.Hash,
+		ParentHash:       result.Block.ParentHash,
+		NewRoot:          result.Block.NewRoot,
+		SequencerAddress: result.Block.SequencerAddress,
+		Version:          result.Block.Version,
+		Status:           result.Block.Status,
 		TxCount:          len(result.Block.Transactions),
 
 		Invoke:        make([]storage.Invoke, 0),
@@ -70,10 +67,7 @@ func Parse(
 		L1Handler:     make([]storage.L1Handler, 0),
 	}
 
-	if len(result.Block.Transactions) != len(result.Trace.Traces) {
-		return parserData.Result{}, errors.Errorf("invalid data length")
-	}
-	if len(result.Block.Transactions) != len(result.Block.Receipts) {
+	if len(result.Block.Transactions) != len(result.Traces) {
 		return parserData.Result{}, errors.Errorf("invalid data length")
 	}
 
@@ -100,16 +94,16 @@ func Parse(
 			)
 			switch result.Block.Transactions[i].Version {
 			case starknetData.Version0:
-				invoke, fee, err = p.ParseInvokeV0(ctx, typed, block, result.Trace.Traces[i], result.Block.Receipts[i])
+				invoke, fee, err = p.ParseInvokeV0(ctx, typed, block, result.Block.Transactions[i], result.Traces[i])
 			case starknetData.Version1:
-				invoke, fee, err = p.ParseInvokeV1(ctx, typed, block, result.Trace.Traces[i], result.Block.Receipts[i])
+				invoke, fee, err = p.ParseInvokeV1(ctx, typed, block, result.Block.Transactions[i], result.Traces[i])
 			case starknetData.Version3:
-				invoke, fee, err = p.ParseInvokeV3(ctx, typed, block, result.Trace.Traces[i], result.Block.Receipts[i])
+				invoke, fee, err = p.ParseInvokeV3(ctx, typed, block, result.Block.Transactions[i], result.Traces[i])
 			default:
 				return parserData.Result{}, errors.Errorf("unknown invoke version: %s", result.Block.Transactions[i].Version)
 			}
 			if err != nil {
-				return parserData.Result{}, errors.Wrapf(err, "%s invoke version=%s", result.Block.Transactions[i].TransactionHash, result.Block.Transactions[i].Version)
+				return parserData.Result{}, errors.Wrapf(err, "%s invoke version=%s", result.Block.Transactions[i].Hash, result.Block.Transactions[i].Version)
 			}
 			invoke.Position = i
 			block.Invoke = append(block.Invoke, invoke)
@@ -117,9 +111,9 @@ func Parse(
 				block.Fee = append(block.Fee, *fee)
 			}
 		case *starknetData.Declare:
-			tx, fee, err := p.ParseDeclare(ctx, result.Block.Transactions[i].Version, typed, block, result.Trace.Traces[i], result.Block.Receipts[i])
+			tx, fee, err := p.ParseDeclare(ctx, result.Block.Transactions[i].Version, typed, block, result.Block.Transactions[i], result.Traces[i])
 			if err != nil {
-				return parserData.Result{}, errors.Wrapf(err, "%s declare", result.Block.Transactions[i].TransactionHash)
+				return parserData.Result{}, errors.Wrapf(err, "%s declare", result.Block.Transactions[i].Hash)
 			}
 			tx.Position = i
 			block.Declare = append(block.Declare, tx)
@@ -127,9 +121,9 @@ func Parse(
 				block.Fee = append(block.Fee, *fee)
 			}
 		case *starknetData.Deploy:
-			tx, fee, err := p.ParseDeploy(ctx, typed, block, result.Trace.Traces[i], result.Block.Receipts[i])
+			tx, fee, err := p.ParseDeploy(ctx, typed, block, result.Block.Transactions[i], result.Traces[i])
 			if err != nil {
-				return parserData.Result{}, errors.Wrapf(err, "%s deploy", result.Block.Transactions[i].TransactionHash)
+				return parserData.Result{}, errors.Wrapf(err, "%s deploy", result.Block.Transactions[i].Hash)
 			}
 			tx.Position = i
 			block.Deploy = append(block.Deploy, tx)
@@ -137,9 +131,9 @@ func Parse(
 				block.Fee = append(block.Fee, *fee)
 			}
 		case *starknetData.DeployAccount:
-			tx, fee, err := p.ParseDeployAccount(ctx, typed, block, result.Trace.Traces[i], result.Block.Receipts[i])
+			tx, fee, err := p.ParseDeployAccount(ctx, typed, block, result.Block.Transactions[i], result.Traces[i])
 			if err != nil {
-				return parserData.Result{}, errors.Wrapf(err, "%s deploy account", result.Block.Transactions[i].TransactionHash)
+				return parserData.Result{}, errors.Wrapf(err, "%s deploy account", result.Block.Transactions[i].Hash)
 			}
 			tx.Position = i
 			block.DeployAccount = append(block.DeployAccount, tx)
@@ -147,9 +141,9 @@ func Parse(
 				block.Fee = append(block.Fee, *fee)
 			}
 		case *starknetData.L1Handler:
-			tx, fee, err := p.ParseL1Handler(ctx, typed, block, result.Trace.Traces[i], result.Block.Receipts[i])
+			tx, fee, err := p.ParseL1Handler(ctx, typed, block, result.Block.Transactions[i], result.Traces[i])
 			if err != nil {
-				return parserData.Result{}, errors.Wrapf(err, "%s l1 handler", result.Block.Transactions[i].TransactionHash)
+				return parserData.Result{}, errors.Wrapf(err, "%s l1 handler", result.Block.Transactions[i].Hash)
 			}
 			tx.Position = i
 			block.L1Handler = append(block.L1Handler, tx)

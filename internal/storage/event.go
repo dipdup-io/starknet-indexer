@@ -48,7 +48,7 @@ type Event struct {
 	Keys       []string       `bun:",array" comment:"Raw event keys"`
 	Data       []string       `bun:",array" comment:"Raw event data"`
 	Name       string         `comment:"Event name"`
-	ParsedData map[string]any `comment:"Event data parsed according to contract ABI"`
+	ParsedData map[string]any `bun:",nullzero" comment:"Event data parsed according to contract ABI"`
 
 	From     Address `bun:"rel:belongs-to" hasura:"table:address,field:from_id,remote_field:id,type:oto,name:from"`
 	Contract Address `bun:"rel:belongs-to" hasura:"table:address,field:contract_id,remote_field:id,type:oto,name:contract"`
@@ -98,13 +98,14 @@ func (e Event) Flat() []any {
 		pq.StringArray(e.Keys),
 		pq.StringArray(e.Data),
 		e.Name,
+		nil,
 	}
 
-	parsed, err := json.MarshalWithOption(e.ParsedData, json.UnorderedMap(), json.DisableNormalizeUTF8())
-	if err != nil {
-		data = append(data, nil)
-	} else {
-		data = append(data, string(parsed))
+	if e.ParsedData != nil {
+		parsed, err := json.MarshalWithOption(e.ParsedData, json.UnorderedMap(), json.DisableNormalizeUTF8())
+		if err == nil {
+			data[16] = string(parsed)
+		}
 	}
 	return data
 }

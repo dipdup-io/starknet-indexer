@@ -57,7 +57,7 @@ type Fee struct {
 	Entrypoint     string         `comment:"Entrypoint name"`
 	Calldata       []string       `bun:",array" comment:"Raw calldata"`
 	Result         []string       `bun:",array" comment:"Raw result"`
-	ParsedCalldata map[string]any `comment:"Calldata parsed according to contract ABI"`
+	ParsedCalldata map[string]any `bun:",nullzero" comment:"Calldata parsed according to contract ABI"`
 
 	Class     Class      `bun:"rel:belongs-to" hasura:"table:class,field:class_id,remote_field:id,type:oto,name:class"`
 	Caller    Address    `bun:"rel:belongs-to" hasura:"table:address,field:caller_id,remote_field:id,type:oto,name:caller"`
@@ -115,12 +115,14 @@ func (f Fee) Flat() []any {
 		f.Entrypoint,
 		pq.StringArray(f.Calldata),
 		pq.StringArray(f.Result),
+		nil,
 	}
-	parsed, err := json.MarshalWithOption(f.ParsedCalldata, json.UnorderedMap(), json.DisableNormalizeUTF8())
-	if err != nil {
-		data = append(data, nil)
-	} else {
-		data = append(data, string(parsed))
+
+	if f.ParsedCalldata != nil {
+		parsed, err := json.MarshalWithOption(f.ParsedCalldata, json.UnorderedMap(), json.DisableNormalizeUTF8())
+		if err == nil {
+			data[18] = string(parsed)
+		}
 	}
 	return data
 }
