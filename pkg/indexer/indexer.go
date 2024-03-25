@@ -413,7 +413,7 @@ func (indexer *Indexer) handleBlock(ctx context.Context, result receiver.Result)
 	indexer.txWriteMutex.Lock()
 	{
 		startSave := time.Now()
-		parseResult.State = indexer.updateState(ctx, parseResult.Block, len(parseResult.Context.Classes()))
+		parseResult.State = indexer.updateState(parseResult.Block)
 		if err := indexer.store.Save(ctx, parseResult); err != nil {
 			return errors.Wrap(err, "saving block to database")
 		}
@@ -446,7 +446,7 @@ func (indexer *Indexer) handleBlock(ctx context.Context, result receiver.Result)
 	return nil
 }
 
-func (indexer *Indexer) updateState(ctx context.Context, block models.Block, classesCount int) *models.State {
+func (indexer *Indexer) updateState(block models.Block) *models.State {
 	state := indexer.state.Current()
 	if indexer.state.Height() < block.Height {
 		state.LastHeight = block.Height

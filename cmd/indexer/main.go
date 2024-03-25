@@ -85,7 +85,7 @@ func main() {
 		return
 	}
 
-	views, err := createViews(ctx, postgres)
+	views, err := createViews(postgres)
 	if err != nil {
 		log.Panic().Err(err).Msg("create views")
 		return

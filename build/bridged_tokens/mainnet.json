@@ -1,5 +1,22 @@
 [
     {
+        "name": "Starknet Token",
+        "symbol": "STRK",
+        "decimals": 18,
+        "l1_token_address": "0xCa14007Eff0dB1f8135f4C25B34De49AB0d42766",
+        "l2_token_address": "0x04718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d",
+        "l1_bridge_address": "0xcE5485Cfb26914C5dcE00B9BAF0580364daFC7a4",
+        "l2_bridge_address": "0x0594c1582459ea03f77deaf9eb7e3917d6994a03c13405ba42867f83d85f085d",
+        "l2_locking_contract": "0x0782f0ddca11d9950bc3220e35ac82cf868778edb67a5e58b39838544bc4cd0f"
+    },
+    {
+        "name": "Starknet Voting Token",
+        "symbol": "vSTRK",
+        "decimals": 18,
+        "l2_token_address": "0x0782f0ddca11d9950bc3220e35ac82cf868778edb67a5e58b39838544bc4cd0f",
+        "l2_locked_token": "0x04718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d"
+    },
+    {
         "name": "Wrapped BTC",
         "symbol": "WBTC",
         "decimals": 8,
@@ -30,18 +47,107 @@
         "name": "Ether",
         "symbol": "ETH",
         "decimals": 18,
-        "l1_token_address": "0x0000000000000000000000000000000000000000",
+        "l1_token_address": "0x0000000000000000000000000000000000455448",
         "l2_token_address": "0x049d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7",
         "l1_bridge_address": "0xae0Ee0A63A2cE6BaeEFFE56e7714FB4EFE48D419",
         "l2_bridge_address": "0x073314940630fd6dcda0d772d4c972c4e0a9946bef9dabf4ef84eda8ef542b82"
     },
     {
-        "name": "DAI",
+        "name": "Dai Stablecoin",
         "symbol": "DAI",
         "decimals": 18,
         "l1_token_address": "0x6B175474E89094C44Da98b954EedeAC495271d0F",
-        "l2_bridge_address": "0x001108cdbe5d82737b9057590adaf97d34e74b5452f0628161d237746b6fe69e",
+        "l1_bridge_address": "0xCA14057f85F2662257fd2637FdEc558626bCe554",
+        "l2_bridge_address": "0x07754236934aeaf4c29d287b94b5fde8687ba7d59466ea6b80f3f57d6467b7d6",
+        "l2_token_address": "0x05574eb6b8789a91466f902c380d978e472db68170ff82a5b650b95a58ddf4ad"
+    },
+    {
+        "name": "Dai Stablecoin",
+        "symbol": "DAI",
+        "decimals": 18,
+        "l1_token_address": "0x6B175474E89094C44Da98b954EedeAC495271d0F",
+        "l2_bridge_address": "0x075ac198e734e289a6892baa8dd14b21095f13bf8401900f5349d5569c3f6e60",
         "l2_token_address": "0x00da114221cb83fa859dbdb4c44beeaa0bb37c7537ad5ae66fe5e0efd20e6eb3",
-        "l1_bridge_address": "0x659a00c33263d9254Fed382dE81349426C795BB6"
+        "l1_bridge_address": "0x9F96fE0633eE838D0298E8b8980E6716bE81388d",
+        "comment": "Dai v0"
+    },
+    {
+        "name": "Wrapped liquid staked Ether 2.0",
+        "symbol": "wstETH",
+        "decimals": 18,
+        "l1_token_address": "0x7f39C581F595B53c5cb19bD0b3f8dA6c935E2Ca0",
+        "l1_bridge_address": "0xBf67F59D2988A46FBFF7ed79A621778a3Cd3985B",
+        "l2_bridge_address": "0x0088eedbe2fe3918b69ccb411713b7fa72079d4eddf291103ccbe41e78a9615c",
+        "l2_token_address": "0x42b8f0484674ca266ac5d08e4ac6a3fe65bd3129795def2dca5c34ecc5f96d2"
+    },
+    {
+        "name": "Rocket Pool ETH",
+        "symbol": "rETH",
+        "decimals": 18,
+        "l1_token_address": "0xae78736Cd615f374D3085123A210448E74Fc6393",
+        "l1_bridge_address": "0xcf58536D6Fab5E59B654228a5a4ed89b13A876C2",
+        "l2_bridge_address": "0x0078da8023b3c08e5a41540a34f7c385fd4f4540d5668f1be3ede0d3bb1b9d4d",
+        "l2_token_address": "0x0319111a5037cbec2b3e638cc34a3474e2d2608299f3e62866e9cc683208c610"
+    },
+    {
+        "name": "R Stablecoin",
+        "symbol": "R",
+        "decimals": 18,
+        "l1_token_address": "0x183015a9bA6fF60230fdEaDc3F43b3D788b13e21",
+        "l2_token_address": "0x01fa2fb85f624600112040e1f3a848f53a37ed5a7385810063d5fe6887280333",
+        "l1_bridge_address": "0xb27d0dCAFd63db302C155c8864886f33BD2a41E5",
+        "l2_bridge_address": "0x00b0cefce685e321eba324fac1c8e2db768892bc1ddb8375fe40fd269fa69fb2"
+    },
+    {
+        "name": "Frax",
+        "symbol": "FRAX",
+        "decimals": 18,
+        "l1_token_address": "0x853d955aCEf822Db058eb8505911ED77F175b99e",
+        "l2_token_address": "0x009c6b4fb13dfaa025c1383ed6190af8ed8cbb09d9588a3bb020feb152442406",
+        "l1_bridge_address": "0xDc687e1E0B85CB589b2da3C47c933De9Db3d1ebb",
+        "l2_bridge_address": "0x006646a87b8e9e51a893c52facd89f99539a152b96e72daee6a7a3734aa5299a"
+    },
+    {
+        "name": "Frax Share",
+        "symbol": "FXS",
+        "decimals": 18,
+        "l1_token_address": "0x3432B6A60D23Ca0dFCa7761B7ab56459D9C964D0",
+        "l2_token_address": "0x0058efd0e73c33a848ffaa88738d128ebf0af98ea78cf3c14dc757bb02d39ffb",
+        "l1_bridge_address": "0x66ba83ba3D3AD296424a2258145d9910E9E40B7C",
+        "l2_bridge_address": "0x06bf25c0911c6c63abfe3600428144d0d0dbf8b7bfbc44306a3386aa95a24296"
+    },
+    {
+        "name": "Staked Frax Ether",
+        "symbol": "sfrxETH",
+        "decimals": 18,
+        "l1_token_address": "0xac3E018457B222d93114458476f3E3416Abbe38F",
+        "l2_token_address": "0x04578fffc279e61b5cb0267a5f8e24b6089d40f93158fbbad2cb23b8622c9233",
+        "l1_bridge_address": "0xd8E8531fdD446DF5298819d3Bc9189a5D8948Ee8",
+        "l2_bridge_address": "0x06dcc61c4cf056ff42a8f4b8635c207e3da73332282aa2132058022520fa0179"
+    },
+    {
+        "name": "LUSD Stablecoin",
+        "symbol": "LUSD",
+        "decimals": 18,
+        "l1_token_address": "0x5f98805a4e8be255a32880fdec7f6728c6568ba0",
+        "l2_bridge_address": "0x05841ed9b790719b61dc98826246a7a3012dd35b0ed728e3c455af2647385c80",
+        "l2_token_address": "0x070a76fd48ca0ef910631754d77dd822147fe98a569b826ec85e3c33fde586ac",
+        "l1_bridge_address": "0xF3F62F23dF9C1D2C7C63D9ea6B90E8d24c7E3DF5"
+    },
+    {
+        "name": "Uniswap",
+        "symbol": "UNI",
+        "decimals": 18,
+        "l1_token_address": "0x1f9840a85d5af5bf1d1762f925bdaddc4201f984",
+        "l2_bridge_address": "0x04fe90c0c4594b4a5ce3031a4bbdfbc7c046b4b9d7cf31b79647540c85b8ec79",
+        "l2_token_address": "0x049210ffc442172463f3177147c1aeaa36c51d152c1b0630f2364c300d4f48ee",
+        "l1_bridge_address": "0xf76e6bF9e2df09D0f854F045A3B724074dA1236B"
+    },
+    {
+        "name": "MultiBridge",
+        "StarkgateManager": "0x0c5aE94f8939182F2D06097025324D1E537d5B60",
+        "StarkgateRegistry": "0x1268cc171c54F2000402DfF20E93E60DF4c96812",
+        "StarknetTokenBridge": "0xF5b6Ee2CAEb6769659f6C091D209DfdCaF3F69Eb",
+        "l2_token_bridge": "0x0616757a151c21f9be8775098d591c2807316d992bbc3bb1a5c1821630589256"
     }
 ]

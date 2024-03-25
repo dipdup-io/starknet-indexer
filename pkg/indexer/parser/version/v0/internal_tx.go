@@ -138,7 +138,7 @@ func (parser InternalTxParser) Parse(ctx context.Context, txCtx parserData.TxCon
 	// txHash := encoding.EncodeHex(tx.Hash)
 	// log.Info().Msg(txHash)
 
-	if len(tx.Selector) > 0 {
+	if len(tx.Selector) > 0 && internal.Selector != "0x0" {
 		var (
 			_, has = contractAbi.GetByTypeAndSelector(internal.EntrypointType, encoding.EncodeHex(tx.Selector))
 

@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"fmt"
 	"os"
 	"strings"
@@ -9,7 +8,7 @@ import (
 	"github.com/dipdup-io/starknet-indexer/internal/storage/postgres"
 )
 
-func createViews(ctx context.Context, strg postgres.Storage) ([]string, error) {
+func createViews(strg postgres.Storage) ([]string, error) {
 	files, err := os.ReadDir("views")
 	if err != nil {
 		return nil, err
