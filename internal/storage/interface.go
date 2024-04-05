@@ -38,6 +38,8 @@ type FilterOptions struct {
 	SortField string
 	SortOrder storage.SortOrder
 
+	SortFields []string
+
 	MaxHeight        uint64
 	HeightColumnName string
 	Cursor           uint64
@@ -85,6 +87,13 @@ func WithDescSortByIdFilter() FilterOption {
 	return func(opt *FilterOptions) {
 		opt.SortField = "id"
 		opt.SortOrder = storage.SortOrderDesc
+	}
+}
+
+// WithMultiSort -
+func WithMultiSort(fields ...string) FilterOption {
+	return func(opt *FilterOptions) {
+		opt.SortFields = fields
 	}
 }
 

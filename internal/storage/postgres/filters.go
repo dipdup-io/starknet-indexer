@@ -186,9 +186,9 @@ func addSort(q *bun.SelectQuery, field string, order sdk.SortOrder) *bun.SelectQ
 		return q
 	}
 	if order == sdk.SortOrderAsc {
-		return q.OrderExpr("? asc", bun.Ident(field))
+		return q.OrderExpr("(?) asc", bun.Ident(field))
 	}
-	return q.OrderExpr("? desc", bun.Ident(field))
+	return q.OrderExpr("(?) desc", bun.Ident(field))
 }
 
 func optionsFilter(q *bun.SelectQuery, tableName string, opts ...storage.FilterOption) *bun.SelectQuery {
@@ -198,7 +198,12 @@ func optionsFilter(q *bun.SelectQuery, tableName string, opts ...storage.FilterO
 	}
 	q = addLimit(q, opt.Limit)
 	q = addOffset(q, opt.Offset)
-	q = addSort(q, opt.SortField, opt.SortOrder)
+
+	if len(opt.SortFields) > 0 {
+		q.Order(opt.SortFields...)
+	} else {
+		q = addSort(q, opt.SortField, opt.SortOrder)
+	}
 
 	if opt.MaxHeight > 0 {
 		q = q.Where("?.? <= ?", bun.Ident(tableName), bun.Safe(opt.HeightColumnName), opt.MaxHeight)

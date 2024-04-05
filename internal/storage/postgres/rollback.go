@@ -207,9 +207,9 @@ func (rm RollbackManager) rollbackTokenBalances(ctx context.Context, height uint
 					},
 				},
 			},
-			models.WithDescSortByIdFilter(),
 			models.WithLimitFilter(limit),
 			models.WithOffsetFilter(offset),
+			models.WithMultiSort("time desc", "id desc"),
 		)
 		if err != nil {
 			return err
