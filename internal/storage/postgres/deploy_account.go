@@ -44,3 +44,13 @@ func (d *DeployAccount) Filter(ctx context.Context, fltr []storage.DeployAccount
 	err = query.Scan(ctx)
 	return
 }
+
+func (d *DeployAccount) HashByHeight(ctx context.Context, height uint64) (hash []byte, err error) {
+	err = d.DB().NewSelect().
+		Model((*storage.DeployAccount)(nil)).
+		Column("hash").
+		Where("height = ?", height).
+		Limit(1).
+		Scan(ctx, &hash)
+	return
+}

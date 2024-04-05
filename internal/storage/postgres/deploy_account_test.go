@@ -176,6 +176,15 @@ func (s *DeployAccountTestSuite) TestFilterByParsedCalldata() {
 	s.Require().Len(deploys, 3)
 }
 
+func (s *DeployAccountTestSuite) TestHashByHeight() {
+	ctx, ctxCancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer ctxCancel()
+
+	hash, err := s.storage.DeployAccount.HashByHeight(ctx, 154958)
+	s.Require().NoError(err)
+	s.Require().Len(hash, 32)
+}
+
 func TestSuiteDeployAccount_Run(t *testing.T) {
 	suite.Run(t, new(DeployAccountTestSuite))
 }

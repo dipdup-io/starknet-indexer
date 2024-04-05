@@ -162,6 +162,45 @@ func (c *IInvokeGetByIDCall) DoAndReturn(f func(context.Context, uint64) (*stora
 	return c
 }
 
+// HashByHeight mocks base method.
+func (m *MockIInvoke) HashByHeight(ctx context.Context, height uint64) ([]byte, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "HashByHeight", ctx, height)
+	ret0, _ := ret[0].([]byte)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// HashByHeight indicates an expected call of HashByHeight.
+func (mr *MockIInvokeMockRecorder) HashByHeight(ctx, height any) *IInvokeHashByHeightCall {
+	mr.mock.ctrl.T.Helper()
+	call := mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "HashByHeight", reflect.TypeOf((*MockIInvoke)(nil).HashByHeight), ctx, height)
+	return &IInvokeHashByHeightCall{Call: call}
+}
+
+// IInvokeHashByHeightCall wrap *gomock.Call
+type IInvokeHashByHeightCall struct {
+	*gomock.Call
+}
+
+// Return rewrite *gomock.Call.Return
+func (c *IInvokeHashByHeightCall) Return(arg0 []byte, arg1 error) *IInvokeHashByHeightCall {
+	c.Call = c.Call.Return(arg0, arg1)
+	return c
+}
+
+// Do rewrite *gomock.Call.Do
+func (c *IInvokeHashByHeightCall) Do(f func(context.Context, uint64) ([]byte, error)) *IInvokeHashByHeightCall {
+	c.Call = c.Call.Do(f)
+	return c
+}
+
+// DoAndReturn rewrite *gomock.Call.DoAndReturn
+func (c *IInvokeHashByHeightCall) DoAndReturn(f func(context.Context, uint64) ([]byte, error)) *IInvokeHashByHeightCall {
+	c.Call = c.Call.DoAndReturn(f)
+	return c
+}
+
 // IsNoRows mocks base method.
 func (m *MockIInvoke) IsNoRows(err error) bool {
 	m.ctrl.T.Helper()

@@ -12,6 +12,7 @@ import (
 type IDeclare interface {
 	storage.Table[*Declare]
 	Filterable[Declare, DeclareFilter]
+	HashByHeight
 }
 
 // DeclareFilter -

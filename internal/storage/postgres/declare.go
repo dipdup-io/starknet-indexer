@@ -43,3 +43,13 @@ func (d *Declare) Filter(ctx context.Context, fltr []storage.DeclareFilter, opts
 	err = query.Scan(ctx)
 	return
 }
+
+func (d *Declare) HashByHeight(ctx context.Context, height uint64) (hash []byte, err error) {
+	err = d.DB().NewSelect().
+		Model((*storage.Declare)(nil)).
+		Column("hash").
+		Where("height = ?", height).
+		Limit(1).
+		Scan(ctx, &hash)
+	return
+}

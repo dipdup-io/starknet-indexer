@@ -25,6 +25,10 @@ type Heightable interface {
 	GetId() uint64
 }
 
+type HashByHeight interface {
+	HashByHeight(ctx context.Context, height uint64) ([]byte, error)
+}
+
 // Filterable -
 type Filterable[M storage.Model, F any] interface {
 	Filter(ctx context.Context, flt []F, opts ...FilterOption) ([]M, error)

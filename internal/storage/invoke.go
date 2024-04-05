@@ -14,6 +14,7 @@ import (
 type IInvoke interface {
 	storage.Table[*Invoke]
 	Filterable[Invoke, InvokeFilter]
+	HashByHeight
 }
 
 // InvokeFilter -

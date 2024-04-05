@@ -14,6 +14,7 @@ import (
 type IL1Handler interface {
 	storage.Table[*L1Handler]
 	Filterable[L1Handler, L1HandlerFilter]
+	HashByHeight
 }
 
 // L1HandlerFilter -

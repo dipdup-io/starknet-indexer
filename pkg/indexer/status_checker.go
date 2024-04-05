@@ -10,13 +10,8 @@ import (
 	"github.com/dipdup-io/starknet-indexer/pkg/indexer/receiver"
 	"github.com/dipdup-io/workerpool"
 	sdk "github.com/dipdup-net/indexer-sdk/pkg/storage"
-	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
-)
-
-var (
-	errCantFindTransactionsInBlock = errors.New("ca't find transactions in block")
 )
 
 type acceptedOnL2 struct {
@@ -158,93 +153,59 @@ func (checker *statusChecker) init(ctx context.Context) error {
 	return nil
 }
 
-func byHeight[T sdk.Model, F any](ctx context.Context, src storage.Filterable[T, F], fltr F) (t T, err error) {
-	tx, err := src.Filter(ctx, []F{fltr}, storage.WithLimitFilter(1), storage.WithMultiSort("time desc", "id desc"))
-	if err != nil {
-		return t, err
-	}
-	if len(tx) == 0 {
-		return t, errors.Wrapf(
-			errCantFindTransactionsInBlock,
-			"model = %s", t.TableName())
-	}
-
-	return tx[0], nil
-}
-
 func (checker *statusChecker) addIndexedBlockToQueue(ctx context.Context, block storage.Block) error {
 	if block.InvokeCount > 0 {
-		tx, err := byHeight[storage.Invoke, storage.InvokeFilter](ctx, checker.invoke, storage.InvokeFilter{
-			Height: storage.IntegerFilter{
-				Eq: block.Height,
-			},
-		})
+		hash, err := checker.invoke.HashByHeight(ctx, block.Height)
 		if err != nil {
 			return err
 		}
 		checker.acceptedOnL2.Push(acceptedOnL2{
-			TransactionHash: tx.Hash,
-			Height:          tx.Height,
+			TransactionHash: hash,
+			Height:          block.Height,
 		})
 		return nil
 	}
 	if block.DeployCount > 0 {
-		tx, err := byHeight[storage.Deploy, storage.DeployFilter](ctx, checker.deploys, storage.DeployFilter{
-			Height: storage.IntegerFilter{
-				Eq: block.Height,
-			},
-		})
+		hash, err := checker.deploys.HashByHeight(ctx, block.Height)
 		if err != nil {
 			return err
 		}
 		checker.acceptedOnL2.Push(acceptedOnL2{
-			TransactionHash: tx.Hash,
-			Height:          tx.Height,
+			TransactionHash: hash,
+			Height:          block.Height,
 		})
 		return nil
 	}
 	if block.DeployAccountCount > 0 {
-		tx, err := byHeight[storage.DeployAccount, storage.DeployAccountFilter](ctx, checker.deployAccounts, storage.DeployAccountFilter{
-			Height: storage.IntegerFilter{
-				Eq: block.Height,
-			},
-		})
+		hash, err := checker.deployAccounts.HashByHeight(ctx, block.Height)
 		if err != nil {
 			return err
 		}
 		checker.acceptedOnL2.Push(acceptedOnL2{
-			TransactionHash: tx.Hash,
-			Height:          tx.Height,
+			TransactionHash: hash,
+			Height:          block.Height,
 		})
 		return nil
 	}
 	if block.DeclareCount > 0 {
-		tx, err := byHeight[storage.Declare, storage.DeclareFilter](ctx, checker.declares, storage.DeclareFilter{
-			Height: storage.IntegerFilter{
-				Eq: block.Height,
-			},
-		})
+		hash, err := checker.declares.HashByHeight(ctx, block.Height)
 		if err != nil {
 			return err
 		}
 		checker.acceptedOnL2.Push(acceptedOnL2{
-			TransactionHash: tx.Hash,
-			Height:          tx.Height,
+			TransactionHash: hash,
+			Height:          block.Height,
 		})
 		return nil
 	}
 	if block.L1HandlerCount > 0 {
-		tx, err := byHeight[storage.L1Handler, storage.L1HandlerFilter](ctx, checker.l1Handlers, storage.L1HandlerFilter{
-			Height: storage.IntegerFilter{
-				Eq: block.Height,
-			},
-		})
+		hash, err := checker.l1Handlers.HashByHeight(ctx, block.Height)
 		if err != nil {
 			return err
 		}
 		checker.acceptedOnL2.Push(acceptedOnL2{
-			TransactionHash: tx.Hash,
-			Height:          tx.Height,
+			TransactionHash: hash,
+			Height:          block.Height,
 		})
 		return nil
 	}

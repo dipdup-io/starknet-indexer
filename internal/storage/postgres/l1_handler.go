@@ -47,3 +47,13 @@ func (l1 *L1Handler) Filter(ctx context.Context, fltr []storage.L1HandlerFilter,
 	err = query.Scan(ctx)
 	return result, err
 }
+
+func (l1 *L1Handler) HashByHeight(ctx context.Context, height uint64) (hash []byte, err error) {
+	err = l1.DB().NewSelect().
+		Model((*storage.L1Handler)(nil)).
+		Column("hash").
+		Where("height = ?", height).
+		Limit(1).
+		Scan(ctx, &hash)
+	return
+}

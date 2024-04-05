@@ -50,3 +50,13 @@ func (invoke *Invoke) Filter(ctx context.Context, fltr []storage.InvokeFilter, o
 		Scan(ctx, &result)
 	return result, err
 }
+
+func (invoke *Invoke) HashByHeight(ctx context.Context, height uint64) (hash []byte, err error) {
+	err = invoke.DB().NewSelect().
+		Model((*storage.Invoke)(nil)).
+		Column("hash").
+		Where("height = ?", height).
+		Limit(1).
+		Scan(ctx, &hash)
+	return
+}

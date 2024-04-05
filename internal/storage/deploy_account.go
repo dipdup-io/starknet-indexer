@@ -14,6 +14,7 @@ import (
 type IDeployAccount interface {
 	storage.Table[*DeployAccount]
 	Filterable[DeployAccount, DeployAccountFilter]
+	HashByHeight
 }
 
 // DeployAccountFilter -

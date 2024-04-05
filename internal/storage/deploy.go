@@ -13,6 +13,7 @@ import (
 type IDeploy interface {
 	storage.Table[*Deploy]
 	Filterable[Deploy, DeployFilter]
+	HashByHeight
 }
 
 // DeployFilter -
