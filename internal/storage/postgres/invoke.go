@@ -23,7 +23,7 @@ func NewInvoke(db *database.Bun) *Invoke {
 
 // Filter -
 func (invoke *Invoke) Filter(ctx context.Context, fltr []storage.InvokeFilter, opts ...storage.FilterOption) (result []storage.Invoke, err error) {
-	query := invoke.DB().NewSelect().Model(&result)
+	query := invoke.DB().NewSelect().Model((*storage.Invoke)(nil))
 	query = query.WhereGroup(" AND ", func(q1 *bun.SelectQuery) *bun.SelectQuery {
 		for i := range fltr {
 			q1 = q1.WhereGroup(" OR ", func(q *bun.SelectQuery) *bun.SelectQuery {
@@ -42,8 +42,11 @@ func (invoke *Invoke) Filter(ctx context.Context, fltr []storage.InvokeFilter, o
 		return q1
 	})
 	query = optionsFilter(query, "invoke", opts...)
-	query.Relation("Contract")
 
-	err = query.Scan(ctx)
+	err = invoke.DB().NewSelect().TableExpr("(?) as invoke", query).
+		ColumnExpr("invoke.*").
+		ColumnExpr("contract.id as contract__id, contract.class_id as contract__class_id, contract.hash as contract__hash, contract.height as contract__height").
+		Join("left join address as contract on contract.id = invoke.contract_id").
+		Scan(ctx, &result)
 	return result, err
 }

@@ -159,7 +159,7 @@ func (checker *statusChecker) init(ctx context.Context) error {
 }
 
 func byHeight[T sdk.Model, F any](ctx context.Context, src storage.Filterable[T, F], fltr F) (t T, err error) {
-	tx, err := src.Filter(ctx, []F{fltr}, storage.WithLimitFilter(1))
+	tx, err := src.Filter(ctx, []F{fltr}, storage.WithLimitFilter(1), storage.WithMultiSort("time desc", "id desc"))
 	if err != nil {
 		return t, err
 	}
@@ -174,7 +174,7 @@ func byHeight[T sdk.Model, F any](ctx context.Context, src storage.Filterable[T,
 
 func (checker *statusChecker) addIndexedBlockToQueue(ctx context.Context, block storage.Block) error {
 	if block.InvokeCount > 0 {
-		tx, err := byHeight[storage.Invoke, storage.InvokeFilter](ctx, checker.invoke, storage.InvokeFilter{
+		tx, err := byHeight(ctx, checker.invoke, storage.InvokeFilter{
 			Height: storage.IntegerFilter{
 				Eq: block.Height,
 			},
@@ -189,7 +189,7 @@ func (checker *statusChecker) addIndexedBlockToQueue(ctx context.Context, block 
 		return nil
 	}
 	if block.DeployCount > 0 {
-		tx, err := byHeight[storage.Deploy, storage.DeployFilter](ctx, checker.deploys, storage.DeployFilter{
+		tx, err := byHeight(ctx, checker.deploys, storage.DeployFilter{
 			Height: storage.IntegerFilter{
 				Eq: block.Height,
 			},
@@ -204,7 +204,7 @@ func (checker *statusChecker) addIndexedBlockToQueue(ctx context.Context, block 
 		return nil
 	}
 	if block.DeployAccountCount > 0 {
-		tx, err := byHeight[storage.DeployAccount, storage.DeployAccountFilter](ctx, checker.deployAccounts, storage.DeployAccountFilter{
+		tx, err := byHeight(ctx, checker.deployAccounts, storage.DeployAccountFilter{
 			Height: storage.IntegerFilter{
 				Eq: block.Height,
 			},
@@ -219,7 +219,7 @@ func (checker *statusChecker) addIndexedBlockToQueue(ctx context.Context, block 
 		return nil
 	}
 	if block.DeclareCount > 0 {
-		tx, err := byHeight[storage.Declare, storage.DeclareFilter](ctx, checker.declares, storage.DeclareFilter{
+		tx, err := byHeight(ctx, checker.declares, storage.DeclareFilter{
 			Height: storage.IntegerFilter{
 				Eq: block.Height,
 			},
@@ -234,7 +234,7 @@ func (checker *statusChecker) addIndexedBlockToQueue(ctx context.Context, block 
 		return nil
 	}
 	if block.L1HandlerCount > 0 {
-		tx, err := byHeight[storage.L1Handler, storage.L1HandlerFilter](ctx, checker.l1Handlers, storage.L1HandlerFilter{
+		tx, err := byHeight(ctx, checker.l1Handlers, storage.L1HandlerFilter{
 			Height: storage.IntegerFilter{
 				Eq: block.Height,
 			},
