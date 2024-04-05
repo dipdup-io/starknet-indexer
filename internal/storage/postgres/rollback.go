@@ -11,7 +11,7 @@ import (
 	"github.com/uptrace/bun"
 )
 
-const rollbackQuery = `WITH deleted AS (DELETE FROM ? WHERE height > ? RETURNING *) SELECT count(*) FROM deleted;`
+const rollbackQuery = `WITH deleted AS (DELETE FROM ? WHERE height > ? RETURNING id) SELECT count(*) FROM deleted;`
 
 // RollbackManager -
 type RollbackManager struct {
