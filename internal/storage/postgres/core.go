@@ -137,6 +137,9 @@ func createIndices(ctx context.Context, conn *database.Bun) error {
 		if _, err := tx.ExecContext(ctx, `CREATE INDEX IF NOT EXISTS storage_diff_contract_id_idx ON storage_diff (contract_id)`); err != nil {
 			return err
 		}
+		if _, err := tx.ExecContext(ctx, `CREATE INDEX IF NOT EXISTS storage_diff_height_idx ON storage_diff USING BRIN (height)`); err != nil {
+			return err
+		}
 
 		// Invoke
 		if _, err := tx.ExecContext(ctx, `CREATE INDEX IF NOT EXISTS invoke_height_idx ON invoke USING BRIN (height)`); err != nil {
@@ -221,6 +224,35 @@ func createIndices(ctx context.Context, conn *database.Bun) error {
 			return err
 		}
 		if _, err := tx.ExecContext(ctx, `CREATE INDEX IF NOT EXISTS token_identity_idx ON token (contract_id, token_id)`); err != nil {
+			return err
+		}
+
+		// Transfer
+		if _, err := tx.ExecContext(ctx, `CREATE INDEX IF NOT EXISTS transfer_height_idx ON transfer USING BRIN (height)`); err != nil {
+			return err
+		}
+		if _, err := tx.ExecContext(ctx, `CREATE INDEX IF NOT EXISTS transfer_from_id_idx ON transfer (from_id)`); err != nil {
+			return err
+		}
+		if _, err := tx.ExecContext(ctx, `CREATE INDEX IF NOT EXISTS transfer_to_id_idx ON transfer (to_id)`); err != nil {
+			return err
+		}
+		if _, err := tx.ExecContext(ctx, `CREATE INDEX IF NOT EXISTS transfer_contract_id_idx ON transfer (contract_id)`); err != nil {
+			return err
+		}
+
+		// Class Replace
+		if _, err := tx.ExecContext(ctx, `CREATE INDEX IF NOT EXISTS class_replace_height_idx ON class_replace USING BRIN (height)`); err != nil {
+			return err
+		}
+
+		// Class
+		if _, err := tx.ExecContext(ctx, `CREATE INDEX IF NOT EXISTS class_height_idx ON class USING BRIN (height)`); err != nil {
+			return err
+		}
+
+		// Block
+		if _, err := tx.ExecContext(ctx, `CREATE INDEX IF NOT EXISTS block_height_idx ON block USING BRIN (height)`); err != nil {
 			return err
 		}
 

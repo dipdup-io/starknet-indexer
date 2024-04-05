@@ -1,0 +1,8 @@
+- id: 1
+  height: 1
+  time: '2021-11-16T14:24:55+00:00'
+  contract_id: 8
+  from_id: 11
+  to_id: 12
+  amount: 1000
+  token_id: 1
