@@ -13,7 +13,6 @@ What you can build with DipDup:
 - Portfolio tracking tool
 - A generic / specialized chain explorer
 - An archive node for your L3 chain
-- ???
 
 ## Features
 - Blocks, events, and all operation types
@@ -38,7 +37,6 @@ Also check out the [cmd/rpc_tester](https://github.com/dipdup-io/starknet-indexe
 ## Public instances
 Public deployments with reasonable rate limits are available for testing and prototyping:
 - [Starknet mainnet](https://play.dipdup.io/?endpoint=https://starknet-mainnet-gql.dipdup.net/v1/graphql) `https://starknet-mainnet-gql.dipdup.net/v1/graphql`
-- [Goerli2 testnet](https://play.dipdup.io/?endpoint=https://starknet-goerli2-gql.dipdup.net/v1/graphql) `https://starknet-goerli2-gql.dipdup.net/v1/graphql`
 
 ## Notes
 - Indexer works on top of the API provided by the sequencer node — it contains the most comprehensive data set, in particular classes and ABIs ordinary nodes do not always have; It's possible though to outsource several request types to the node API to reduce the load on the sequencer and speed up the indexing process, there's an option in the config for that.
