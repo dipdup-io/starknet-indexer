@@ -41,6 +41,10 @@ github.com/denisenkom/go-mssqldb v0.12.3 h1:pBSGx9Tq67pBOTLmxNuirNTeB8Vjmf886Kx+
 github.com/denisenkom/go-mssqldb v0.12.3/go.mod h1:k0mtMFOnU+AihqFxPMiF05rtiDrorD1Vrm1KEz5hxDo=
 github.com/dipdup-io/starknet-go-api v0.0.0-20240307134453-42ca4ba88776 h1:j7CcqHyilB750xiPtUO/HueGE7VtTzixRvLKp4ccPsY=
 github.com/dipdup-io/starknet-go-api v0.0.0-20240307134453-42ca4ba88776/go.mod h1:y3KGLFQtwzUBcT0X2LMj6CxocUimr/A9XYg+j0KIRDE=
+github.com/dipdup-io/starknet-go-api v0.0.0-20240428114910-88b2cf389ba1 h1:4UGQYnr81ElQKtxlG3Lw+TR5Ij9vavj7iWtqqWMIeHc=
+github.com/dipdup-io/starknet-go-api v0.0.0-20240428114910-88b2cf389ba1/go.mod h1:y3KGLFQtwzUBcT0X2LMj6CxocUimr/A9XYg+j0KIRDE=
+github.com/dipdup-io/starknet-go-api v0.0.0-20240428115333-9db5c96f6b81 h1:jKSCsoLYm4uuO4tu/0pcBthvixgXII4KQQCVmcoL3Cc=
+github.com/dipdup-io/starknet-go-api v0.0.0-20240428115333-9db5c96f6b81/go.mod h1:y3KGLFQtwzUBcT0X2LMj6CxocUimr/A9XYg+j0KIRDE=
 github.com/dipdup-io/workerpool v0.0.4 h1:m58fuFY3VIPRc+trWpjw2Lsm4FvIgtjP/4VRe79r+/s=
 github.com/dipdup-io/workerpool v0.0.4/go.mod h1:m6YMqx7M+fORTyabHD/auKymBRpbDax0t1aPZ1i7GZA=
 github.com/dipdup-net/go-lib v0.3.3 h1:vTUI+sT4L+x+eiMf712Cg8EtlqUCMiN6M3vcNaPlCw8=

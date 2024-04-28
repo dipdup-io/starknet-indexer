@@ -30,10 +30,11 @@ func (resolver *Resolver) Proxy(ctx context.Context, txCtx data.TxContext, class
 		hash = address
 	}
 
-	if len(current.Abi) > 0 {
+	if len(current.Abi) == 0 {
 		return resolver.cache.GetAbiByClass(current)
 	}
-	return a, errors.Errorf("can't find contract abi under proxy: %x contract=%x", current.Hash, contract.Hash)
+	err = a.UnmarshalJSON(current.Abi)
+	return a, err
 }
 
 // UpgradeProxy -
