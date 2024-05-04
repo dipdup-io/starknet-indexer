@@ -6,7 +6,6 @@ import (
 	"github.com/dipdup-io/starknet-indexer/internal/storage"
 	"github.com/dipdup-net/go-lib/database"
 	"github.com/dipdup-net/indexer-sdk/pkg/storage/postgres"
-	"github.com/rs/zerolog/log"
 	"github.com/uptrace/bun"
 )
 
@@ -57,7 +56,6 @@ func (event *Event) Filter(ctx context.Context, fltr []storage.EventFilter, opts
 		Join("left join address as from_addr on from_addr.id = event.from_id")
 	q = addSort(q, opt.SortField, opt.SortOrder)
 
-	log.Info().Msg(q.String())
 	err = q.Scan(ctx, &result)
 	return
 }
