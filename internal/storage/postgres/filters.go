@@ -122,17 +122,15 @@ func addressFilter(q *bun.SelectQuery, name string, fltr storage.BytesFilter, jo
 	return q
 }
 
-func idFilter(q *bun.SelectQuery, name string, fltr storage.IdFilter, joinColumn string) *bun.SelectQuery {
-	if name == "" || joinColumn == "" {
+func idFilter(q *bun.SelectQuery, name string, fltr storage.IdFilter) *bun.SelectQuery {
+	if name == "" {
 		return q
 	}
 
 	switch {
 	case fltr.Eq > 0:
-		q = q.Relation(joinColumn)
 		q = q.Where("? = ?", bun.Safe(name), fltr.Eq)
 	case len(fltr.In) > 0:
-		q = q.Relation(joinColumn)
 		q = q.Where("? IN (?)", bun.Safe(name), bun.In(fltr.In))
 	}
 

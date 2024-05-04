@@ -23,17 +23,17 @@ func NewEvent(db *database.Bun) *Event {
 
 // Filter -
 func (event *Event) Filter(ctx context.Context, fltr []storage.EventFilter, opts ...storage.FilterOption) (result []storage.Event, err error) {
-	query := event.DB().NewSelect().Model(&result)
+	query := event.DB().NewSelect().Model((*storage.Event)(nil))
 	query = query.WhereGroup(" AND ", func(q1 *bun.SelectQuery) *bun.SelectQuery {
 		for i := range fltr {
 			q1 = q1.WhereGroup(" OR ", func(q *bun.SelectQuery) *bun.SelectQuery {
-				q = integerFilter(q, "event.id", fltr[i].ID)
-				q = integerFilter(q, "event.height", fltr[i].Height)
-				q = timeFilter(q, "event.time", fltr[i].Time)
-				q = idFilter(q, "event.contract_id", fltr[i].Contract, "Contract")
-				q = idFilter(q, "event.from_id", fltr[i].From, "From")
-				q = stringFilter(q, "event.name", fltr[i].Name)
-				q = jsonFilter(q, "event.parsed_data", fltr[i].ParsedData)
+				q = integerFilter(q, "id", fltr[i].ID)
+				q = integerFilter(q, "height", fltr[i].Height)
+				q = timeFilter(q, "time", fltr[i].Time)
+				q = idFilter(q, "contract_id", fltr[i].Contract)
+				q = idFilter(q, "from_id", fltr[i].From)
+				q = stringFilter(q, "name", fltr[i].Name)
+				q = jsonFilter(q, "parsed_data", fltr[i].ParsedData)
 				return q
 			})
 		}
@@ -41,8 +41,20 @@ func (event *Event) Filter(ctx context.Context, fltr []storage.EventFilter, opts
 	})
 
 	query = optionsFilter(query, "event", opts...)
-	query.Relation("Contract").Relation("From")
 
-	err = query.Scan(ctx)
+	var opt storage.FilterOptions
+	for i := range opts {
+		opts[i](&opt)
+	}
+
+	q := event.DB().NewSelect().
+		TableExpr("(?) as event", query).
+		ColumnExpr("event.*").
+		ColumnExpr("contract.id as contract__id, contract.class_id as contract__class_id, contract.height as contract__height, contract.hash as contract__hash").
+		ColumnExpr("from_addr.id as from__id, from_addr.class_id as from__class_id, from_addr.height as from__height, from_addr.hash as from__hash").
+		Join("left join address as contract on contract.id = event.contract_id").
+		Join("left join address as from_addr on from_addr.id = event.from_id")
+	q = addSort(q, opt.SortField, opt.SortOrder)
+	err = q.Scan(ctx, &result)
 	return
 }
