@@ -286,7 +286,7 @@ func (module *Server) syncTables(ctx context.Context, tables tables, targetHeigh
 		}
 
 		if head := tables[0].Head(); head != nil {
-			if err := sendModelToClient(ctx, subscriptionID, stream, head); err != nil {
+			if err := sendModelToClient(subscriptionID, stream, head); err != nil {
 				return err
 			}
 		}
@@ -301,7 +301,7 @@ func (module *Server) syncTables(ctx context.Context, tables tables, targetHeigh
 	return nil
 }
 
-func sendModelToClient(ctx context.Context, subscriptionID uint64, stream pb.IndexerService_SubscribeServer, model any) error {
+func sendModelToClient(subscriptionID uint64, stream pb.IndexerService_SubscribeServer, model any) error {
 	var msg pb.Subscription
 	switch typ := model.(type) {
 	case storage.Invoke:
@@ -423,7 +423,7 @@ func (module *Server) syncTokenBalances(ctx context.Context, fltr []storage.Toke
 		end = len(data) < limit
 		offset += len(data)
 		for i := range data {
-			if err := sendModelToClient(ctx, subscriptionID, stream, data[i]); err != nil {
+			if err := sendModelToClient(subscriptionID, stream, data[i]); err != nil {
 				return err
 			}
 		}

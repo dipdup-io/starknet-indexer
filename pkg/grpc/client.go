@@ -137,7 +137,7 @@ func (client *Client) subscribe(ctx context.Context, req *pb.SubscribeRequest) (
 	grpcStream := grpc.NewStream[pb.Subscription](stream)
 
 	client.G.GoCtx(ctx, func(ctx context.Context) {
-		client.handleMessage(ctx, grpcStream)
+		client.handleMessage(grpcStream)
 	})
 
 	id, err := grpcStream.Subscribe(ctx)
@@ -164,7 +164,7 @@ func (client *Client) sendToOutput(name string, data any) error {
 	return nil
 }
 
-func (client *Client) handleMessage(ctx context.Context, stream *grpcSDK.Stream[pb.Subscription]) {
+func (client *Client) handleMessage(stream *grpcSDK.Stream[pb.Subscription]) {
 	for {
 		select {
 		case <-stream.Context().Done():
