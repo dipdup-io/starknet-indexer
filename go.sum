@@ -43,6 +43,8 @@ github.com/dipdup-io/starknet-go-api v0.0.0-20240428115333-9db5c96f6b81 h1:jKSCs
 github.com/dipdup-io/starknet-go-api v0.0.0-20240428115333-9db5c96f6b81/go.mod h1:y3KGLFQtwzUBcT0X2LMj6CxocUimr/A9XYg+j0KIRDE=
 github.com/dipdup-io/starknet-go-api v0.0.0-20240428184801-e7a7f9b05da9 h1:gLnNH4kZZXjHBG3WVmwi91giiGHPol0VszqOdalNMXA=
 github.com/dipdup-io/starknet-go-api v0.0.0-20240428184801-e7a7f9b05da9/go.mod h1:y3KGLFQtwzUBcT0X2LMj6CxocUimr/A9XYg+j0KIRDE=
+github.com/dipdup-io/starknet-go-api v0.0.0-20240517123614-8bb965043f0b h1:mIonvNL2IM9/2kyGvSuqV1ut0yL1W4kpPP5ojTyA3SY=
+github.com/dipdup-io/starknet-go-api v0.0.0-20240517123614-8bb965043f0b/go.mod h1:y3KGLFQtwzUBcT0X2LMj6CxocUimr/A9XYg+j0KIRDE=
 github.com/dipdup-io/workerpool v0.0.4 h1:m58fuFY3VIPRc+trWpjw2Lsm4FvIgtjP/4VRe79r+/s=
 github.com/dipdup-io/workerpool v0.0.4/go.mod h1:m6YMqx7M+fORTyabHD/auKymBRpbDax0t1aPZ1i7GZA=
 github.com/dipdup-net/go-lib v0.3.3 h1:vTUI+sT4L+x+eiMf712Cg8EtlqUCMiN6M3vcNaPlCw8=
