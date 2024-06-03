@@ -100,6 +100,7 @@ func (resolver *Resolver) parseDeployedContracts(ctx context.Context, block *sto
 			if err != nil {
 				return errors.Wrap(err, contracts[i].ClassHash.String())
 			}
+			resolver.cache.SetAbiByAddress(class, contracts[i].Address.Bytes())
 		}
 
 		key := data.NewFeltFromBytes(contracts[i].Address.Bytes())
@@ -121,7 +122,6 @@ func (resolver *Resolver) parseDeployedContracts(ctx context.Context, block *sto
 		if class, ok := addrs[h]; ok && addresses[i].ClassID == nil {
 			addresses[i].ClassID = &class.ID
 			resolver.addAddress(&addresses[i])
-			resolver.cache.SetAbiByAddress(class, addresses[i].Hash)
 			delete(addrs, h)
 		}
 	}
