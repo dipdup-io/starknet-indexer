@@ -5,15 +5,22 @@ import (
 
 	"github.com/dipdup-io/starknet-go-api/pkg/data"
 	"github.com/dipdup-io/starknet-go-api/pkg/encoding"
+	api "github.com/dipdup-io/starknet-go-api/pkg/rpc"
 	"github.com/dipdup-io/starknet-indexer/internal/starknet"
 	"github.com/dipdup-io/starknet-indexer/internal/storage"
+	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
 )
+
+var ErrUndeclaredClass = errors.New("undeclared class")
 
 // ReceiveClass -
 func (resolver *Resolver) ReceiveClass(ctx context.Context, class *storage.Class) error {
 	rawClass, err := resolver.receiver.GetClass(ctx, encoding.EncodeHex(class.Hash))
 	if err != nil {
+		if e, ok := err.(*api.Error); ok && e.Code == 28 {
+			return ErrUndeclaredClass
+		}
 		return err
 	}
 

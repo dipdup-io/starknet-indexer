@@ -3,7 +3,7 @@ module github.com/dipdup-io/starknet-indexer
 go 1.22
 
 require (
-	github.com/dipdup-io/starknet-go-api v0.0.0-20240517123614-8bb965043f0b
+	github.com/dipdup-io/starknet-go-api v0.0.0-20240610163809-69297a8e3cac
 	github.com/dipdup-io/workerpool v0.0.4
 	github.com/dipdup-net/go-lib v0.3.3
 	github.com/dipdup-net/indexer-sdk v0.0.4

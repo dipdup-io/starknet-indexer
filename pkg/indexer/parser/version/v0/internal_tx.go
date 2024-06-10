@@ -130,13 +130,13 @@ func (parser InternalTxParser) Parse(ctx context.Context, txCtx parserData.TxCon
 		}
 
 		if err := parser.Resolver.ReceiveClass(ctx, &tx.Class); err != nil {
+			if errors.Is(err, resolver.ErrUndeclaredClass) {
+				return tx, nil
+			}
 			return tx, err
 		}
 		tx.Class.Height = tx.Height
 	}
-
-	// txHash := encoding.EncodeHex(tx.Hash)
-	// log.Info().Msg(txHash)
 
 	if len(tx.Selector) > 0 && internal.Selector != "0x0" {
 		var (

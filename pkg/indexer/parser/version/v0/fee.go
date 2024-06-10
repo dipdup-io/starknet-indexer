@@ -186,6 +186,9 @@ func (parser FeeParser) ParseInvocation(ctx context.Context, txCtx data.TxContex
 		}
 
 		if err := parser.resolver.ReceiveClass(ctx, &tx.Class); err != nil {
+			if errors.Is(err, resolver.ErrUndeclaredClass) {
+				return nil, nil
+			}
 			return nil, err
 		}
 		tx.Class.Height = tx.Height
