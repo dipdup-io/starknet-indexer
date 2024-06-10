@@ -274,7 +274,7 @@ func (indexer *Indexer) getNewBlocks(ctx context.Context) error {
 
 func (indexer *Indexer) sync(ctx context.Context) {
 	if err := indexer.getNewBlocks(ctx); err != nil {
-		indexer.Log.Error().Msgf("getNewBlocks: %s", err.Error())
+		indexer.Log.Err(err).Msg("getNewBlocks")
 	}
 
 	ticker := time.NewTicker(time.Second * 30)
