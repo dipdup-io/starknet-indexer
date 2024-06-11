@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/dipdup-io/starknet-go-api/pkg/data"
+	api "github.com/dipdup-io/starknet-go-api/pkg/rpc"
 	"github.com/dipdup-io/starknet-indexer/internal/starknet"
 	models "github.com/dipdup-io/starknet-indexer/internal/storage"
 	"github.com/dipdup-io/starknet-indexer/internal/storage/postgres"
@@ -492,6 +493,9 @@ func (indexer *Indexer) fixClassAbi(ctx context.Context) error {
 		hash := data.NewFeltFromBytes(classes[i].Hash)
 		class, err := indexer.receiver.GetClass(ctx, hash.String())
 		if err != nil {
+			if e, ok := err.(*api.Error); ok && e.Code == 28 {
+				continue
+			}
 			return tx.HandleError(ctx, err)
 		}
 		classes[i].Abi = models.Bytes(class.RawAbi)
