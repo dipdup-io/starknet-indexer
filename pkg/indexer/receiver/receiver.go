@@ -92,66 +92,102 @@ func (r *Receiver) worker(ctx context.Context, height uint64) {
 	blockId := starknetData.BlockID{
 		Number: &height,
 	}
-	var result Result
-	for {
-		select {
-		case <-ctx.Done():
-			return
-		default:
-		}
+	var (
+		result Result
+		wg     sync.WaitGroup
+		mx     = new(sync.Mutex)
+	)
 
-		response, err := r.api.GetBlock(ctx, blockId)
-		if err != nil {
-			if errors.Is(err, context.Canceled) {
+	wg.Add(1)
+	go func(mx *sync.Mutex, wg *sync.WaitGroup) {
+		defer wg.Done()
+
+		for {
+			select {
+			case <-ctx.Done():
 				return
+			default:
 			}
-			r.log.Err(err).Msg("get block request")
-			time.Sleep(time.Second)
-			continue
-		}
-		result.Block = response
-		break
-	}
 
-	for {
-		select {
-		case <-ctx.Done():
-			return
-		default:
+			response, err := r.api.GetBlock(ctx, blockId)
+			if err != nil {
+				if errors.Is(err, context.Canceled) {
+					return
+				}
+				r.log.Err(err).Msg("get block request")
+				time.Sleep(time.Second)
+				continue
+			}
+			mx.Lock()
+			{
+				result.Block = response
+			}
+			mx.Unlock()
+			break
 		}
+	}(mx, &wg)
 
-		response, err := r.api.TraceBlock(ctx, blockId)
-		if err != nil {
-			if errors.Is(err, context.Canceled) {
+	wg.Add(1)
+	go func(mx *sync.Mutex, wg *sync.WaitGroup) {
+		defer wg.Done()
+
+		for {
+			select {
+			case <-ctx.Done():
 				return
+			default:
 			}
-			r.log.Err(err).Msg("get block traces request")
-			time.Sleep(time.Second)
-			continue
-		}
-		result.Traces = response
-		break
-	}
 
-	for {
-		select {
-		case <-ctx.Done():
-			return
-		default:
-		}
+			response, err := r.api.TraceBlock(ctx, blockId)
+			if err != nil {
+				if errors.Is(err, context.Canceled) {
+					return
+				}
+				r.log.Err(err).Msg("get block traces request")
+				time.Sleep(time.Second)
+				continue
+			}
 
-		response, err := r.getStateUpdate(ctx, blockId)
-		if err != nil {
-			if errors.Is(err, context.Canceled) {
+			mx.Lock()
+			{
+				result.Traces = response
+			}
+			mx.Unlock()
+			break
+		}
+	}(mx, &wg)
+
+	wg.Add(1)
+	go func(mx *sync.Mutex, wg *sync.WaitGroup) {
+		defer wg.Done()
+
+		for {
+			select {
+			case <-ctx.Done():
 				return
+			default:
 			}
-			r.log.Err(err).Msg("state update request")
-			time.Sleep(time.Second)
-			continue
+
+			response, err := r.getStateUpdate(ctx, blockId)
+			if err != nil {
+				if errors.Is(err, context.Canceled) {
+					return
+				}
+				r.log.Err(err).Msg("state update request")
+				time.Sleep(time.Second)
+				continue
+			}
+
+			mx.Lock()
+			{
+				result.StateUpdate = response
+			}
+			mx.Unlock()
+			break
 		}
-		result.StateUpdate = response
-		break
-	}
+	}(mx, &wg)
+
+	wg.Wait()
 
 	r.log.Info().Uint64("height", height).Int64("ms", time.Since(start).Milliseconds()).Msg("received block data")
 	r.result <- result
