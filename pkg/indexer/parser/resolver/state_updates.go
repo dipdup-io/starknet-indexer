@@ -122,6 +122,7 @@ func (resolver *Resolver) parseDeployedContracts(ctx context.Context, block *sto
 		if class, ok := addrs[h]; ok && addresses[i].ClassID == nil {
 			addresses[i].ClassID = &class.ID
 			resolver.addAddress(&addresses[i])
+			resolver.cache.SetAddress(ctx, addresses[i])
 			delete(addrs, h)
 		}
 	}
