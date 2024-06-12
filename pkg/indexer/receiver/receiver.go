@@ -114,7 +114,7 @@ func (r *Receiver) worker(ctx context.Context, height uint64) {
 				if errors.Is(err, context.Canceled) {
 					return
 				}
-				r.log.Err(err).Msg("get block request")
+				r.log.Err(err).Uint64("height", height).Msg("get block request")
 				time.Sleep(time.Second)
 				continue
 			}
@@ -143,7 +143,7 @@ func (r *Receiver) worker(ctx context.Context, height uint64) {
 				if errors.Is(err, context.Canceled) {
 					return
 				}
-				r.log.Err(err).Msg("get block traces request")
+				r.log.Err(err).Uint64("height", height).Msg("get block traces request")
 				time.Sleep(time.Second)
 				continue
 			}
@@ -173,7 +173,7 @@ func (r *Receiver) worker(ctx context.Context, height uint64) {
 				if errors.Is(err, context.Canceled) {
 					return
 				}
-				r.log.Err(err).Msg("state update request")
+				r.log.Err(err).Uint64("height", height).Msg("state update request")
 				time.Sleep(time.Second)
 				continue
 			}
