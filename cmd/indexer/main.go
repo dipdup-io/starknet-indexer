@@ -6,6 +6,7 @@ import (
 	"os/signal"
 	"strconv"
 	"syscall"
+	"time"
 
 	"github.com/dipdup-io/starknet-indexer/internal/starknet"
 	"github.com/dipdup-io/starknet-indexer/internal/storage"
@@ -92,14 +93,20 @@ func main() {
 	}
 
 	if cfg.Hasura != nil {
-		if err := hasura.Create(ctx, hasura.GenerateArgs{
-			Config:         cfg.Hasura,
-			DatabaseConfig: cfg.Database,
-			Models:         storage.ModelsAny,
-			Views:          views,
-		}); err != nil {
-			log.Panic().Err(err).Msg("hasura initialization")
-			return
+		var hasuraInitialized bool
+		for !hasuraInitialized {
+			log.Info().Msg("hasura initialization...")
+			if err := hasura.Create(ctx, hasura.GenerateArgs{
+				Config:         cfg.Hasura,
+				DatabaseConfig: cfg.Database,
+				Models:         storage.ModelsAny,
+				Views:          views,
+			}); err != nil {
+				log.Err(err).Msg("hasura initialization. waiting 5 seconds and trying again.")
+				time.Sleep(time.Second * 5)
+			} else {
+				hasuraInitialized = true
+			}
 		}
 	}
 
