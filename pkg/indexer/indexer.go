@@ -7,8 +7,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/dipdup-io/starknet-go-api/pkg/data"
-	api "github.com/dipdup-io/starknet-go-api/pkg/rpc"
 	"github.com/dipdup-io/starknet-indexer/internal/starknet"
 	models "github.com/dipdup-io/starknet-indexer/internal/storage"
 	"github.com/dipdup-io/starknet-indexer/internal/storage/postgres"
@@ -139,11 +137,6 @@ func (indexer *Indexer) Start(ctx context.Context) {
 	indexer.receiver.Start(ctx)
 
 	indexer.statusChecker.Start(ctx)
-
-	if err := indexer.fixClassAbi(ctx); err != nil {
-		indexer.Log.Err(err).Msg("recovering class abi error")
-		return
-	}
 
 	indexer.G.GoCtx(ctx, indexer.saveBlocks)
 	indexer.G.GoCtx(ctx, indexer.sync)
@@ -473,39 +466,4 @@ func (indexer *Indexer) Rollback(ctx context.Context, height uint64) error {
 	indexer.rollback <- struct{}{}
 
 	return indexer.rollbackManager.Rollback(ctx, indexer.Name(), height)
-}
-
-func (indexer *Indexer) fixClassAbi(ctx context.Context) error {
-	tx, err := indexer.transactable.BeginTransaction(ctx)
-	if err != nil {
-		return err
-	}
-	defer tx.Close(ctx)
-
-	classes, err := indexer.classes.GetUnresolved(ctx)
-	if err != nil {
-		return tx.HandleError(ctx, err)
-	}
-
-	log.Info().Msgf("found %d unresolved classes", len(classes))
-
-	for i := range classes {
-		hash := data.NewFeltFromBytes(classes[i].Hash)
-		class, err := indexer.receiver.GetClass(ctx, hash.String())
-		if err != nil {
-			if e, ok := err.(*api.Error); ok && e.Code == 28 {
-				continue
-			}
-			return tx.HandleError(ctx, err)
-		}
-		classes[i].Abi = models.Bytes(class.RawAbi)
-		if err := tx.Update(ctx, &classes[i]); err != nil {
-			return tx.HandleError(ctx, err)
-		}
-	}
-
-	if err := tx.Flush(ctx); err != nil {
-		return tx.HandleError(ctx, err)
-	}
-	return nil
 }
