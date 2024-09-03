@@ -28,7 +28,6 @@ services:
     restart: always
     volumes:
       - db:/var/lib/postgresql/data
-      - /etc/postgresql/postgresql.conf:/etc/postgresql/postgresql.conf
     ports:
       - 127.0.0.1:${POSTGRES_PORT:-5432}:5432
     environment:
@@ -42,18 +41,14 @@ services:
       timeout: 5s
       retries: 5
     logging: *starknet-indexer-logging
-    command:
-      - "postgres"
-      - "-c"
-      - "config_file=${POSTGRES_CONFIG:-/etc/postgresql/postgresql.conf}"
 
   hasura:
-    image: hasura/graphql-engine:v2.22.0
+    image: hasura/graphql-engine:v2.28.0
     ports:
       - 127.0.0.1:8080:8080
     restart: always
     environment:
-      - HASURA_GRAPHQL_DATABASE_URL=postgres://dipdup:${POSTGRES_PASSWORD:-changeme}@db:5432/starknet
+      - HASURA_GRAPHQL_DATABASE_URL=postgres://${POSTGRES_USER:-dipdup}:${POSTGRES_PASSWORD:-changeme}@${HASURA_POSTGRES_HOST:-db}:${POSTGRES_PORT:-5432}/${POSTGRES_DB:-starknet}
       - HASURA_GRAPHQL_ENABLE_CONSOLE=true
       - HASURA_GRAPHQL_DEV_MODE=true
       - HASURA_GRAPHQL_ENABLED_LOG_TYPES=startup, http-log, webhook-log, websocket-log, query-log
