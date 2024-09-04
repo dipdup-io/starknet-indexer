@@ -46,8 +46,6 @@ func NewReceiver(cfg config.Config, ds map[string]ddConfig.DataSource) (*Receive
 	switch cfg.Datasource {
 	case "node":
 		api = NewNode(dsCfg)
-	case "sequencer":
-		api = NewFeeder(dsCfg)
 	}
 
 	receiver := &Receiver{

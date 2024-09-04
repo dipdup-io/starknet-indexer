@@ -5,7 +5,6 @@ import (
 	"os"
 	"time"
 
-	"github.com/dipdup-io/starknet-go-api/pkg/data"
 	starknetData "github.com/dipdup-io/starknet-go-api/pkg/data"
 	"github.com/dipdup-io/starknet-go-api/pkg/encoding"
 	starknet "github.com/dipdup-io/starknet-go-api/pkg/rpc"
@@ -39,8 +38,8 @@ func (n *Node) GetBlock(ctx context.Context, blockId starknetData.BlockID) (bloc
 
 	block.Height = response.Result.BlockNumber
 	block.Time = time.Unix(response.Result.Timestamp, 0).UTC()
-	block.Hash = data.Felt(response.Result.BlockHash).Bytes()
-	block.ParentHash = data.Felt(response.Result.ParentHash).Bytes()
+	block.Hash = starknetData.Felt(response.Result.BlockHash).Bytes()
+	block.ParentHash = starknetData.Felt(response.Result.ParentHash).Bytes()
 	block.NewRoot = encoding.MustDecodeHex(response.Result.NewRoot)
 	block.SequencerAddress = encoding.MustDecodeHex(response.Result.SequencerAddress)
 	block.Version = response.Result.Version

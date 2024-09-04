@@ -1,5 +1,5 @@
 # Starknet indexer
-This is an indexing layer for Starknet written in Golang that operates on top of the (Feeder) Gateway API and stores data in a Postgres database.  
+This is an indexing layer for Starknet written in Golang that operates on top of the Node API and stores data in a Postgres database.  
 
 It can be used in multiple ways and for various purposes:
 - As a base component for the [DipDup Vertical](https://dipdup.io) — GraphQL federation providing a wide range of APIs for accessing both on-chain and off-chain data/metadata
