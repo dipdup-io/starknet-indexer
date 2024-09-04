@@ -46,8 +46,8 @@ func NewReceiver(cfg config.Config, ds map[string]ddConfig.DataSource) (*Receive
 	switch cfg.Datasource {
 	case "node":
 		api = NewNode(dsCfg)
-	case "sequencer":
-		api = NewFeeder(dsCfg)
+	default:
+		return nil, errors.Errorf("usupported datasource type: %s", cfg.Datasource)
 	}
 
 	receiver := &Receiver{

@@ -4,7 +4,6 @@ import (
 	"context"
 	"time"
 
-	"github.com/dipdup-io/starknet-go-api/pkg/data"
 	starknetData "github.com/dipdup-io/starknet-go-api/pkg/data"
 	starknet "github.com/dipdup-io/starknet-go-api/pkg/sequencer"
 	"github.com/dipdup-io/starknet-indexer/internal/storage"
@@ -36,9 +35,9 @@ type Block struct {
 
 type Transaction struct {
 	Type      string
-	Version   data.Felt
-	Hash      data.Felt
-	ActualFee data.Felt
+	Version   starknetData.Felt
+	Hash      starknetData.Felt
+	ActualFee starknetData.Felt
 
 	Body any
 }
