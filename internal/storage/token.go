@@ -22,7 +22,7 @@ const (
 // TokenFilter -
 type TokenFilter struct {
 	ID       IntegerFilter
-	Contract BytesFilter
+	Contract IdFilter
 	TokenId  StringFilter
 	Type     EnumStringFilter
 }

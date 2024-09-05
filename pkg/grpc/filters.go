@@ -30,6 +30,10 @@ func newSubscriptionFilters(ctx context.Context, req *pb.SubscribeRequest, db po
 	if err != nil {
 		return subscriptionFilters{}, err
 	}
+	token, err := tokenFilter(ctx, db.Address, req.GetTokens())
+	if err != nil {
+		return subscriptionFilters{}, err
+	}
 	return subscriptionFilters{
 		declare:       declareFilter(req.GetDeclares()),
 		deploy:        deployFilter(req.GetDeploys()),
@@ -44,7 +48,7 @@ func newSubscriptionFilters(ctx context.Context, req *pb.SubscribeRequest, db po
 		tokenBalance:  tokenBalanceFilter(req.GetTokenBalances()),
 		transfer:      transferFilter(req.GetTransfers()),
 		address:       addressFilter(req.GetAddresses()),
-		tokens:        tokenFilter(req.GetTokens()),
+		tokens:        token,
 	}, nil
 }
 
@@ -275,21 +279,25 @@ func storageDiffFilter(fltr []*pb.StorageDiffFilter) []storage.StorageDiffFilter
 	return result
 }
 
-func tokenFilter(fltr []*pb.TokenFilter) []storage.TokenFilter {
+func tokenFilter(ctx context.Context, address storage.IAddress, fltr []*pb.TokenFilter) ([]storage.TokenFilter, error) {
 	if len(fltr) == 0 {
-		return nil
+		return nil, nil
 	}
 
 	result := make([]storage.TokenFilter, len(fltr))
 	for i := range fltr {
+		contractFilter, err := idFilter(ctx, address, fltr[i].Contract)
+		if err != nil {
+			return nil, err
+		}
 		result[i] = storage.TokenFilter{
 			ID:       integerFilter(fltr[i].Id),
 			Type:     enumStringFilter(fltr[i].Type),
 			TokenId:  stringFilter(fltr[i].TokenId),
-			Contract: bytesFilter(fltr[i].Contract),
+			Contract: contractFilter,
 		}
 	}
-	return result
+	return result, nil
 }
 
 func tokenBalanceFilter(fltr []*pb.TokenBalanceFilter) []storage.TokenBalanceFilter {
