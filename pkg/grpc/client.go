@@ -6,7 +6,6 @@ import (
 
 	"github.com/dipdup-io/starknet-indexer/pkg/grpc/pb"
 	"github.com/dipdup-net/indexer-sdk/pkg/modules"
-	"github.com/dipdup-net/indexer-sdk/pkg/modules/grpc"
 	grpcSDK "github.com/dipdup-net/indexer-sdk/pkg/modules/grpc"
 	generalPB "github.com/dipdup-net/indexer-sdk/pkg/modules/grpc/pb"
 	"github.com/rs/zerolog/log"
@@ -134,7 +133,7 @@ func (client *Client) subscribe(ctx context.Context, req *pb.SubscribeRequest) (
 	if err != nil {
 		return 0, nil, err
 	}
-	grpcStream := grpc.NewStream[pb.Subscription](stream)
+	grpcStream := grpcSDK.NewStream[pb.Subscription](stream)
 
 	client.G.GoCtx(ctx, func(ctx context.Context) {
 		client.handleMessage(grpcStream)

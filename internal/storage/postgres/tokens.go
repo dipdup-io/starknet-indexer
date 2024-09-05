@@ -53,7 +53,7 @@ func (token *Token) Filter(ctx context.Context, fltr []storage.TokenFilter, opts
 		for i := range fltr {
 			q1 = q1.WhereGroup(" OR ", func(q *bun.SelectQuery) *bun.SelectQuery {
 				q = integerFilter(q, "token.id", fltr[i].ID)
-				q = addressFilter(q, "hash", fltr[i].Contract, "Contract")
+				q = idFilter(q, "contract_id", fltr[i].Contract)
 				q = stringFilter(q, "token.token_id", fltr[i].TokenId)
 				q = enumStringFilter(q, "token.type", fltr[i].Type)
 				return q
@@ -62,9 +62,21 @@ func (token *Token) Filter(ctx context.Context, fltr []storage.TokenFilter, opts
 		return q1
 	})
 	query = optionsFilter(query, "token", opts...)
-	query = query.Relation("Contract")
 
-	err = query.Scan(ctx)
+	var opt storage.FilterOptions
+	for i := range opts {
+		opts[i](&opt)
+	}
+
+	q := token.DB().NewSelect().
+		TableExpr("(?) as token", query).
+		ColumnExpr("token.*").
+		ColumnExpr("contract.id as contract__id, contract.class_id as contract__class_id, contract.height as contract__height, contract.hash as contract__hash").
+		Join("left join address as contract on contract.id = token.contract_id")
+
+	q = addSort(q, opt.SortField, opt.SortOrder)
+
+	err = q.Scan(ctx, &result)
 	return result, err
 }
 
