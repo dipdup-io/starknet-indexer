@@ -26,6 +26,7 @@ type Result struct {
 // Receiver -
 type Receiver struct {
 	api          API
+	fallbackAPI  API
 	result       chan Result
 	pool         *workerpool.Pool[uint64]
 	processing   map[uint64]struct{}
@@ -58,6 +59,11 @@ func NewReceiver(cfg config.Config, ds map[string]ddConfig.DataSource) (*Receive
 		log:          log.With().Str("module", "receiver").Logger(),
 		timeout:      time.Duration(cfg.Timeout) * time.Second,
 		wg:           new(sync.WaitGroup),
+	}
+
+	fallbackDs, ok := ds["fallback"]
+	if ok {
+		receiver.fallbackAPI = NewNode(fallbackDs)
 	}
 
 	if receiver.timeout == 0 {
@@ -131,6 +137,7 @@ func (r *Receiver) worker(ctx context.Context, height uint64) {
 	go func(mx *sync.Mutex, wg *sync.WaitGroup) {
 		defer wg.Done()
 
+		api := r.api
 		for {
 			select {
 			case <-ctx.Done():
@@ -138,13 +145,15 @@ func (r *Receiver) worker(ctx context.Context, height uint64) {
 			default:
 			}
 
-			response, err := r.api.TraceBlock(ctx, blockId)
+			response, err := api.TraceBlock(ctx, blockId)
 			if err != nil {
 				if errors.Is(err, context.Canceled) {
 					return
 				}
 				r.log.Err(err).Uint64("height", height).Msg("get block traces request")
 				time.Sleep(time.Second)
+				r.log.Warn().Msg("trying fallback node...")
+				api = r.fallbackAPI
 				continue
 			}
 
