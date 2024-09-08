@@ -19,6 +19,9 @@ datasources:
   node:
     url: ${STARKNET_NODE_URL}
     rps: ${STARKNET_NODE_RPS:-5}
+  fallback:
+    url: ${STARKNET_FALLBACK_NODE_URL}
+    rps: ${STARKNET_FALLBACK_NODE_RPS:-1}
 
 database:
   kind: postgres
