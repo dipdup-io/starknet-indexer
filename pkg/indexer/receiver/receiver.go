@@ -61,8 +61,7 @@ func NewReceiver(cfg config.Config, ds map[string]ddConfig.DataSource) (*Receive
 		wg:           new(sync.WaitGroup),
 	}
 
-	fallbackDs, ok := ds["fallback"]
-	if ok {
+	if fallbackDs, ok := ds["fallback"]; ok && fallbackDs.URL != "" {
 		receiver.fallbackAPI = NewNode(fallbackDs)
 	}
 
