@@ -56,14 +56,17 @@ func CalldataForL1Handler(contractAbi abi.Abi, selector []byte, calldata []strin
 
 // Event -
 func Event(contractAbi abi.Abi, keys []string, data []string) (map[string]any, string, error) {
-	values := make([]string, 0)
+	var values []string
 	switch len(keys) {
 	case 0:
 		return nil, "", nil
 	case 1:
-		values = append(values, data...)
+		values = make([]string, len(data))
+		copy(values, data)
 	default:
-		values = append(keys[1:], data...)
+		values = make([]string, len(keys[1:]))
+		copy(values, keys[1:])
+		values = append(values, data...)
 	}
 	selector := encoding.EncodeHex(encoding.MustDecodeHex(keys[0]))
 	event, ok := contractAbi.GetEventBySelector(selector)
