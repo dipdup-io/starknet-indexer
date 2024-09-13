@@ -130,7 +130,7 @@ func (r *Receiver) worker(ctx context.Context, height uint64) {
 		Number: &height,
 	}
 	var (
-		result Result
+		result = NewResult()
 		wg     sync.WaitGroup
 	)
 
