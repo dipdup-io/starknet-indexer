@@ -6,7 +6,6 @@ import (
 	models "github.com/dipdup-io/starknet-indexer/internal/storage"
 	"github.com/dipdup-io/starknet-indexer/internal/storage/postgres"
 	"github.com/dipdup-io/starknet-indexer/pkg/indexer/cache"
-	"github.com/dipdup-io/starknet-indexer/pkg/indexer/parser/data"
 	parserData "github.com/dipdup-io/starknet-indexer/pkg/indexer/parser/data"
 	"github.com/dipdup-net/go-lib/database"
 	"github.com/dipdup-net/indexer-sdk/pkg/storage"
@@ -104,7 +103,7 @@ func (store *Store) Save(
 	}
 
 	if result.Block.TxCount > 0 {
-		sm := newSubModels(store.internals, store.transfers, store.events)
+		sm := newSubModels()
 
 		if err := store.saveDeclare(ctx, tx, result, sm); err != nil {
 			return tx.HandleError(ctx, err)
@@ -189,7 +188,7 @@ func (store *Store) saveInternals(
 	return nil
 }
 
-func (store *Store) saveProxies(ctx context.Context, tx postgres.Transaction, proxies data.ProxyMap[*models.ProxyUpgrade]) error {
+func (store *Store) saveProxies(ctx context.Context, tx postgres.Transaction, proxies parserData.ProxyMap[*models.ProxyUpgrade]) error {
 	return proxies.Range(func(_ parserData.ProxyKey, value *models.ProxyUpgrade) (bool, error) {
 		store.cache.SetProxy(value.Hash, value.Selector, value.ToProxy())
 		if err := tx.Add(ctx, value); err != nil {
