@@ -59,13 +59,10 @@ func (t Transaction) SaveTokens(ctx context.Context, tokens ...*models.Token) er
 	if len(tokens) == 0 {
 		return nil
 	}
-
-	values := t.Tx().NewValues(&tokens).Column("first_height", "contract_id", "token_id", "type")
-	_, err := t.Tx().NewInsert().Column("first_height", "contract_id", "token_id", "type").
-		With("_data", values).
-		Model((*models.Token)(nil)).
+	_, err := t.Tx().
+		NewInsert().
+		Model(&tokens).
 		On("CONFLICT ON CONSTRAINT token_unique_id DO NOTHING").
-		TableExpr("_data").
 		Exec(ctx)
 	return err
 }

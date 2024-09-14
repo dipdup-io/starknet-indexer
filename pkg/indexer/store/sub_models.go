@@ -19,11 +19,7 @@ type subModels struct {
 	Internals     []models.Internal
 }
 
-func newSubModels(
-	internalsStorage models.IInternal,
-	transfersStorage models.ITransfer,
-	eventsStorage models.IEvent,
-) *subModels {
+func newSubModels() *subModels {
 	return &subModels{
 		Transfers:     make([]models.Transfer, 0),
 		Events:        make([]models.Event, 0),

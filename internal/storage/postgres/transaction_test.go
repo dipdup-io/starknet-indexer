@@ -182,6 +182,8 @@ func (s *TransactionTest) TestTokens() {
 
 	err = tx.SaveTokens(ctx, tokens...)
 	s.Require().NoError(err)
+	s.Require().Greater(tokens[0].ID, uint64(0))
+	s.Require().Greater(tokens[1].ID, uint64(0))
 
 	err = tx.Flush(ctx)
 	s.Require().NoError(err)
