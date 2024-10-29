@@ -144,75 +144,11 @@ func (checker *statusChecker) init(ctx context.Context) error {
 		end = limit != count
 
 		for i := range blocks {
-			if err := checker.addIndexedBlockToQueue(ctx, blocks[i]); err != nil {
-				return err
-			}
+			checker.acceptedOnL2.Push(acceptedOnL2{
+				Height: blocks[i].Height,
+			})
 		}
 	}
-
-	return nil
-}
-
-func (checker *statusChecker) addIndexedBlockToQueue(ctx context.Context, block storage.Block) error {
-	if block.InvokeCount > 0 {
-		hash, err := checker.invoke.HashByHeight(ctx, block.Height)
-		if err != nil {
-			return err
-		}
-		checker.acceptedOnL2.Push(acceptedOnL2{
-			TransactionHash: hash,
-			Height:          block.Height,
-		})
-		return nil
-	}
-	if block.DeployCount > 0 {
-		hash, err := checker.deploys.HashByHeight(ctx, block.Height)
-		if err != nil {
-			return err
-		}
-		checker.acceptedOnL2.Push(acceptedOnL2{
-			TransactionHash: hash,
-			Height:          block.Height,
-		})
-		return nil
-	}
-	if block.DeployAccountCount > 0 {
-		hash, err := checker.deployAccounts.HashByHeight(ctx, block.Height)
-		if err != nil {
-			return err
-		}
-		checker.acceptedOnL2.Push(acceptedOnL2{
-			TransactionHash: hash,
-			Height:          block.Height,
-		})
-		return nil
-	}
-	if block.DeclareCount > 0 {
-		hash, err := checker.declares.HashByHeight(ctx, block.Height)
-		if err != nil {
-			return err
-		}
-		checker.acceptedOnL2.Push(acceptedOnL2{
-			TransactionHash: hash,
-			Height:          block.Height,
-		})
-		return nil
-	}
-	if block.L1HandlerCount > 0 {
-		hash, err := checker.l1Handlers.HashByHeight(ctx, block.Height)
-		if err != nil {
-			return err
-		}
-		checker.acceptedOnL2.Push(acceptedOnL2{
-			TransactionHash: hash,
-			Height:          block.Height,
-		})
-		return nil
-	}
-
-	checker.acceptedOnL2.Push(acceptedOnL2{
-		Height: block.Height,
-	})
 
 	return nil
 }

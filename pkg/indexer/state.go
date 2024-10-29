@@ -4,7 +4,6 @@ import (
 	"sync"
 
 	"github.com/dipdup-io/starknet-indexer/internal/storage"
-	models "github.com/dipdup-io/starknet-indexer/internal/storage"
 )
 
 type state struct {
@@ -15,7 +14,7 @@ type state struct {
 
 func newState(s *storage.State) *state {
 	if s == nil {
-		s = new(models.State)
+		s = new(storage.State)
 	}
 	return &state{
 		state: s,
