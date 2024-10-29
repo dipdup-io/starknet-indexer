@@ -12,6 +12,7 @@ import (
 )
 
 const rollbackQuery = `DELETE FROM ? WHERE height > ? RETURNING id;`
+const rollbackQueryWithPartition = `DELETE FROM ? WHERE height > ? AND time > ? RETURNING id;`
 
 // RollbackManager -
 type RollbackManager struct {
@@ -73,6 +74,16 @@ func (rm RollbackManager) Rollback(ctx context.Context, indexerName string, heig
 		&models.Class{},
 		&models.StorageDiff{},
 		&models.Block{},
+		&models.ProxyUpgrade{},
+		&models.ClassReplace{},
+	} {
+		_, err := tx.Exec(ctx, rollbackQuery, bun.Ident(model.TableName()), height)
+		if err != nil {
+			return tx.HandleError(ctx, err)
+		}
+	}
+
+	for _, model := range []storage.Model{
 		&models.Invoke{},
 		&models.Declare{},
 		&models.Deploy{},
@@ -83,10 +94,8 @@ func (rm RollbackManager) Rollback(ctx context.Context, indexerName string, heig
 		&models.Message{},
 		&models.Fee{},
 		&models.Transfer{},
-		&models.ProxyUpgrade{},
-		&models.ClassReplace{},
 	} {
-		deletedCount, err := tx.Exec(ctx, rollbackQuery, bun.Ident(model.TableName()), height)
+		deletedCount, err := tx.Exec(ctx, rollbackQueryWithPartition, bun.Ident(model.TableName()), height, state.LastTime.AddDate(0, 0, -1))
 		if err != nil {
 			return tx.HandleError(ctx, err)
 		}
