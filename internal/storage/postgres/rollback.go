@@ -57,14 +57,17 @@ func (rm RollbackManager) Rollback(ctx context.Context, indexerName string, heig
 		return tx.HandleError(ctx, err)
 	}
 
+	log.Info().Uint64("new_height", height).Str("indexer", indexerName).Msg("rollback proxy...")
 	if err := rm.rollbackProxy(ctx, height, tx); err != nil {
 		return tx.HandleError(ctx, err)
 	}
 
+	log.Info().Uint64("new_height", height).Str("indexer", indexerName).Msg("rollback balances...")
 	if err := rm.rollbackTokenBalances(ctx, height, tx); err != nil {
 		return tx.HandleError(ctx, err)
 	}
 
+	log.Info().Uint64("new_height", height).Str("indexer", indexerName).Msg("rollback replace classes...")
 	if err := rm.rollbackReplaceClass(ctx, height, tx); err != nil {
 		return tx.HandleError(ctx, err)
 	}
@@ -77,6 +80,7 @@ func (rm RollbackManager) Rollback(ctx context.Context, indexerName string, heig
 		&models.ProxyUpgrade{},
 		&models.ClassReplace{},
 	} {
+		log.Info().Uint64("new_height", height).Str("indexer", indexerName).Msgf("rollback %s...", model.TableName())
 		_, err := tx.Exec(ctx, rollbackQuery, bun.Ident(model.TableName()), height)
 		if err != nil {
 			return tx.HandleError(ctx, err)
@@ -95,6 +99,7 @@ func (rm RollbackManager) Rollback(ctx context.Context, indexerName string, heig
 		&models.Fee{},
 		&models.Transfer{},
 	} {
+		log.Info().Uint64("new_height", height).Str("indexer", indexerName).Msgf("rollback %s...", model.TableName())
 		deletedCount, err := tx.Exec(ctx, rollbackQueryWithPartition, bun.Ident(model.TableName()), height, state.LastTime.AddDate(0, 0, -1))
 		if err != nil {
 			return tx.HandleError(ctx, err)
@@ -126,6 +131,7 @@ func (rm RollbackManager) Rollback(ctx context.Context, indexerName string, heig
 	state.LastTime = lastBlock.Time
 	state.LastHeight = lastBlock.Height
 
+	log.Info().Uint64("new_height", height).Str("indexer", indexerName).Msg("update state...")
 	if err := tx.Update(ctx, &state); err != nil {
 		return tx.HandleError(ctx, err)
 	}
