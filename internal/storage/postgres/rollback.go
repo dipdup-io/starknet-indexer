@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	"time"
 
 	models "github.com/dipdup-io/starknet-indexer/internal/storage"
 	"github.com/dipdup-net/indexer-sdk/pkg/storage"
@@ -212,6 +213,7 @@ func (rm RollbackManager) rollbackTokenBalances(ctx context.Context, height uint
 		end    = false
 	)
 
+	maxRollbackTime := time.Now().AddDate(1, -1, 0)
 	updates := make(map[string]*models.TokenBalance, 0)
 	for !end {
 		transfers, err := rm.transfers.Filter(ctx,
@@ -219,6 +221,9 @@ func (rm RollbackManager) rollbackTokenBalances(ctx context.Context, height uint
 				{
 					Height: models.IntegerFilter{
 						Gt: height,
+					},
+					Time: models.TimeFilter{
+						Gt: uint64(maxRollbackTime.Unix()),
 					},
 				},
 			},
