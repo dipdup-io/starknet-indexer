@@ -13,6 +13,7 @@ import (
 	parserData "github.com/dipdup-io/starknet-indexer/pkg/indexer/parser/data"
 	"github.com/dipdup-io/starknet-indexer/pkg/indexer/parser/helpers"
 	"github.com/dipdup-io/starknet-indexer/pkg/indexer/receiver"
+	"github.com/rs/zerolog/log"
 )
 
 // ParseL1Handler -
@@ -73,7 +74,7 @@ func (parser Parser) ParseL1Handler(ctx context.Context, raw *data.L1Handler, bl
 		tx.ParsedCalldata, tx.Entrypoint, err = decode.CalldataForL1Handler(contractAbi, tx.Selector, tx.CallData)
 		if err != nil {
 			if !errors.Is(err, abi.ErrNoLenField) {
-				return tx, nil, err
+				log.Err(err).Hex("tx_hash", tx.Hash).Msg("can't decode calldata")
 			}
 		}
 	}
