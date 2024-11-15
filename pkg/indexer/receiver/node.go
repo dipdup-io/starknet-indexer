@@ -149,15 +149,6 @@ func (n *Node) GetBlockStatus(ctx context.Context, height uint64) (storage.Statu
 	return storage.NewStatus(response.Result.Status), nil
 }
 
-func (n *Node) TransactionStatus(ctx context.Context, hash string) (storage.Status, error) {
-	response, err := n.api.GetTransactionStatus(ctx, hash)
-	if err != nil {
-		return storage.StatusUnknown, err
-	}
-
-	return storage.NewStatus(response.Result.Finality), nil
-}
-
 func (n *Node) GetClass(ctx context.Context, hash string) (starknetData.Class, error) {
 	blockId := starknetData.BlockID{
 		String: starknetData.Latest,

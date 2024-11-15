@@ -4,7 +4,6 @@ import (
 	"context"
 	"time"
 
-	"github.com/dipdup-io/starknet-go-api/pkg/encoding"
 	"github.com/dipdup-io/starknet-indexer/internal/storage"
 	"github.com/dipdup-io/starknet-indexer/internal/storage/postgres"
 	"github.com/dipdup-io/starknet-indexer/pkg/indexer/receiver"
@@ -15,41 +14,7 @@ import (
 )
 
 type acceptedOnL2 struct {
-	Height          uint64
-	TransactionHash []byte
-}
-
-func newAcceptedOnL2FromIndexingBlock(block storage.Block) acceptedOnL2 {
-	a := acceptedOnL2{
-		Height: block.Height,
-	}
-
-	if block.InvokeCount > 0 {
-		a.TransactionHash = block.Invoke[0].Hash
-		return a
-	}
-
-	if block.DeclareCount > 0 {
-		a.TransactionHash = block.Declare[0].Hash
-		return a
-	}
-
-	if block.DeployCount > 0 {
-		a.TransactionHash = block.Deploy[0].Hash
-		return a
-	}
-
-	if block.DeployAccountCount > 0 {
-		a.TransactionHash = block.DeployAccount[0].Hash
-		return a
-	}
-
-	if block.L1HandlerCount > 0 {
-		a.TransactionHash = block.L1Handler[0].Hash
-		return a
-	}
-
-	return a
+	Height uint64
 }
 
 type statusChecker struct {
@@ -186,14 +151,10 @@ func (checker *statusChecker) check(ctx context.Context) error {
 }
 
 func (checker *statusChecker) addBlock(block storage.Block) {
-	checker.acceptedOnL2.Push(newAcceptedOnL2FromIndexingBlock(block))
+	checker.acceptedOnL2.Push(acceptedOnL2{block.Height})
 }
 
 func (checker *statusChecker) getStatus(ctx context.Context, item acceptedOnL2) (storage.Status, error) {
-	if len(item.TransactionHash) > 0 {
-		return checker.receiver.TransactionStatus(ctx, encoding.EncodeHex(item.TransactionHash))
-	}
-
 	return checker.receiver.GetBlockStatus(ctx, item.Height)
 }
 

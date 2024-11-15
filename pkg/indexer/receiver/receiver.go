@@ -183,14 +183,6 @@ func (r *Receiver) GetClass(ctx context.Context, hash string) (starknetData.Clas
 	return r.api.GetClass(requestCtx, hash)
 }
 
-// TransactionStatus -
-func (r *Receiver) TransactionStatus(ctx context.Context, hash string) (storage.Status, error) {
-	requestCtx, cancel := context.WithTimeout(ctx, r.timeout)
-	defer cancel()
-
-	return r.api.TransactionStatus(requestCtx, hash)
-}
-
 // GetBlockStatus -
 func (r *Receiver) GetBlockStatus(ctx context.Context, height uint64) (storage.Status, error) {
 	requestCtx, cancel := context.WithTimeout(ctx, r.timeout)

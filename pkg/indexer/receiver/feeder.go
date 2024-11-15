@@ -80,15 +80,6 @@ func (f *Feeder) GetBlockStatus(ctx context.Context, height uint64) (storage.Sta
 	return storage.NewStatus(response.Status), nil
 }
 
-func (f *Feeder) TransactionStatus(ctx context.Context, hash string) (storage.Status, error) {
-	response, err := f.api.GetTransactionStatus(ctx, hash)
-	if err != nil {
-		return storage.StatusUnknown, err
-	}
-
-	return storage.NewStatus(response.Status), nil
-}
-
 func (f *Feeder) GetClass(ctx context.Context, hash string) (starknetData.Class, error) {
 	blockId := starknetData.BlockID{
 		String: starknetData.Latest,

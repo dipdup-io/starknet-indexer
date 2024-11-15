@@ -14,7 +14,6 @@ type API interface {
 	TraceBlock(ctx context.Context, blockId starknetData.BlockID) ([]starknet.Trace, error)
 	GetStateUpdate(ctx context.Context, blockId starknetData.BlockID) (starknetData.StateUpdate, error)
 	GetBlockStatus(ctx context.Context, height uint64) (storage.Status, error)
-	TransactionStatus(ctx context.Context, hash string) (storage.Status, error)
 	GetClass(ctx context.Context, hash string) (starknetData.Class, error)
 	Head(ctx context.Context) (uint64, error)
 }
