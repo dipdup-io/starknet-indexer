@@ -181,7 +181,7 @@ query GetExecutionTrace {
 DipDup Vertical for Starknet is a federated API including the following services:
 - [x] Generic Starknet indexer
 - [x] Starknet.ID indexer
-- [X] NFT metadata resolver
+- [x] NFT metadata resolver
 
 Project is supported by Starkware and Starknet Foundation via [OnlyDust platform](https://app.onlydust.com/p/dipdup)
 
