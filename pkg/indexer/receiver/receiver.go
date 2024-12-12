@@ -2,6 +2,7 @@ package receiver
 
 import (
 	"context"
+	"github.com/dipdup-io/starknet-indexer/pkg/indexer/receiver/subsquid"
 	"sync"
 	"time"
 
@@ -59,6 +60,7 @@ func (r *Result) setStateUpdates(stateUpdate starknetData.StateUpdate) {
 type Receiver struct {
 	api          API
 	fallbackAPI  API
+	sqdAPI       *subsquid.Subsquid
 	result       chan Result
 	pool         *workerpool.Pool[uint64]
 	processing   map[uint64]struct{}
@@ -75,22 +77,22 @@ func NewReceiver(cfg config.Config, ds map[string]ddConfig.DataSource) (*Receive
 		return nil, errors.Errorf("unknown datasource name: %s", cfg.Datasource)
 	}
 
-	var api API
-	switch cfg.Datasource {
-	case "node":
-		api = NewNode(dsCfg)
-	default:
-		return nil, errors.Errorf("usupported datasource type: %s", cfg.Datasource)
-	}
-
 	receiver := &Receiver{
-		api:          api,
 		result:       make(chan Result, cfg.ThreadsCount*2),
 		processing:   make(map[uint64]struct{}),
 		processingMx: new(sync.Mutex),
 		log:          log.With().Str("module", "receiver").Logger(),
 		timeout:      time.Duration(cfg.Timeout) * time.Second,
 		wg:           new(sync.WaitGroup),
+	}
+
+	switch cfg.Datasource {
+	case "node":
+		receiver.api = NewNode(dsCfg)
+	case "subsquid":
+		receiver.sqdAPI = subsquid.NewSubsquid(dsCfg)
+	default:
+		return nil, errors.Errorf("usupported datasource type: %s", cfg.Datasource)
 	}
 
 	if fallbackDs, ok := ds["fallback"]; ok && fallbackDs.URL != "" {
@@ -172,6 +174,10 @@ func (r *Receiver) Head(ctx context.Context) (uint64, error) {
 	requestCtx, cancel := context.WithTimeout(ctx, r.timeout)
 	defer cancel()
 
+	if r.usingSqd() {
+		return r.sqdAPI.GetHead(requestCtx)
+	}
+
 	return r.api.Head(requestCtx)
 }
 
@@ -248,6 +254,10 @@ func (r *Receiver) getBlock(ctx context.Context, blockId starknetData.BlockID, r
 	}
 }
 
+func (r *Receiver) usingSqd() bool {
+	return r.sqdAPI != nil
+}
+
 func (r *Receiver) traceBlock(ctx context.Context, blockId starknetData.BlockID, result *Result, wg *sync.WaitGroup) {
 	defer wg.Done()
 
@@ -304,4 +314,31 @@ func (r *Receiver) receiveStateUpdate(ctx context.Context, blockId starknetData.
 		result.setStateUpdates(response)
 		break
 	}
+}
+
+func (r *Receiver) GetSqdData(ctx context.Context, startLevel uint64) {
+	r.sqdAPI.GetData(ctx, startLevel)
+	//for {
+	//	select {
+	//	case <-ctx.Done():
+	//		return
+	//	default:
+	//	}
+	//
+	//	response, err := api.GetData(ctx, blockId)
+	//	if err != nil {
+	//		if errors.Is(err, context.Canceled) {
+	//			return
+	//		}
+	//		r.log.Err(err).Uint64("height", *blockId.Number).Msg("get block request")
+	//		if r.fallbackAPI != nil {
+	//			r.log.Warn().Msg("trying fallback node...")
+	//			api = r.fallbackAPI
+	//		}
+	//		time.Sleep(time.Second)
+	//		continue
+	//	}
+	//	result.setBlock(response)
+	//	break
+	//}
 }

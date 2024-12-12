@@ -15,7 +15,7 @@ require (
 	github.com/rs/zerolog v1.30.0
 	github.com/shopspring/decimal v1.3.1
 	github.com/spf13/cobra v1.7.0
-	github.com/stretchr/testify v1.8.4
+	github.com/stretchr/testify v1.9.0
 	github.com/uptrace/bun v1.1.14
 	go.uber.org/mock v0.2.0
 	google.golang.org/grpc v1.58.3
@@ -31,6 +31,7 @@ require (
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/jackc/puddle/v2 v2.2.1 // indirect
 	github.com/moby/sys/user v0.1.0 // indirect
+	github.com/opus-domini/fast-shot v1.1.4 // indirect
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.45.0 // indirect
 	go.opentelemetry.io/otel/metric v1.19.0 // indirect
 	golang.org/x/sync v0.3.0 // indirect
