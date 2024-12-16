@@ -169,7 +169,10 @@ func (f *SqdBlocksFetcher) getNew(ctx context.Context) error {
 			startLevel += 1
 		}
 	}
-	f.indexer.receiver.GetSqdData(ctx, startLevel)
+	err = f.indexer.receiver.GetSqdData(ctx, startLevel, head)
+	if err != nil {
+		return errors.Wrap(err, "GetSqdData")
+	}
 
 	f.indexer.Log.Info().Uint64("height", f.indexer.state.Height()).Msg("synced")
 	return nil

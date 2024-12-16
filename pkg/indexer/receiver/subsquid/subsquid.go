@@ -35,10 +35,10 @@ func (s *Subsquid) GetWorkerUrl(ctx context.Context, startLevel uint64) (string,
 	return response.Body().AsString()
 }
 
-func (s *Subsquid) GetData(ctx context.Context, startLevel uint64) {
+func (s *Subsquid) GetData(ctx context.Context, startLevel uint64) ([]*SqdBlockResponse, error) {
 	workerUrl, err := s.GetWorkerUrl(ctx, startLevel)
 	if err != nil {
-		return
+		return nil, err
 	}
 
 	var workerClient = fastshot.NewClient(workerUrl).
@@ -50,15 +50,17 @@ func (s *Subsquid) GetData(ctx context.Context, startLevel uint64) {
 		Send()
 
 	if err != nil {
-		return
+		return nil, err
 	}
 
-	var result []SqdBlockResponse
+	var result []*SqdBlockResponse
 	err = response.Body().AsJSON(&result)
 	if err != nil {
-		return
+		return nil, err
 	}
-	fmt.Println("done")
+	fmt.Println("worker url ")
+	fmt.Print(workerUrl)
+	return result, err
 }
 
 func (s *Subsquid) GetHead(ctx context.Context) (uint64, error) {

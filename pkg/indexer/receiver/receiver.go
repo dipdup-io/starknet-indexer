@@ -62,6 +62,7 @@ type Receiver struct {
 	fallbackAPI  API
 	sqdAPI       *subsquid.Subsquid
 	result       chan Result
+	blockLevel   uint64
 	pool         *workerpool.Pool[uint64]
 	processing   map[uint64]struct{}
 	processingMx *sync.Mutex
@@ -316,29 +317,40 @@ func (r *Receiver) receiveStateUpdate(ctx context.Context, blockId starknetData.
 	}
 }
 
-func (r *Receiver) GetSqdData(ctx context.Context, startLevel uint64) {
-	r.sqdAPI.GetData(ctx, startLevel)
-	//for {
-	//	select {
-	//	case <-ctx.Done():
-	//		return
-	//	default:
-	//	}
-	//
-	//	response, err := api.GetData(ctx, blockId)
-	//	if err != nil {
-	//		if errors.Is(err, context.Canceled) {
-	//			return
-	//		}
-	//		r.log.Err(err).Uint64("height", *blockId.Number).Msg("get block request")
-	//		if r.fallbackAPI != nil {
-	//			r.log.Warn().Msg("trying fallback node...")
-	//			api = r.fallbackAPI
-	//		}
-	//		time.Sleep(time.Second)
-	//		continue
-	//	}
-	//	result.setBlock(response)
-	//	break
-	//}
+func (r *Receiver) GetSqdData(ctx context.Context, startLevel uint64, headLevel uint64) error {
+	r.setBlockLevel(startLevel)
+	var lastBlockLevel = startLevel
+
+	for lastBlockLevel < headLevel {
+		select {
+		case <-ctx.Done():
+			return nil
+		default:
+			sqdResponse, err := r.sqdAPI.GetData(ctx, r.getBlockLevel())
+			if err != nil {
+				if errors.Is(err, context.Canceled) {
+					return nil
+				}
+				r.log.Err(err).Uint64("start level", startLevel).Msg("get subsquid block request")
+				time.Sleep(time.Second)
+				continue
+			}
+
+			lastBlockLevel = sqdResponse[len(sqdResponse)-1].Header.Number
+			r.setBlockLevel(lastBlockLevel)
+			r.log.Info().
+				Uint64("last block height", lastBlockLevel).
+				Int("blocks", len(sqdResponse)).
+				Msg("received sqd data")
+		}
+	}
+	return nil
+}
+
+func (r *Receiver) getBlockLevel() uint64 {
+	return r.blockLevel
+}
+
+func (r *Receiver) setBlockLevel(level uint64) {
+	r.blockLevel = level
 }
