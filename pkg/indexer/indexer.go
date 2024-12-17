@@ -3,6 +3,7 @@ package indexer
 import (
 	"bytes"
 	"context"
+	"github.com/dipdup-io/starknet-indexer/pkg/indexer/sqd_receiver"
 	"runtime"
 	"sync"
 	"time"
@@ -53,129 +54,15 @@ type Indexer struct {
 	state           *state
 	idGenerator     *generator.IdGenerator
 	receiver        *receiver.Receiver
+	sqdReceiver     *sqd_receiver.Receiver
 	statusChecker   *statusChecker
 	rollbackManager models.Rollback
-
-	blocksFetcher IBlocksFetcher
 
 	rollback      chan struct{}
 	rollbackRerun chan struct{}
 	rollbackWait  *sync.WaitGroup
 
 	txWriteMutex *sync.Mutex
-}
-
-type IBlocksFetcher interface {
-	getNew(ctx context.Context) error
-}
-
-type BlocksFetcher struct {
-	indexer *Indexer
-}
-type SqdBlocksFetcher struct {
-	indexer *Indexer
-}
-
-func (f *BlocksFetcher) getNew(ctx context.Context) error {
-	head, err := f.indexer.receiver.Head(ctx)
-	if err != nil {
-		return err
-	}
-
-	if head < f.indexer.state.Height() {
-		log.Warn().
-			Uint64("indexer_height", f.indexer.state.Height()).
-			Uint64("node_height", head).
-			Msg("rollback detected by block height")
-		if err := f.indexer.makeRollback(ctx, head); err != nil {
-			return errors.Wrap(err, "makeRollback")
-		}
-	}
-
-	for head > f.indexer.state.Height() {
-		f.indexer.Log.Info().
-			Uint64("indexer_block", f.indexer.state.Height()).
-			Uint64("node_block", head).
-			Msg("syncing...")
-
-		startLevel := f.indexer.cfg.StartLevel
-		if startLevel < f.indexer.state.Height() {
-			startLevel = f.indexer.state.Height()
-			if f.indexer.state.Height() > 0 {
-				startLevel += 1
-			}
-		}
-
-		for height := startLevel; height <= head; height++ {
-			select {
-			case <-ctx.Done():
-				return nil
-			case <-f.indexer.rollback:
-				log.Info().Msg("stop receiving blocks")
-				return nil
-			default:
-				if f.indexer.checkQueue(ctx) {
-					return nil
-				}
-				f.indexer.receiver.AddTask(height)
-			}
-		}
-
-		time.Sleep(5 * time.Second)
-
-		for head, err = f.indexer.receiver.Head(ctx); err != nil; {
-			select {
-			case <-ctx.Done():
-				return nil
-			case <-f.indexer.rollback:
-				log.Info().Msg("stop receiving blocks")
-				return nil
-			default:
-				log.Err(err).Msg("receive head error")
-				return err
-			}
-		}
-	}
-
-	f.indexer.Log.Info().Uint64("height", f.indexer.state.Height()).Msg("synced")
-	return nil
-}
-
-func (f *SqdBlocksFetcher) getNew(ctx context.Context) error {
-	head, err := f.indexer.receiver.Head(ctx)
-	if err != nil {
-		return err
-	}
-
-	if head < f.indexer.state.Height() {
-		log.Warn().
-			Uint64("indexer_height", f.indexer.state.Height()).
-			Uint64("node_height", head).
-			Msg("rollback detected by block height")
-		if err := f.indexer.makeRollback(ctx, head); err != nil {
-			return errors.Wrap(err, "makeRollback")
-		}
-	}
-
-	f.indexer.Log.Info().
-		Uint64("indexer_block", f.indexer.state.Height()).
-		Uint64("node_block", head).
-		Msg("syncing...")
-
-	startLevel := f.indexer.cfg.StartLevel
-	if startLevel < f.indexer.state.Height() {
-		startLevel = f.indexer.state.Height()
-		if f.indexer.state.Height() > 0 {
-			startLevel += 1
-		}
-	}
-	err = f.indexer.receiver.GetSqdData(ctx, startLevel, head)
-	if err != nil {
-		return errors.Wrap(err, "GetSqdData")
-	}
-
-	f.indexer.Log.Info().Uint64("height", f.indexer.state.Height()).Msg("synced")
-	return nil
 }
 
 // New - creates new indexer entity
@@ -211,20 +98,26 @@ func New(
 
 	switch cfg.Datasource {
 	case "subsquid":
-		indexer.blocksFetcher = &SqdBlocksFetcher{
-			indexer: indexer,
+		sqdReceiver, err := sqd_receiver.New(
+			cfg,
+			datasource,
+			cfg.StartLevel,
+			cfg.ThreadsCount,
+			func() uint64 {
+				return indexer.state.Height()
+			},
+		)
+		if err != nil {
+			return nil, err
 		}
+		indexer.sqdReceiver = sqdReceiver
 	default:
-		indexer.blocksFetcher = &BlocksFetcher{
-			indexer: indexer,
+		rcvr, err := receiver.NewReceiver(cfg, datasource)
+		if err != nil {
+			return nil, err
 		}
+		indexer.receiver = rcvr
 	}
-
-	rcvr, err := receiver.NewReceiver(cfg, datasource)
-	if err != nil {
-		return nil, err
-	}
-	indexer.receiver = rcvr
 
 	indexer.CreateOutput(OutputBlocks)
 
@@ -261,12 +154,16 @@ func (indexer *Indexer) Start(ctx context.Context) {
 		return
 	}
 
-	indexer.receiver.Start(ctx)
+	switch indexer.cfg.Datasource {
+	case "subsquid":
+		indexer.sqdReceiver.Start(ctx)
+	default:
+		indexer.receiver.Start(ctx)
+		indexer.G.GoCtx(ctx, indexer.sync)
+		indexer.G.GoCtx(ctx, indexer.saveBlocks)
+	}
 
 	indexer.statusChecker.Start(ctx)
-
-	indexer.G.GoCtx(ctx, indexer.saveBlocks)
-	indexer.G.GoCtx(ctx, indexer.sync)
 }
 
 // Name -
@@ -328,8 +225,73 @@ func (indexer *Indexer) checkQueue(ctx context.Context) bool {
 	return false
 }
 
+func (indexer *Indexer) getNewBlocks(ctx context.Context) error {
+	head, err := indexer.receiver.Head(ctx)
+	if err != nil {
+		return err
+	}
+
+	if head < indexer.state.Height() {
+		log.Warn().
+			Uint64("indexer_height", indexer.state.Height()).
+			Uint64("node_height", head).
+			Msg("rollback detected by block height")
+		if err := indexer.makeRollback(ctx, head); err != nil {
+			return errors.Wrap(err, "makeRollback")
+		}
+	}
+
+	for head > indexer.state.Height() {
+		indexer.Log.Info().
+			Uint64("indexer_block", indexer.state.Height()).
+			Uint64("node_block", head).
+			Msg("syncing...")
+
+		startLevel := indexer.cfg.StartLevel
+		if startLevel < indexer.state.Height() {
+			startLevel = indexer.state.Height()
+			if indexer.state.Height() > 0 {
+				startLevel += 1
+			}
+		}
+
+		for height := startLevel; height <= head; height++ {
+			select {
+			case <-ctx.Done():
+				return nil
+			case <-indexer.rollback:
+				log.Info().Msg("stop receiving blocks")
+				return nil
+			default:
+				if indexer.checkQueue(ctx) {
+					return nil
+				}
+				indexer.receiver.AddTask(height)
+			}
+		}
+
+		time.Sleep(5 * time.Second)
+
+		for head, err = indexer.receiver.Head(ctx); err != nil; {
+			select {
+			case <-ctx.Done():
+				return nil
+			case <-indexer.rollback:
+				log.Info().Msg("stop receiving blocks")
+				return nil
+			default:
+				log.Err(err).Msg("receive head error")
+				return err
+			}
+		}
+	}
+
+	indexer.Log.Info().Uint64("height", indexer.state.Height()).Msg("synced")
+	return nil
+}
+
 func (indexer *Indexer) sync(ctx context.Context) {
-	if err := indexer.blocksFetcher.getNew(ctx); err != nil {
+	if err := indexer.getNewBlocks(ctx); err != nil {
 		indexer.Log.Err(err).Msg("getNewBlocks")
 	}
 
@@ -343,11 +305,11 @@ func (indexer *Indexer) sync(ctx context.Context) {
 		case <-ctx.Done():
 			return
 		case <-ticker.C:
-			if err := indexer.blocksFetcher.getNew(ctx); err != nil {
+			if err := indexer.getNewBlocks(ctx); err != nil {
 				indexer.Log.Err(err).Msg("getNewBlocks")
 			}
 		case <-indexer.rollbackRerun:
-			if err := indexer.blocksFetcher.getNew(ctx); err != nil {
+			if err := indexer.getNewBlocks(ctx); err != nil {
 				indexer.Log.Err(err).Msg("getNewBlocks")
 			}
 		}

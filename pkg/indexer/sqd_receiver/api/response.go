@@ -1,12 +1,12 @@
-package subsquid
+package api
 
 type SqdBlockResponse struct {
 	Header       BlockHeader     `json:"header"`
-	Transactions []Transaction   `json:"transactions"`
-	Traces       []TraceResponse `json:"traces"`
-	Messages     []Message       `json:"messages"`
-	StateUpdates []StateUpdate   `json:"state_updates"`
-	StorageDiffs []StorageDiff   `json:"storage_diffs"`
+	Transactions []Transaction   `json:"transactions,omitempty"`
+	Traces       []TraceResponse `json:"traces,omitempty"`
+	Messages     []Message       `json:"messages,omitempty"`
+	StateUpdates []StateUpdate   `json:"state_updates,omitempty"`
+	StorageDiffs []StorageDiff   `json:"storage_diffs,omitempty"`
 }
 
 type BlockHeader struct {

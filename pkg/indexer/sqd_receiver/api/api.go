@@ -1,4 +1,4 @@
-package subsquid
+package api
 
 import (
 	"context"
@@ -22,7 +22,7 @@ func NewSubsquid(cfg config.DataSource) *Subsquid {
 	}
 }
 
-func (s *Subsquid) GetWorkerUrl(ctx context.Context, startLevel uint64) (string, error) {
+func (s *Subsquid) GetWorkerUrl(_ context.Context, startLevel uint64) (string, error) {
 	path := fmt.Sprintf("/%d/worker", startLevel)
 	response, err := s.httpClient.
 		GET(path).
@@ -35,18 +35,13 @@ func (s *Subsquid) GetWorkerUrl(ctx context.Context, startLevel uint64) (string,
 	return response.Body().AsString()
 }
 
-func (s *Subsquid) GetData(ctx context.Context, startLevel uint64) ([]*SqdBlockResponse, error) {
-	workerUrl, err := s.GetWorkerUrl(ctx, startLevel)
-	if err != nil {
-		return nil, err
-	}
-
+func (s *Subsquid) GetBlocks(_ context.Context, from, to uint64, workerUrl string) ([]*SqdBlockResponse, error) {
 	var workerClient = fastshot.NewClient(workerUrl).
 		Build()
 
 	response, err := workerClient.POST("").
 		Header().AddContentType(mime.JSON).
-		Body().AsJSON(NewRequest(startLevel)).
+		Body().AsJSON(NewRequest(from, to)).
 		Send()
 
 	if err != nil {
@@ -58,12 +53,33 @@ func (s *Subsquid) GetData(ctx context.Context, startLevel uint64) ([]*SqdBlockR
 	if err != nil {
 		return nil, err
 	}
-	fmt.Println("worker url ")
-	fmt.Print(workerUrl)
+
 	return result, err
 }
 
-func (s *Subsquid) GetHead(ctx context.Context) (uint64, error) {
+func (s *Subsquid) GetBlankBlocks(_ context.Context, startLevel uint64, workerUrl string) ([]*SqdBlockResponse, error) {
+	var workerClient = fastshot.NewClient(workerUrl).
+		Build()
+
+	response, err := workerClient.POST("").
+		Header().AddContentType(mime.JSON).
+		Body().AsJSON(NewSimpleRequest(startLevel)).
+		Send()
+
+	if err != nil {
+		return nil, err
+	}
+
+	var result []*SqdBlockResponse
+	err = response.Body().AsJSON(&result)
+	if err != nil {
+		return nil, err
+	}
+
+	return result, err
+}
+
+func (s *Subsquid) GetHead(_ context.Context) (uint64, error) {
 	response, err := s.httpClient.
 		GET("/height").
 		Send()

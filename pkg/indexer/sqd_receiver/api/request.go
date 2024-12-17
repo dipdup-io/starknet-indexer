@@ -1,15 +1,16 @@
-package subsquid
+package api
 
 type Request struct {
 	Type             string                 `json:"type"`
 	FromBlock        uint64                 `json:"fromBlock"`
+	ToBlock          uint64                 `json:"toBlock,omitempty"`
 	IncludeAllBlocks bool                   `json:"includeAllBlocks"`
-	Fields           Fields                 `json:"fields"`
-	StateUpdates     []map[string]any       `json:"stateUpdates"`
-	StorageDiffs     []map[string]any       `json:"storageDiffs"`
-	Traces           []Trace                `json:"traces"`
-	Messages         []map[string]any       `json:"messages"`
-	Transactions     []TransactionWithTrace `json:"transactions"`
+	Fields           Fields                 `json:"fields,omitempty"`
+	StateUpdates     []map[string]any       `json:"stateUpdates,omitempty"`
+	StorageDiffs     []map[string]any       `json:"storageDiffs,omitempty"`
+	Traces           []Trace                `json:"traces,omitempty"`
+	Messages         []map[string]any       `json:"messages,omitempty"`
+	Transactions     []TransactionWithTrace `json:"transactions,omitempty"`
 }
 
 type Fields struct {
@@ -89,10 +90,11 @@ type TransactionWithTrace struct {
 	Events bool `json:"events"`
 }
 
-func NewRequest(level uint64) *Request {
+func NewRequest(fromLevel, toLevel uint64) *Request {
 	return &Request{
 		Type:             "starknet",
-		FromBlock:        level,
+		FromBlock:        fromLevel,
+		ToBlock:          toLevel,
 		IncludeAllBlocks: true,
 		Fields: Fields{
 			Block: BlockField{
@@ -162,5 +164,13 @@ func NewRequest(level uint64) *Request {
 		Transactions: []TransactionWithTrace{
 			{Traces: true, Events: true},
 		},
+	}
+}
+
+func NewSimpleRequest(level uint64) *Request {
+	return &Request{
+		Type:             "starknet",
+		FromBlock:        level,
+		IncludeAllBlocks: true,
 	}
 }

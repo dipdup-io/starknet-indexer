@@ -8,5 +8,5 @@ type Config struct {
 	Timeout            uint64 `yaml:"timeout"              validate:"omitempty"`
 	ClassInterfacesDir string `yaml:"class_interfaces_dir" validate:"required,dir"`
 	BridgedTokensFile  string `yaml:"bridged_tokens_file"  validate:"required,file"`
-	Datasource         string `yaml:"datasource"           validate:"required,oneof=sequencer node subsquid"`
+	Datasource         string `yaml:"datasource"           validate:"required,oneof=subsquid node api"`
 }
