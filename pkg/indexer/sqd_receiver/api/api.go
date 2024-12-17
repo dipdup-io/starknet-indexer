@@ -35,13 +35,13 @@ func (s *Subsquid) GetWorkerUrl(_ context.Context, startLevel uint64) (string, e
 	return response.Body().AsString()
 }
 
-func (s *Subsquid) GetBlocks(_ context.Context, from, to uint64, workerUrl string) ([]*SqdBlockResponse, error) {
+func (s *Subsquid) GetBlocks(_ context.Context, from uint64, workerUrl string) ([]*SqdBlockResponse, error) {
 	var workerClient = fastshot.NewClient(workerUrl).
 		Build()
 
 	response, err := workerClient.POST("").
 		Header().AddContentType(mime.JSON).
-		Body().AsJSON(NewRequest(from, to)).
+		Body().AsJSON(NewRequest(from)).
 		Send()
 
 	if err != nil {

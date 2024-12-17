@@ -11,11 +11,7 @@ func (r *Receiver) worker(ctx context.Context, blockRange BlocksToWorker) {
 		Str("URL", blockRange.WorkerURL).
 		Msg("worker handling sqd worker...")
 
-	// todo: move to config
-	var batchSize uint64 = 1000
 	from := blockRange.From
-	to := blockRange.From + batchSize
-
 	for {
 		select {
 		case <-ctx.Done():
@@ -25,7 +21,7 @@ func (r *Receiver) worker(ctx context.Context, blockRange BlocksToWorker) {
 		//	log.Info().Msg("stop receiving blocks")
 		//	return
 		default:
-			blocks, err := r.api.GetBlocks(ctx, from, to, blockRange.WorkerURL)
+			blocks, err := r.api.GetBlocks(ctx, from, blockRange.WorkerURL)
 			if err != nil {
 				if errors.Is(err, context.Canceled) {
 					return
@@ -38,12 +34,12 @@ func (r *Receiver) worker(ctx context.Context, blockRange BlocksToWorker) {
 			if lastBlock.Header.Number == blockRange.To {
 				break
 			}
-
 			from = lastBlock.Header.Number + 1
-			to = from + batchSize
-			if to > blockRange.To {
-				to = blockRange.To
+
+			for _, block := range blocks {
+				r.blocks <- block
 			}
+
 			r.log.Info().
 				Uint64("From", blocks[0].Header.Number).
 				Uint64("To", lastBlock.Header.Number).

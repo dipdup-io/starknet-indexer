@@ -24,11 +24,18 @@ type BlocksToWorker struct {
 
 type GetIndexerHeight func() uint64
 
+const (
+	OutputName = "blocks"
+	StopOutput = "stop"
+)
+
 type Receiver struct {
 	modules.BaseModule
 	api              *api.Subsquid
 	startLevel       uint64
+	level            uint64
 	threadsCount     int
+	blocks           chan *api.SqdBlockResponse
 	getIndexerHeight GetIndexerHeight
 	pool             *workerpool.Pool[BlocksToWorker]
 	processing       map[uint64]struct{}
@@ -37,6 +44,7 @@ type Receiver struct {
 	log              zerolog.Logger
 	timeout          time.Duration
 	wg               *sync.WaitGroup
+	mx               *sync.RWMutex
 }
 
 // New -
@@ -54,19 +62,24 @@ func New(cfg config.Config,
 	receiver := &Receiver{
 		BaseModule:       modules.New("subsquid receiver"),
 		startLevel:       startLevel,
-		threadsCount:     threadsCount,
 		getIndexerHeight: getIndexerHeight,
+		threadsCount:     threadsCount,
 		api:              api.NewSubsquid(dsCfg),
+		blocks:           make(chan *api.SqdBlockResponse, cfg.ThreadsCount*10),
 		processing:       make(map[uint64]struct{}),
 		processingMx:     new(sync.Mutex),
 		log:              log.With().Str("module", "subsquid_receiver").Logger(),
 		timeout:          time.Duration(cfg.Timeout) * time.Second,
 		wg:               new(sync.WaitGroup),
+		mx:               new(sync.RWMutex),
 	}
 
 	if receiver.timeout == 0 {
 		receiver.timeout = 10 * time.Second
 	}
+
+	receiver.CreateOutput(OutputName)
+	receiver.CreateOutput(StopOutput)
 
 	receiver.pool = workerpool.NewPool(receiver.worker, cfg.ThreadsCount)
 	return receiver, nil
@@ -75,9 +88,16 @@ func New(cfg config.Config,
 // Start -
 func (r *Receiver) Start(ctx context.Context) {
 	r.log.Info().Msg("starting subsquid receiver...")
-	r.pool.Start(ctx)
+	level := r.getIndexerHeight()
+	if r.startLevel > level {
+		level = r.startLevel
+	}
 
+	r.setLevel(level)
+
+	r.pool.Start(ctx)
 	r.G.GoCtx(ctx, r.sync)
+	r.G.GoCtx(ctx, r.sequencer)
 }
 
 // Close -
@@ -165,4 +185,18 @@ func (r *Receiver) GetSqdWorkerRanges(ctx context.Context, fromLevel, height uin
 	}
 
 	return result, nil
+}
+
+func (r *Receiver) Level() uint64 {
+	r.mx.RLock()
+	defer r.mx.RUnlock()
+
+	return r.level
+}
+
+func (r *Receiver) setLevel(level uint64) {
+	r.mx.Lock()
+	defer r.mx.Unlock()
+
+	r.level = level
 }
