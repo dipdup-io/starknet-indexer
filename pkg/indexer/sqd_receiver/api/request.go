@@ -3,6 +3,7 @@ package api
 type Request struct {
 	Type             string                 `json:"type"`
 	FromBlock        uint64                 `json:"fromBlock"`
+	ToBlock          uint64                 `json:"toBlock,omitempty"`
 	IncludeAllBlocks bool                   `json:"includeAllBlocks"`
 	Fields           Fields                 `json:"fields,omitempty"`
 	StateUpdates     []map[string]any       `json:"stateUpdates,omitempty"`
@@ -89,10 +90,11 @@ type TransactionWithTrace struct {
 	Events bool `json:"events"`
 }
 
-func NewRequest(fromLevel uint64) *Request {
+func NewRequest(fromLevel uint64, toLevel uint64) *Request {
 	return &Request{
 		Type:             "starknet",
 		FromBlock:        fromLevel,
+		ToBlock:          toLevel,
 		IncludeAllBlocks: true,
 		Fields: Fields{
 			Block: BlockField{

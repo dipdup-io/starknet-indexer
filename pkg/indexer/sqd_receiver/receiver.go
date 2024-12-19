@@ -119,7 +119,7 @@ func (r *Receiver) checkQueue(ctx context.Context) bool {
 		case <-ctx.Done():
 			return true
 		default:
-			time.Sleep(time.Millisecond * 100)
+			time.Sleep(time.Millisecond * 10)
 		}
 	}
 
@@ -185,6 +185,28 @@ func (r *Receiver) GetSqdWorkerRanges(ctx context.Context, fromLevel, height uin
 	}
 
 	return result, nil
+}
+
+func (r *Receiver) SplitWorkerRanger(workerRanges []BlocksToWorker) []BlocksToWorker {
+	var result []BlocksToWorker
+	batchSize := uint64(200)
+
+	for _, worker := range workerRanges {
+		for start := worker.From; start <= worker.To; start += batchSize {
+			end := start + batchSize - 1
+			if end > worker.To {
+				end = worker.To
+			}
+
+			result = append(result, BlocksToWorker{
+				From:      start,
+				To:        end,
+				WorkerURL: worker.WorkerURL,
+			})
+		}
+	}
+
+	return result
 }
 
 func (r *Receiver) Level() uint64 {

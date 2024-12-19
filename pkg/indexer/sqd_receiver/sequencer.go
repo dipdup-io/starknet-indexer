@@ -25,15 +25,7 @@ func (r *Receiver) sequencer(ctx context.Context) {
 			b, ok := orderedBlocks[currentBlock]
 			for ok {
 				r.MustOutput(OutputName).Push(b)
-				r.Log.Info().
-					Uint64("ID", b.Header.Number).
-					Msg("sended block")
-
 				r.setLevel(currentBlock)
-				r.Log.Debug().
-					Uint64("height", currentBlock).
-					Msg("put in order block")
-
 				delete(orderedBlocks, currentBlock)
 				currentBlock += 1
 

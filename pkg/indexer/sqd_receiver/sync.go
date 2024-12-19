@@ -16,11 +16,6 @@ func (r *Receiver) sync(ctx context.Context) {
 			Uint64("indexer_height", r.getIndexerHeight()).
 			Uint64("node_height", head).
 			Msg("rollback detected by block height")
-
-		// todo: makeRollback
-		//if err := f.indexer.makeRollback(ctx, head); err != nil {
-		//	return errors.Wrap(err, "makeRollback")
-		//}
 	}
 
 	r.log.Info().
@@ -41,14 +36,10 @@ func (r *Receiver) sync(ctx context.Context) {
 		return
 	}
 
-	for _, blockRange := range blocksToWorker {
+	for _, blockRange := range r.SplitWorkerRanger(blocksToWorker) {
 		select {
 		case <-ctx.Done():
 			return
-		// todo: f.indexer.rollback
-		//case <-f.indexer.rollback:
-		//	log.Info().Msg("stop receiving blocks")
-		//	return nil
 		default:
 			if r.checkQueue(ctx) {
 				return

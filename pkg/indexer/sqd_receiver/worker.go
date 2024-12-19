@@ -2,49 +2,39 @@ package sqd_receiver
 
 import (
 	"context"
-	"github.com/pkg/errors"
-	"time"
+	"github.com/rs/zerolog/log"
 )
 
 func (r *Receiver) worker(ctx context.Context, blockRange BlocksToWorker) {
-	r.log.Info().
-		Str("URL", blockRange.WorkerURL).
-		Msg("worker handling sqd worker...")
-
 	from := blockRange.From
-	for {
+	var allBlocksDownloaded bool
+
+	for !allBlocksDownloaded {
 		select {
 		case <-ctx.Done():
 			return
-			// todo: indexer.rollback
-		//case <-f.indexer.rollback:
-		//	log.Info().Msg("stop receiving blocks")
-		//	return
 		default:
-			blocks, err := r.api.GetBlocks(ctx, from, blockRange.WorkerURL)
+			blocks, err := r.api.GetBlocks(ctx, from, blockRange.To, blockRange.WorkerURL)
 			if err != nil {
-				if errors.Is(err, context.Canceled) {
-					return
-				}
-				time.Sleep(time.Second)
-				continue
+				log.Err(err).
+					Uint64("fromLevel", from).
+					Uint64("toLevel", blockRange.To).
+					Str("worker url", blockRange.WorkerURL).
+					Msg("loading blocks error")
+				return
 			}
 
 			lastBlock := blocks[len(blocks)-1]
-			if lastBlock.Header.Number == blockRange.To {
-				break
-			}
-			from = lastBlock.Header.Number + 1
 
 			for _, block := range blocks {
 				r.blocks <- block
 			}
 
-			r.log.Info().
-				Uint64("From", blocks[0].Header.Number).
-				Uint64("To", lastBlock.Header.Number).
-				Msg("worker received blocks")
+			if lastBlock.Header.Number == blockRange.To {
+				allBlocksDownloaded = true
+			} else {
+				from = lastBlock.Header.Number + 1
+			}
 		}
 	}
-
 }
