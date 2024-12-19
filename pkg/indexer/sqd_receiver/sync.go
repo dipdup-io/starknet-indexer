@@ -18,7 +18,7 @@ func (r *Receiver) sync(ctx context.Context) {
 			Msg("rollback detected by block height")
 	}
 
-	r.log.Info().
+	r.Log.Info().
 		Uint64("indexer_block", r.getIndexerHeight()).
 		Uint64("node_block", head).
 		Msg("syncing...")
@@ -48,6 +48,6 @@ func (r *Receiver) sync(ctx context.Context) {
 		}
 	}
 
-	r.log.Info().Uint64("height", r.getIndexerHeight()).Msg("synced")
+	r.Log.Info().Uint64("height", r.getIndexerHeight()).Msg("synced")
 	return
 }

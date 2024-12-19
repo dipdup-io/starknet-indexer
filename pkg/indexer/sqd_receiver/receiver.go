@@ -7,8 +7,6 @@ import (
 	"github.com/dipdup-io/workerpool"
 	"github.com/dipdup-net/indexer-sdk/pkg/modules"
 	"github.com/pkg/errors"
-	"github.com/rs/zerolog"
-	"github.com/rs/zerolog/log"
 	"sync"
 	"time"
 
@@ -41,7 +39,6 @@ type Receiver struct {
 	processing       map[uint64]struct{}
 	processingMx     *sync.Mutex
 	result           chan rcvr.Result
-	log              zerolog.Logger
 	timeout          time.Duration
 	wg               *sync.WaitGroup
 	mx               *sync.RWMutex
@@ -68,7 +65,6 @@ func New(cfg config.Config,
 		blocks:           make(chan *api.SqdBlockResponse, cfg.ThreadsCount*10),
 		processing:       make(map[uint64]struct{}),
 		processingMx:     new(sync.Mutex),
-		log:              log.With().Str("module", "subsquid_receiver").Logger(),
 		timeout:          time.Duration(cfg.Timeout) * time.Second,
 		wg:               new(sync.WaitGroup),
 		mx:               new(sync.RWMutex),
@@ -87,7 +83,7 @@ func New(cfg config.Config,
 
 // Start -
 func (r *Receiver) Start(ctx context.Context) {
-	r.log.Info().Msg("starting subsquid receiver...")
+	r.Log.Info().Msg("starting subsquid receiver...")
 	level := r.getIndexerHeight()
 	if r.startLevel > level {
 		level = r.startLevel
@@ -102,7 +98,7 @@ func (r *Receiver) Start(ctx context.Context) {
 
 // Close -
 func (r *Receiver) Close() error {
-	r.log.Info().Msg("closing...")
+	r.Log.Info().Msg("closing...")
 	r.wg.Wait()
 
 	if err := r.pool.Close(); err != nil {
@@ -145,7 +141,7 @@ func (r *Receiver) Results() <-chan rcvr.Result {
 }
 
 func (r *Receiver) GetSqdWorkerRanges(ctx context.Context, fromLevel, height uint64) ([]BlocksToWorker, error) {
-	r.log.Info().
+	r.Log.Info().
 		Uint64("head", height).
 		Msg("retrieving subsquid workers...")
 
@@ -178,7 +174,7 @@ func (r *Receiver) GetSqdWorkerRanges(ctx context.Context, fromLevel, height uin
 
 		currentLevel = lastBlock.Header.Number + 1
 
-		r.log.Info().
+		r.Log.Info().
 			Uint64("from level", workerSegment.From).
 			Uint64("to level", workerSegment.To).
 			Msg("retrieved worker for blocks")
