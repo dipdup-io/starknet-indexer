@@ -1,4 +1,4 @@
-package sqd_receiver
+package receiver
 
 import (
 	"context"

@@ -3,7 +3,7 @@ package indexer
 import (
 	"bytes"
 	"context"
-	"github.com/dipdup-io/starknet-indexer/pkg/indexer/sqd_receiver"
+	sqdRcvr "github.com/dipdup-io/starknet-indexer/pkg/indexer/subsquid/receiver"
 	"runtime"
 	"sync"
 	"time"
@@ -54,7 +54,7 @@ type Indexer struct {
 	state           *state
 	idGenerator     *generator.IdGenerator
 	receiver        *receiver.Receiver
-	sqdReceiver     *sqd_receiver.Receiver
+	sqdReceiver     *sqdRcvr.Receiver
 	statusChecker   *statusChecker
 	rollbackManager models.Rollback
 
@@ -98,7 +98,7 @@ func New(
 
 	switch cfg.Datasource {
 	case "subsquid":
-		sqdReceiver, err := sqd_receiver.New(
+		sqdReceiver, err := sqdRcvr.New(
 			cfg,
 			datasource,
 			cfg.StartLevel,

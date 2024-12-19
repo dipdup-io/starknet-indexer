@@ -1,8 +1,8 @@
-package sqd_receiver
+package receiver
 
 import (
 	"context"
-	"github.com/dipdup-io/starknet-indexer/pkg/indexer/sqd_receiver/api"
+	"github.com/dipdup-io/starknet-indexer/pkg/indexer/subsquid/receiver/api"
 )
 
 func (r *Receiver) sequencer(ctx context.Context) {

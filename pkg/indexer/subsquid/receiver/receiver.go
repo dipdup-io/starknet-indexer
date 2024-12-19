@@ -1,9 +1,9 @@
-package sqd_receiver
+package receiver
 
 import (
 	"context"
 	rcvr "github.com/dipdup-io/starknet-indexer/pkg/indexer/receiver"
-	"github.com/dipdup-io/starknet-indexer/pkg/indexer/sqd_receiver/api"
+	api2 "github.com/dipdup-io/starknet-indexer/pkg/indexer/subsquid/receiver/api"
 	"github.com/dipdup-io/workerpool"
 	"github.com/dipdup-net/indexer-sdk/pkg/modules"
 	"github.com/pkg/errors"
@@ -29,11 +29,11 @@ const (
 
 type Receiver struct {
 	modules.BaseModule
-	api              *api.Subsquid
+	api              *api2.Subsquid
 	startLevel       uint64
 	level            uint64
 	threadsCount     int
-	blocks           chan *api.SqdBlockResponse
+	blocks           chan *api2.SqdBlockResponse
 	getIndexerHeight GetIndexerHeight
 	pool             *workerpool.Pool[BlocksToWorker]
 	processing       map[uint64]struct{}
@@ -57,12 +57,12 @@ func New(cfg config.Config,
 	}
 
 	receiver := &Receiver{
-		BaseModule:       modules.New("subsquid receiver"),
+		BaseModule:       modules.New("sqd receiver"),
 		startLevel:       startLevel,
 		getIndexerHeight: getIndexerHeight,
 		threadsCount:     threadsCount,
-		api:              api.NewSubsquid(dsCfg),
-		blocks:           make(chan *api.SqdBlockResponse, cfg.ThreadsCount*10),
+		api:              api2.NewSubsquid(dsCfg),
+		blocks:           make(chan *api2.SqdBlockResponse, cfg.ThreadsCount*10),
 		processing:       make(map[uint64]struct{}),
 		processingMx:     new(sync.Mutex),
 		timeout:          time.Duration(cfg.Timeout) * time.Second,

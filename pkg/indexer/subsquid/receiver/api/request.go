@@ -24,7 +24,11 @@ type Fields struct {
 }
 
 type BlockField struct {
-	Timestamp bool `json:"timestamp"`
+	Timestamp        bool `json:"timestamp"`
+	ParentHash       bool `json:"parentHash,omitempty"`
+	Status           bool `json:"status,omitempty"`
+	NewRoot          bool `json:"newRoot,omitempty"`
+	SequencerAddress bool `json:"sequencerAddress,omitempty"`
 }
 
 type StateUpdateField struct {
@@ -98,7 +102,11 @@ func NewRequest(fromLevel uint64, toLevel uint64) *Request {
 		IncludeAllBlocks: true,
 		Fields: Fields{
 			Block: BlockField{
-				Timestamp: true,
+				ParentHash:       true,
+				Status:           true,
+				NewRoot:          true,
+				Timestamp:        true,
+				SequencerAddress: true,
 			},
 			StateUpdate: StateUpdateField{
 				NewRoot:                   true,
