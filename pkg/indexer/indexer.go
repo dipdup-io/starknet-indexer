@@ -3,6 +3,7 @@ package indexer
 import (
 	"bytes"
 	"context"
+	sqdAdapter "github.com/dipdup-io/starknet-indexer/pkg/indexer/subsquid/adapter"
 	sqdRcvr "github.com/dipdup-io/starknet-indexer/pkg/indexer/subsquid/receiver"
 	"runtime"
 	"sync"
@@ -55,6 +56,7 @@ type Indexer struct {
 	idGenerator     *generator.IdGenerator
 	receiver        *receiver.Receiver
 	sqdReceiver     *sqdRcvr.Receiver
+	adapter         *sqdAdapter.Adapter
 	statusChecker   *statusChecker
 	rollbackManager models.Rollback
 
@@ -111,6 +113,11 @@ func New(
 			return nil, err
 		}
 		indexer.sqdReceiver = sqdReceiver
+		indexer.adapter = sqdAdapter.New()
+
+		if err = indexer.adapter.AttachTo(indexer.sqdReceiver, sqdRcvr.OutputName, sqdAdapter.InputName); err != nil {
+			return nil, errors.Wrap(err, "while attaching adapter to receiver")
+		}
 	default:
 		rcvr, err := receiver.NewReceiver(cfg, datasource)
 		if err != nil {
@@ -157,6 +164,7 @@ func (indexer *Indexer) Start(ctx context.Context) {
 	switch indexer.cfg.Datasource {
 	case "subsquid":
 		indexer.sqdReceiver.Start(ctx)
+		indexer.adapter.Start(ctx)
 	default:
 		indexer.receiver.Start(ctx)
 		indexer.G.GoCtx(ctx, indexer.sync)

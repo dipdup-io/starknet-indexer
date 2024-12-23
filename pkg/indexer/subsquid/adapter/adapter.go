@@ -17,8 +17,8 @@ const (
 	StopOutput = "stop"
 )
 
-func New() Adapter {
-	m := Adapter{
+func New() *Adapter {
+	m := &Adapter{
 		BaseModule: modules.New("sqd adapter"),
 	}
 	m.CreateInputWithCapacity(InputName, 128)

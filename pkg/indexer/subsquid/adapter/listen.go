@@ -28,9 +28,13 @@ func (a *Adapter) listen(ctx context.Context) {
 				continue
 			}
 
-			a.Log.Info().
-				Uint64("level", block.Header.Number).
-				Msg("received block")
+			if err := a.convert(ctx, block); err != nil {
+				a.Log.Err(err).
+					Uint64("height", block.Header.Number).
+					Msg("convert error")
+				a.MustOutput(StopOutput).Push(struct{}{})
+				continue
+			}
 		}
 	}
 }

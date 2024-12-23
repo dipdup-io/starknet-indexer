@@ -10,21 +10,25 @@ type SqdBlockResponse struct {
 }
 
 type BlockHeader struct {
-	Number    uint64 `example:"321"                                                               json:"number"`
-	Hash      string `example:"0x44529f2c44d9113e0ba4e53cb6e84f425ec186cda27545827b5a72d5540bfdc" json:"hash"`
-	Timestamp int64  `example:"1641950335"                                                        json:"timestamp"`
+	Number           uint64 `example:"321"                                                               json:"number"`
+	Hash             string `example:"0x44529f2c44d9113e0ba4e53cb6e84f425ec186cda27545827b5a72d5540bfdc" json:"hash"`
+	ParentHash       string `example:"0x44529f2c44d9113e0ba4e53cb6e84f425ec186cda27545827b5a72d5540bfdc" json:"parentHash"`
+	Status           string `example:"ACCEPTED_ON_L1"                                                    json:"status"`
+	NewRoot          string `example:"0x44529f2c44d9113e0ba4e53cb6e84f425ec186cda27545827b5a72d5540bfdc" json:"newRoot"`
+	Timestamp        int64  `example:"1641950335"                                                        json:"timestamp"`
+	SequencerAddress string `example:"0x44529f2c44d9113e0ba4e53cb6e84f425ec186cda27545827b5a72d5540bfdc" json:"sequencerAddress"`
 }
 
 type Transaction struct {
-	TransactionIndex    uint      `example:"0" json:"transactionIndex"`
+	TransactionIndex    uint      `example:"0"                                                                 json:"transactionIndex"`
 	TransactionHash     string    `example:"0x794fae89c8c4b8f5f77a4996948d2547740f90e54bb4a5cc6119a7c70eca42c" json:"transactionHash"`
 	ContractAddress     *string   `example:"0x1cee8364383aea317eefc181dbd8732f1504fd4511aed58f32c369dd546da0d" json:"contractAddress"`
 	EntryPointSelector  *string   `example:"0x317eb442b72a9fae758d4fb26830ed0d9f31c8e7da4dbff4e8c59ea6a158e7f" json:"entryPointSelector"`
 	Calldata            *[]string `json:"calldata"`
-	MaxFee              *string   `example:"0x0" json:"maxFee"`
-	Type                string    `example:"INVOKE" json:"type"`
+	MaxFee              *string   `example:"0x0"                                                               json:"maxFee"`
+	Type                string    `example:"INVOKE"                                                            json:"type"`
 	SenderAddress       *string   `json:"senderAddress"`
-	Version             string    `example:"0x0" json:"version"`
+	Version             string    `example:"0x0"                                                               json:"version"`
 	Signature           *[]string `json:"signature"`
 	Nonce               *uint64   `json:"nonce"`
 	ClassHash           *string   `json:"classHash"`
