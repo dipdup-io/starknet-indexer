@@ -7,7 +7,7 @@ import (
 	"sort"
 )
 
-func ConvertTraces(block *api.SqdBlockResponse) []starknet.Trace {
+func ConvertTraces(block *api.SqdBlockResponse) ([]starknet.Trace, error) {
 	resultTraces := make([]starknet.Trace, 0)
 
 	for _, tx := range block.Transactions {
@@ -25,47 +25,12 @@ func ConvertTraces(block *api.SqdBlockResponse) []starknet.Trace {
 			continue
 		}
 
-		buildTree(txTraces)
-
-		addressDepth := 1
-		tracesByDepth := getTracesByDepth(txTraces, addressDepth)
-
-		for traceIdx, traceInDepth := range tracesByDepth {
-			calldata := make([]data.Felt, len(traceInDepth.Calldata))
-			for i, cd := range traceInDepth.Calldata {
-				calldata[i] = data.Felt(cd)
-			}
-
-			result := make([]data.Felt, len(traceInDepth.Result))
-			for i, r := range traceInDepth.Result {
-				result[i] = data.Felt(r)
-			}
-
-			invokation := starknet.Invocation{
-				CallerAddress:      data.Felt(traceInDepth.CallerAddress),
-				ContractAddress:    data.Felt(traceInDepth.ContractAddress),
-				Calldata:           calldata,
-				CallType:           parseString(traceInDepth.CallType),
-				ClassHash:          stringToFelt(traceInDepth.ClassHash),
-				Selector:           stringToFelt(traceInDepth.EntryPointSelector),
-				EntrypointType:     parseString(traceInDepth.EntryPointType), // todo: wait for sqd re-index
-				Result:             result,
-				ExecutionResources: starknet.ExecutionResources{},
-				InternalCalls:      nil,
-				Events:             nil, // todo: events
-				Messages:           nil, // todo: messages
-			}
-
-			if addressDepth == 1 {
-				resultTrace.FeeTransferInvocation = &invokation
-			} else {
-				invokation.InternalCalls[traceIdx].InternalCalls[0].InternalCalls[0] = invokation
-			}
-			addressDepth += 1
-		}
+		invocation := buildInvocationTree(txTraces)
+		resultTrace.FunctionInvocation = &invocation
+		resultTraces = append(resultTraces, resultTrace)
 	}
 
-	return resultTraces
+	return resultTraces, nil
 }
 
 func getTxTraces(traces []api.TraceResponse, txIndex uint) []api.TraceResponse {
@@ -78,28 +43,8 @@ func getTxTraces(traces []api.TraceResponse, txIndex uint) []api.TraceResponse {
 	return result
 }
 
-func getTxHashByIndex(txs []api.Transaction, txIndex uint) string {
-	for _, tx := range txs {
-		if tx.TransactionIndex == txIndex {
-			return tx.TransactionHash
-		}
-	}
-	return ""
-}
-
-func getTracesByDepth(traces []api.TraceResponse, depth int) []api.TraceResponse {
-	var result []api.TraceResponse
-	for _, trace := range traces {
-		if len(trace.TraceAddress) == depth {
-			result = append(result, trace)
-		}
-	}
-	return result
-}
-
-func buildTree(flatInvocations []api.TraceResponse) starknet.Invocation {
+func buildInvocationTree(flatInvocations []api.TraceResponse) starknet.Invocation {
 	var root starknet.Invocation
-	// TODO: don't sort?
 	sort.Slice(flatInvocations, func(i, j int) bool {
 		return compareTraceAddresses(flatInvocations[i].TraceAddress, flatInvocations[j].TraceAddress)
 	})
@@ -124,9 +69,9 @@ func buildTree(flatInvocations []api.TraceResponse) starknet.Invocation {
 			EntrypointType:     parseString(inv.EntryPointType),
 			Result:             result,
 			ExecutionResources: starknet.ExecutionResources{},
-			InternalCalls:      nil,
-			Events:             nil, // todo: events
-			Messages:           nil, // todo: messages
+			InternalCalls:      make([]starknet.Invocation, 0),
+			Events:             make([]data.Event, 0),
+			Messages:           make([]data.Message, 0),
 		}
 
 		level := len(inv.TraceAddress)
