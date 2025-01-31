@@ -4,6 +4,7 @@ import (
 	"github.com/dipdup-io/starknet-go-api/pkg/data"
 	starknet "github.com/dipdup-io/starknet-go-api/pkg/sequencer"
 	"github.com/dipdup-io/starknet-indexer/pkg/indexer/subsquid/receiver/api"
+	"golang.org/x/exp/slices"
 	"sort"
 )
 
@@ -24,8 +25,10 @@ func ConvertTraces(block *api.SqdBlockResponse) ([]starknet.Trace, error) {
 			resultTraces = append(resultTraces, resultTrace)
 			continue
 		}
+		txEvents := getTxEvents(block.Events, tx.TransactionIndex)
+		txMessages := getTxMessages(block.Messages, tx.TransactionIndex)
 
-		invocation := buildInvocationTree(txTraces)
+		invocation := buildInvocationTree(txTraces, txEvents, txMessages)
 		resultTrace.FunctionInvocation = &invocation
 		resultTraces = append(resultTraces, resultTrace)
 	}
@@ -43,7 +46,27 @@ func getTxTraces(traces []api.TraceResponse, txIndex uint) []api.TraceResponse {
 	return result
 }
 
-func buildInvocationTree(flatInvocations []api.TraceResponse) starknet.Invocation {
+func getTxEvents(events []api.Event, txIndex uint) []api.Event {
+	var result []api.Event
+	for _, trace := range events {
+		if trace.TransactionIndex == txIndex {
+			result = append(result, trace)
+		}
+	}
+	return result
+}
+
+func getTxMessages(messages []api.Message, txIndex uint) []api.Message {
+	var result []api.Message
+	for _, message := range messages {
+		if message.TransactionIndex == txIndex {
+			result = append(result, message)
+		}
+	}
+	return result
+}
+
+func buildInvocationTree(flatInvocations []api.TraceResponse, events []api.Event, messages []api.Message) starknet.Invocation {
 	var root starknet.Invocation
 	sort.Slice(flatInvocations, func(i, j int) bool {
 		return compareTraceAddresses(flatInvocations[i].TraceAddress, flatInvocations[j].TraceAddress)
@@ -59,6 +82,42 @@ func buildInvocationTree(flatInvocations []api.TraceResponse) starknet.Invocatio
 		for i, r := range inv.Result {
 			result[i] = data.Felt(r)
 		}
+		sqdEvents := filterEventsByAddress(events, inv.TraceAddress)
+		adaptedEvents := make([]data.Event, len(sqdEvents))
+		for i, event := range sqdEvents {
+			keys := make([]data.Felt, len(event.Keys))
+			eventData := make([]data.Felt, len(event.Data))
+			for j, key := range event.Keys {
+				keys[j] = data.Felt(key)
+			}
+			for j, dt := range event.Data {
+				eventData[j] = data.Felt(dt)
+			}
+			adaptedEvents[i] = data.Event{
+				Order:       uint64(event.EvenIndex),
+				FromAddress: "",
+				Keys:        keys,
+				Data:        eventData,
+			}
+		}
+
+		sqdMessages := filterMessagesByAddress(messages, inv.TraceAddress)
+		adaptedMessages := make([]data.Message, len(sqdMessages))
+		for i, message := range sqdMessages {
+			payload := make([]data.Felt, len(message.Payload))
+			for j, payloadItem := range message.Payload {
+				payload[j] = data.Felt(payloadItem)
+			}
+			adaptedMessages[i] = data.Message{
+				Order:       uint64(message.Order),
+				FromAddress: parseString(message.FromAddress),
+				ToAddress:   message.ToAddress,
+				Selector:    "",
+				Payload:     payload,
+				Nonce:       "",
+			}
+		}
+
 		current := starknet.Invocation{
 			CallerAddress:      data.Felt(inv.CallerAddress),
 			ContractAddress:    data.Felt(inv.ContractAddress),
@@ -70,8 +129,8 @@ func buildInvocationTree(flatInvocations []api.TraceResponse) starknet.Invocatio
 			Result:             result,
 			ExecutionResources: starknet.ExecutionResources{},
 			InternalCalls:      make([]starknet.Invocation, 0),
-			Events:             make([]data.Event, 0),
-			Messages:           make([]data.Message, 0),
+			Events:             adaptedEvents,
+			Messages:           adaptedMessages,
 		}
 
 		level := len(inv.TraceAddress)
@@ -108,4 +167,26 @@ func findParentByOrder(root *starknet.Invocation, traceAddress []int) *starknet.
 		current = &current.InternalCalls[len(current.InternalCalls)-1]
 	}
 	return current
+}
+
+func filterEventsByAddress(events []api.Event, targetAddress []int) []api.Event {
+	var result []api.Event
+
+	for _, event := range events {
+		if slices.Equal(event.TraceAddress, targetAddress) {
+			result = append(result, event)
+		}
+	}
+	return result
+}
+
+func filterMessagesByAddress(messages []api.Message, targetAddress []int) []api.Message {
+	var result []api.Message
+
+	for _, message := range messages {
+		if slices.Equal(message.TraceAddress, targetAddress) {
+			result = append(result, message)
+		}
+	}
+	return result
 }

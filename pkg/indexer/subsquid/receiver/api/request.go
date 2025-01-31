@@ -76,7 +76,9 @@ type TransactionField struct {
 }
 
 type EventField struct {
-	Keys bool `json:"keys"`
+	Keys         bool `json:"keys"`
+	Data         bool `json:"data"`
+	TraceAddress bool `json:"traceAddress"`
 }
 
 type MessageField struct {
@@ -149,7 +151,9 @@ func NewRequest(fromLevel uint64, toLevel uint64) *Request {
 				ConstructorCalldata: true,
 			},
 			Event: EventField{
-				Keys: true,
+				Keys:         true,
+				Data:         true,
+				TraceAddress: true,
 			},
 			Message: MessageField{
 				FromAddress: true,

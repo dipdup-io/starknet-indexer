@@ -4,6 +4,7 @@ type SqdBlockResponse struct {
 	Header       BlockHeader     `json:"header"`
 	Transactions []Transaction   `json:"transactions,omitempty"`
 	Traces       []TraceResponse `json:"traces,omitempty"`
+	Events       []Event         `json:"events,omitempty"`
 	Messages     []Message       `json:"messages,omitempty"`
 	StateUpdates []StateUpdate   `json:"state_updates,omitempty"`
 	StorageDiffs []StorageDiff   `json:"storage_diffs,omitempty"`
@@ -52,9 +53,17 @@ type TraceResponse struct {
 	Result             []string `json:"result"`
 }
 
+type Event struct {
+	TransactionIndex uint     `json:"transactionIndex"`
+	EvenIndex        uint     `json:"eventIndex"`
+	Keys             []string `json:"keys"`
+	Data             []string `json:"data"`
+	TraceAddress     []int    `json:"traceAddress"`
+}
+
 type Message struct {
-	TransactionIndex uint     `json:"transaction_index"`
-	TraceAddress     []int    `json:"trace_address"`
+	TransactionIndex uint     `json:"transactionIndex"`
+	TraceAddress     []int    `json:"traceAddress"`
 	Order            uint     `json:"order"`
 	FromAddress      *string  `json:"fromAddress"`
 	ToAddress        string   `json:"toAddress"`

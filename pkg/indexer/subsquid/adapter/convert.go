@@ -12,10 +12,6 @@ import (
 )
 
 func (a *Adapter) convert(_ context.Context, block *api.SqdBlockResponse) error {
-	fmt.Print("converting block number ")
-	fmt.Print(block.Header.Number)
-	fmt.Print("\n")
-
 	result := receiver.NewResult()
 	b := receiver.Block{
 		Height:           block.Header.Number,
