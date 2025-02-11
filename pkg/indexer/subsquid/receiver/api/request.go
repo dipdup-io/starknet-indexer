@@ -54,6 +54,7 @@ type TraceField struct {
 	ClassHash          bool `json:"classHash"`
 	EntryPointSelector bool `json:"entryPointSelector"`
 	EntryPointType     bool `json:"entryPointType"`
+	RevertReason       bool `json:"revertReason"`
 	Calldata           bool `json:"calldata"`
 	Result             bool `json:"result"`
 }
@@ -131,6 +132,7 @@ func NewRequest(fromLevel uint64, toLevel uint64) *Request {
 				ClassHash:          true,
 				EntryPointSelector: true,
 				EntryPointType:     true,
+				RevertReason:       true,
 				Calldata:           true,
 				Result:             true,
 			},

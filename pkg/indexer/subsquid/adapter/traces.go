@@ -9,7 +9,7 @@ import (
 )
 
 func ConvertTraces(block *api.SqdBlockResponse) ([]starknet.Trace, error) {
-	resultTraces := make([]starknet.Trace, 0)
+	traces := make([]starknet.Trace, 0)
 
 	for _, tx := range block.Transactions {
 		resultTrace := starknet.Trace{
@@ -22,18 +22,18 @@ func ConvertTraces(block *api.SqdBlockResponse) ([]starknet.Trace, error) {
 		}
 		txTraces := getTxTraces(block.Traces, tx.TransactionIndex)
 		if len(txTraces) == 0 {
-			resultTraces = append(resultTraces, resultTrace)
+			traces = append(traces, resultTrace)
 			continue
 		}
 		txEvents := getTxEvents(block.Events, tx.TransactionIndex)
 		txMessages := getTxMessages(block.Messages, tx.TransactionIndex)
 
-		invocation := buildInvocationTree(txTraces, txEvents, txMessages)
-		resultTrace.FunctionInvocation = &invocation
-		resultTraces = append(resultTraces, resultTrace)
+		trace := buildTraceTree(txTraces, txEvents, txMessages)
+		trace.TransactionHash = data.Felt(tx.TransactionHash)
+		traces = append(traces, trace)
 	}
 
-	return resultTraces, nil
+	return traces, nil
 }
 
 func getTxTraces(traces []api.TraceResponse, txIndex uint) []api.TraceResponse {
@@ -66,23 +66,32 @@ func getTxMessages(messages []api.Message, txIndex uint) []api.Message {
 	return result
 }
 
-func buildInvocationTree(flatInvocations []api.TraceResponse, events []api.Event, messages []api.Message) starknet.Invocation {
-	var root starknet.Invocation
+func buildTraceTree(flatInvocations []api.TraceResponse, events []api.Event, messages []api.Message) starknet.Trace {
+	resultTrace := starknet.Trace{
+		RevertedError:         "",
+		ValidateInvocation:    nil,
+		FunctionInvocation:    nil,
+		FeeTransferInvocation: nil,
+		Signature:             nil,
+		TransactionHash:       "",
+	}
+	mapAddressInvocationType := make(map[int]string)
 	sort.Slice(flatInvocations, func(i, j int) bool {
 		return compareTraceAddresses(flatInvocations[i].TraceAddress, flatInvocations[j].TraceAddress)
 	})
 
-	for _, inv := range flatInvocations {
-		calldata := make([]data.Felt, len(inv.Calldata))
-		for i, cd := range inv.Calldata {
+	for invokationIndex := range flatInvocations {
+		invocation := flatInvocations[invokationIndex]
+		calldata := make([]data.Felt, len(invocation.Calldata))
+		for i, cd := range invocation.Calldata {
 			calldata[i] = data.Felt(cd)
 		}
 
-		result := make([]data.Felt, len(inv.Result))
-		for i, r := range inv.Result {
+		result := make([]data.Felt, len(invocation.Result))
+		for i, r := range invocation.Result {
 			result[i] = data.Felt(r)
 		}
-		sqdEvents := filterEventsByAddress(events, inv.TraceAddress)
+		sqdEvents := filterEventsByAddress(events, invocation.TraceAddress)
 		adaptedEvents := make([]data.Event, len(sqdEvents))
 		for i, event := range sqdEvents {
 			keys := make([]data.Felt, len(event.Keys))
@@ -93,15 +102,22 @@ func buildInvocationTree(flatInvocations []api.TraceResponse, events []api.Event
 			for j, dt := range event.Data {
 				eventData[j] = data.Felt(dt)
 			}
+			eventOrder := uint64(event.EvenIndex)
+			switch invocation.InvocationType {
+			case "execute", "constructor":
+			default:
+				eventOrder = 0
+			}
+
 			adaptedEvents[i] = data.Event{
-				Order:       uint64(event.EvenIndex),
+				Order:       eventOrder,
 				FromAddress: "",
 				Keys:        keys,
 				Data:        eventData,
 			}
 		}
 
-		sqdMessages := filterMessagesByAddress(messages, inv.TraceAddress)
+		sqdMessages := filterMessagesByAddress(messages, invocation.TraceAddress)
 		adaptedMessages := make([]data.Message, len(sqdMessages))
 		for i, message := range sqdMessages {
 			payload := make([]data.Felt, len(message.Payload))
@@ -118,14 +134,14 @@ func buildInvocationTree(flatInvocations []api.TraceResponse, events []api.Event
 			}
 		}
 
-		current := starknet.Invocation{
-			CallerAddress:      data.Felt(inv.CallerAddress),
-			ContractAddress:    data.Felt(inv.ContractAddress),
+		currentInvocation := starknet.Invocation{
+			CallerAddress:      data.Felt(invocation.CallerAddress),
+			ContractAddress:    data.Felt(invocation.ContractAddress),
 			Calldata:           calldata,
-			CallType:           parseString(inv.CallType),
-			ClassHash:          stringToFelt(inv.ClassHash),
-			Selector:           stringToFelt(inv.EntryPointSelector),
-			EntrypointType:     parseString(inv.EntryPointType),
+			CallType:           parseString(invocation.CallType),
+			ClassHash:          stringToFelt(invocation.ClassHash),
+			Selector:           stringToFelt(invocation.EntryPointSelector),
+			EntrypointType:     parseString(invocation.EntryPointType),
 			Result:             result,
 			ExecutionResources: starknet.ExecutionResources{},
 			InternalCalls:      make([]starknet.Invocation, 0),
@@ -133,20 +149,33 @@ func buildInvocationTree(flatInvocations []api.TraceResponse, events []api.Event
 			Messages:           adaptedMessages,
 		}
 
-		level := len(inv.TraceAddress)
+		level := len(invocation.TraceAddress)
 		if level == 1 {
-			root = current
+			mapAddressInvocationType[invocation.TraceAddress[0]] = invocation.InvocationType
+			switch invocation.InvocationType {
+			case "fee_transfer":
+				resultTrace.FeeTransferInvocation = &currentInvocation
+			case "validate":
+				resultTrace.ValidateInvocation = &currentInvocation
+			case "execute", "constructor":
+				if invocation.RevertReason != nil {
+					resultTrace.RevertedError = parseString(invocation.RevertReason)
+				} else {
+					resultTrace.FunctionInvocation = &currentInvocation
+				}
+			}
+
 			continue
 		}
 
-		parentIndex := inv.TraceAddress[:level-1]
-		parent := findParentByOrder(&root, parentIndex)
+		parentIndex := invocation.TraceAddress[:level-1]
+		parent := findParentByOrder(&resultTrace, parentIndex, mapAddressInvocationType)
 		if parent != nil {
-			parent.InternalCalls = append(parent.InternalCalls, current)
+			parent.InternalCalls = append(parent.InternalCalls, currentInvocation)
 		}
 	}
 
-	return root
+	return resultTrace
 }
 
 func compareTraceAddresses(a, b []int) bool {
@@ -158,8 +187,25 @@ func compareTraceAddresses(a, b []int) bool {
 	return len(a) < len(b)
 }
 
-func findParentByOrder(root *starknet.Invocation, traceAddress []int) *starknet.Invocation {
-	current := root
+func findParentByOrder(trace *starknet.Trace, traceAddress []int, mapAddressInvocationType map[int]string) *starknet.Invocation {
+	var rootIndex int
+	if len(traceAddress) == 1 {
+		rootIndex = traceAddress[0]
+	} else {
+		rootIndex = traceAddress[:1][0]
+	}
+
+	var rootInvocation *starknet.Invocation
+	switch invocationType := mapAddressInvocationType[rootIndex]; invocationType {
+	case "fee_transfer":
+		rootInvocation = trace.FeeTransferInvocation
+	case "validate":
+		rootInvocation = trace.ValidateInvocation
+	case "execute", "constructor":
+		rootInvocation = trace.FunctionInvocation
+	}
+
+	current := rootInvocation
 	for i := 1; i < len(traceAddress); i++ {
 		if current == nil || len(current.InternalCalls) == 0 {
 			return nil

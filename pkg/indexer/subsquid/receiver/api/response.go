@@ -49,6 +49,7 @@ type TraceResponse struct {
 	ClassHash          *string  `json:"classHash"`
 	EntryPointSelector *string  `json:"entryPointSelector"`
 	EntryPointType     *string  `json:"entryPointType"`
+	RevertReason       *string  `json:"revertReason"`
 	Calldata           []string `json:"calldata"`
 	Result             []string `json:"result"`
 }
