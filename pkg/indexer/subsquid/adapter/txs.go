@@ -13,7 +13,7 @@ func ConvertTransactions(block *api.SqdBlockResponse) []receiver.Transaction {
 		var body any
 		switch tx.Type {
 		case data.TransactionTypeInvoke:
-			body = data.Invoke{
+			body = &data.Invoke{
 				MaxFee:             stringToFelt(tx.MaxFee),
 				Nonce:              uint64ToFelt(tx.Nonce),
 				ContractAddress:    stringToFelt(tx.ContractAddress),
@@ -23,7 +23,7 @@ func ConvertTransactions(block *api.SqdBlockResponse) []receiver.Transaction {
 				Calldata:           parseStringSlice(tx.Calldata),
 			}
 		case data.TransactionTypeDeclare:
-			body = data.Declare{
+			body = &data.Declare{
 				MaxFee:            stringToFelt(tx.MaxFee),
 				Nonce:             uint64ToFelt(tx.Nonce),
 				SenderAddress:     stringToFelt(tx.SenderAddress),
@@ -33,14 +33,14 @@ func ConvertTransactions(block *api.SqdBlockResponse) []receiver.Transaction {
 				CompiledClassHash: stringToFelt(tx.CompiledClassHash),
 			}
 		case data.TransactionTypeDeploy:
-			body = data.Deploy{
+			body = &data.Deploy{
 				ContractAddressSalt: parseString(tx.ContractAddressSalt),
 				ConstructorCalldata: parseStringSlice(tx.Calldata),
 				ClassHash:           stringToFelt(tx.ClassHash),
 				ContractAddress:     block.GetDeployContractAddress(tx.TransactionIndex),
 			}
 		case data.TransactionTypeDeployAccount:
-			body = data.DeployAccount{
+			body = &data.DeployAccount{
 				MaxFee:              stringToFelt(tx.MaxFee),
 				Nonce:               uint64ToFelt(tx.Nonce),
 				ContractAddress:     stringToFelt(tx.ContractAddress),
@@ -50,7 +50,7 @@ func ConvertTransactions(block *api.SqdBlockResponse) []receiver.Transaction {
 				Signature:           parseStringSlice(tx.Signature),
 			}
 		case data.TransactionTypeL1Handler:
-			body = data.L1Handler{
+			body = &data.L1Handler{
 				Nonce:              uint64ToFelt(tx.Nonce),
 				ContractAddress:    stringToFelt(tx.ContractAddress),
 				EntrypointSelector: stringToFelt(tx.EntryPointSelector),

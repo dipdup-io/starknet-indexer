@@ -72,13 +72,28 @@ type Message struct {
 }
 
 type StateUpdate struct {
-	NewRoot           string             `json:"newRoot"`
-	OldRoot           string             `json:"oldRoot"`
-	DeprecatedClasses []any              `json:"deprecatedDeclaredClasses"`
-	DeclaredClasses   []any              `json:"declaredClasses"`
-	DeployedContracts []DeployedContract `json:"deployedContracts"`
-	ReplacedClasses   []any              `json:"replacedClasses"`
-	Nonces            []any              `json:"nonces"`
+	NewRoot                   string             `json:"newRoot"`
+	OldRoot                   string             `json:"oldRoot"`
+	DeprecatedDeclaredClasses []string           `json:"deprecatedDeclaredClasses"`
+	DeclaredClasses           []DeclaredClass    `json:"declaredClasses"`
+	DeployedContracts         []DeployedContract `json:"deployedContracts"`
+	ReplacedClasses           []ReplacedClass    `json:"replacedClasses"`
+	Nonces                    []Nonce            `json:"nonces"`
+}
+
+type DeclaredClass struct {
+	ClassHash         string `json:"class_hash"`
+	CompiledClassHash string `json:"compiled_class_hash"`
+}
+
+type Nonce struct {
+	ContractAddress string `json:"contract_address"`
+	Nonce           string `json:"nonce"`
+}
+
+type ReplacedClass struct {
+	ContractAddress string `json:"contract_address"`
+	ClassHash       string `json:"class_hash"`
 }
 
 type DeployedContract struct {

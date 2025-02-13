@@ -27,6 +27,8 @@ func (a *Adapter) convert(_ context.Context, block *api.SqdBlockResponse) error 
 	result.Block = b
 
 	ConvertTraces(block)
+	ConvertStateUpdates(block)
+
 	return nil
 }
 
