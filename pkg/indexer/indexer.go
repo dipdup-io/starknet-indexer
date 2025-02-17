@@ -162,6 +162,8 @@ func (indexer *Indexer) Start(ctx context.Context) {
 	}
 
 	indexer.receiver.Start(ctx)
+	indexer.statusChecker.Start(ctx)
+
 	switch indexer.cfg.Datasource {
 	case "subsquid":
 		indexer.adapter.Start(ctx)
@@ -170,7 +172,6 @@ func (indexer *Indexer) Start(ctx context.Context) {
 	}
 
 	indexer.G.GoCtx(ctx, indexer.saveBlocks)
-	indexer.statusChecker.Start(ctx)
 }
 
 // Name -
