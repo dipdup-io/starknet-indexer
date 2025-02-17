@@ -7,8 +7,10 @@ import (
 
 func (r *Receiver) sequencer(ctx context.Context) {
 	orderedBlocks := map[uint64]*api.SqdBlockResponse{}
-	l := r.Level()
-	currentBlock := l + 1
+	currentBlock := r.Level()
+	if currentBlock != 0 {
+		currentBlock += 1
+	}
 
 	for {
 		select {

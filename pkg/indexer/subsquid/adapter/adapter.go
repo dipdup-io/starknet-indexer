@@ -2,11 +2,13 @@ package adapter
 
 import (
 	"context"
+	"github.com/dipdup-io/starknet-indexer/pkg/indexer/receiver"
 	"github.com/dipdup-net/indexer-sdk/pkg/modules"
 )
 
 type Adapter struct {
 	modules.BaseModule
+	results chan receiver.Result
 }
 
 var _ modules.Module = (*Adapter)(nil)
@@ -17,9 +19,10 @@ const (
 	StopOutput = "stop"
 )
 
-func New() *Adapter {
+func New(resultsChannel chan receiver.Result) *Adapter {
 	m := &Adapter{
 		BaseModule: modules.New("sqd adapter"),
+		results:    resultsChannel,
 	}
 	m.CreateInputWithCapacity(InputName, 128)
 	m.CreateOutput(OutputName)

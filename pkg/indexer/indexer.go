@@ -54,8 +54,7 @@ type Indexer struct {
 
 	state           *state
 	idGenerator     *generator.IdGenerator
-	receiver        *receiver.Receiver
-	sqdReceiver     *sqdRcvr.Receiver
+	receiver        receiver.IReceiver
 	adapter         *sqdAdapter.Adapter
 	statusChecker   *statusChecker
 	rollbackManager models.Rollback
@@ -112,10 +111,11 @@ func New(
 		if err != nil {
 			return nil, err
 		}
-		indexer.sqdReceiver = sqdReceiver
-		indexer.adapter = sqdAdapter.New()
 
-		if err = indexer.adapter.AttachTo(indexer.sqdReceiver, sqdRcvr.OutputName, sqdAdapter.InputName); err != nil {
+		indexer.receiver = sqdReceiver
+		indexer.adapter = sqdAdapter.New(sqdReceiver.GetResults())
+
+		if err = indexer.adapter.AttachTo(sqdReceiver, sqdRcvr.OutputName, sqdAdapter.InputName); err != nil {
 			return nil, errors.Wrap(err, "while attaching adapter to receiver")
 		}
 	default:
@@ -161,16 +161,15 @@ func (indexer *Indexer) Start(ctx context.Context) {
 		return
 	}
 
+	indexer.receiver.Start(ctx)
 	switch indexer.cfg.Datasource {
 	case "subsquid":
-		indexer.sqdReceiver.Start(ctx)
 		indexer.adapter.Start(ctx)
 	default:
-		indexer.receiver.Start(ctx)
 		indexer.G.GoCtx(ctx, indexer.sync)
-		indexer.G.GoCtx(ctx, indexer.saveBlocks)
 	}
 
+	indexer.G.GoCtx(ctx, indexer.saveBlocks)
 	indexer.statusChecker.Start(ctx)
 }
 
@@ -191,10 +190,10 @@ func (indexer *Indexer) Close() error {
 		return err
 	}
 
-	if err := indexer.receiver.Close(); err != nil {
+	err := indexer.receiver.Close()
+	if err != nil {
 		return err
 	}
-
 	close(indexer.rollback)
 	close(indexer.rollbackRerun)
 	return nil
@@ -234,7 +233,11 @@ func (indexer *Indexer) checkQueue(ctx context.Context) bool {
 }
 
 func (indexer *Indexer) getNewBlocks(ctx context.Context) error {
-	head, err := indexer.receiver.Head(ctx)
+	commonReceiver, ok := indexer.receiver.(*receiver.Receiver)
+	if !ok {
+		return errors.Errorf("incorrect receiver type")
+	}
+	head, err := commonReceiver.Head(ctx)
 	if err != nil {
 		return err
 	}
@@ -274,7 +277,7 @@ func (indexer *Indexer) getNewBlocks(ctx context.Context) error {
 				if indexer.checkQueue(ctx) {
 					return nil
 				}
-				indexer.receiver.AddTask(height)
+				commonReceiver.AddTask(height)
 			}
 		}
 
@@ -413,7 +416,11 @@ func (indexer *Indexer) makeRollback(ctx context.Context, height uint64) error {
 		delete(indexer.queue, key)
 	}
 
-	indexer.receiver.Clear()
+	commonReceiver, ok := indexer.receiver.(*receiver.Receiver)
+	if !ok {
+		return errors.Errorf("incorrect receiver type")
+	}
+	commonReceiver.Clear()
 
 	if err := indexer.Rollback(ctx, height-1); err != nil {
 		return errors.Wrap(err, "rollback")

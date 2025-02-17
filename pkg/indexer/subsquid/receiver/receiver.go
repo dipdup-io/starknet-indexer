@@ -2,8 +2,10 @@ package receiver
 
 import (
 	"context"
+	starknetData "github.com/dipdup-io/starknet-go-api/pkg/data"
+	"github.com/dipdup-io/starknet-indexer/internal/storage"
 	rcvr "github.com/dipdup-io/starknet-indexer/pkg/indexer/receiver"
-	api2 "github.com/dipdup-io/starknet-indexer/pkg/indexer/subsquid/receiver/api"
+	"github.com/dipdup-io/starknet-indexer/pkg/indexer/subsquid/receiver/api"
 	"github.com/dipdup-io/workerpool"
 	"github.com/dipdup-net/indexer-sdk/pkg/modules"
 	"github.com/pkg/errors"
@@ -29,11 +31,12 @@ const (
 
 type Receiver struct {
 	modules.BaseModule
-	api              *api2.Subsquid
+	api              *api.Subsquid
+	nodeApi          rcvr.API
 	startLevel       uint64
 	level            uint64
 	threadsCount     int
-	blocks           chan *api2.SqdBlockResponse
+	blocks           chan *api.SqdBlockResponse
 	getIndexerHeight GetIndexerHeight
 	pool             *workerpool.Pool[BlocksToWorker]
 	processing       map[uint64]struct{}
@@ -56,13 +59,20 @@ func New(cfg config.Config,
 		return nil, errors.Errorf("unknown datasource name: %s", cfg.Datasource)
 	}
 
+	nodeCfg, ok := ds["node"]
+	if !ok {
+		return nil, errors.Errorf("can't access node datasource: %s", cfg.Datasource)
+	}
+
 	receiver := &Receiver{
 		BaseModule:       modules.New("sqd receiver"),
 		startLevel:       startLevel,
 		getIndexerHeight: getIndexerHeight,
 		threadsCount:     threadsCount,
-		api:              api2.NewSubsquid(dsCfg),
-		blocks:           make(chan *api2.SqdBlockResponse, cfg.ThreadsCount*10),
+		api:              api.NewSubsquid(dsCfg),
+		nodeApi:          rcvr.NewNode(nodeCfg),
+		blocks:           make(chan *api.SqdBlockResponse, cfg.ThreadsCount*10),
+		result:           make(chan rcvr.Result, cfg.ThreadsCount*2),
 		processing:       make(map[uint64]struct{}),
 		processingMx:     new(sync.Mutex),
 		timeout:          time.Duration(cfg.Timeout) * time.Second,
@@ -122,6 +132,11 @@ func (r *Receiver) checkQueue(ctx context.Context) bool {
 	return false
 }
 
+// QueueSize -
+func (r *Receiver) QueueSize() int {
+	return r.pool.QueueSize()
+}
+
 // AddTask -
 func (r *Receiver) AddTask(blocksRange BlocksToWorker) {
 	r.processingMx.Lock()
@@ -138,6 +153,35 @@ func (r *Receiver) AddTask(blocksRange BlocksToWorker) {
 // Results -
 func (r *Receiver) Results() <-chan rcvr.Result {
 	return r.result
+}
+
+// GetResults -
+func (r *Receiver) GetResults() chan rcvr.Result {
+	return r.result
+}
+
+// GetClass -
+func (r *Receiver) GetClass(ctx context.Context, hash string) (starknetData.Class, error) {
+	requestCtx, cancel := context.WithTimeout(ctx, r.timeout)
+	defer cancel()
+
+	return r.nodeApi.GetClass(requestCtx, hash)
+}
+
+// Head -
+func (r *Receiver) Head(ctx context.Context) (uint64, error) {
+	requestCtx, cancel := context.WithTimeout(ctx, r.timeout)
+	defer cancel()
+
+	return r.api.GetHead(requestCtx)
+}
+
+// GetBlockStatus -
+func (r *Receiver) GetBlockStatus(ctx context.Context, height uint64) (storage.Status, error) {
+	requestCtx, cancel := context.WithTimeout(ctx, r.timeout)
+	defer cancel()
+
+	return r.nodeApi.GetBlockStatus(requestCtx, height)
 }
 
 func (r *Receiver) GetSqdWorkerRanges(ctx context.Context, fromLevel, height uint64) ([]BlocksToWorker, error) {
@@ -168,7 +212,7 @@ func (r *Receiver) GetSqdWorkerRanges(ctx context.Context, fromLevel, height uin
 		}
 		result = append(result, workerSegment)
 
-		if lastBlock.Header.Number == height {
+		if lastBlock.Header.Number >= height {
 			break
 		}
 

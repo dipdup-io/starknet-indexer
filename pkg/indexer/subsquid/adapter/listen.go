@@ -28,13 +28,15 @@ func (a *Adapter) listen(ctx context.Context) {
 				continue
 			}
 
-			if err := a.convert(ctx, block); err != nil {
+			results, err := a.convert(ctx, block)
+			if err != nil {
 				a.Log.Err(err).
 					Uint64("height", block.Header.Number).
 					Msg("convert error")
 				a.MustOutput(StopOutput).Push(struct{}{})
 				continue
 			}
+			a.results <- results
 		}
 	}
 }

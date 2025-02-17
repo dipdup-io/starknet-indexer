@@ -11,7 +11,7 @@ import (
 	"time"
 )
 
-func (a *Adapter) convert(_ context.Context, block *api.SqdBlockResponse) error {
+func (a *Adapter) convert(_ context.Context, block *api.SqdBlockResponse) (receiver.Result, error) {
 	result := receiver.NewResult()
 	b := receiver.Block{
 		Height:           block.Header.Number,
@@ -24,12 +24,21 @@ func (a *Adapter) convert(_ context.Context, block *api.SqdBlockResponse) error 
 		Transactions:     ConvertTransactions(block),
 		Receipts:         nil,
 	}
-	result.Block = b
+	result.SetBlock(b)
 
-	ConvertTraces(block)
-	ConvertStateUpdates(block)
+	traces, err := ConvertTraces(block)
+	if err != nil {
+		return result, err
+	}
+	result.SetTraces(traces)
 
-	return nil
+	stateUpdates, err := ConvertStateUpdates(block)
+	if err != nil {
+		return result, err
+	}
+	result.SetStateUpdates(stateUpdates)
+
+	return result, nil
 }
 
 func uint64ToFelt(value *uint64) data.Felt {

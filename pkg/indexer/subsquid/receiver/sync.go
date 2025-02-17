@@ -6,7 +6,7 @@ import (
 )
 
 func (r *Receiver) sync(ctx context.Context) {
-	head, err := r.api.GetHead(ctx)
+	head, err := r.Head(ctx)
 	if err != nil {
 		return
 	}
