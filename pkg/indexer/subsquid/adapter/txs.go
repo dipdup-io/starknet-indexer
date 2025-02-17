@@ -9,7 +9,8 @@ import (
 func ConvertTransactions(block *api.SqdBlockResponse) []receiver.Transaction {
 	txs := block.Transactions
 	resultTxs := make([]receiver.Transaction, len(txs))
-	for i, tx := range txs {
+	for i := range txs {
+		tx := txs[i]
 		var body any
 		switch tx.Type {
 		case data.TransactionTypeInvoke:

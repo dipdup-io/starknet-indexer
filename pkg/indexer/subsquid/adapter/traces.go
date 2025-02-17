@@ -11,7 +11,8 @@ import (
 func ConvertTraces(block *api.SqdBlockResponse) ([]starknet.Trace, error) {
 	traces := make([]starknet.Trace, 0)
 
-	for _, tx := range block.Transactions {
+	for i := range block.Transactions {
+		tx := block.Transactions[i]
 		resultTrace := starknet.Trace{
 			RevertedError:         "",
 			ValidateInvocation:    nil,
@@ -38,7 +39,8 @@ func ConvertTraces(block *api.SqdBlockResponse) ([]starknet.Trace, error) {
 
 func getTxTraces(traces []api.TraceResponse, txIndex uint) []api.TraceResponse {
 	var result []api.TraceResponse
-	for _, trace := range traces {
+	for i := range traces {
+		trace := traces[i]
 		if trace.TransactionIndex == txIndex {
 			result = append(result, trace)
 		}
@@ -48,9 +50,10 @@ func getTxTraces(traces []api.TraceResponse, txIndex uint) []api.TraceResponse {
 
 func getTxEvents(events []api.Event, txIndex uint) []api.Event {
 	var result []api.Event
-	for _, trace := range events {
-		if trace.TransactionIndex == txIndex {
-			result = append(result, trace)
+	for i := range events {
+		event := events[i]
+		if event.TransactionIndex == txIndex {
+			result = append(result, event)
 		}
 	}
 	return result
@@ -58,7 +61,8 @@ func getTxEvents(events []api.Event, txIndex uint) []api.Event {
 
 func getTxMessages(messages []api.Message, txIndex uint) []api.Message {
 	var result []api.Message
-	for _, message := range messages {
+	for i := range messages {
+		message := messages[i]
 		if message.TransactionIndex == txIndex {
 			result = append(result, message)
 		}
@@ -88,12 +92,13 @@ func buildTraceTree(flatInvocations []api.TraceResponse, events []api.Event, mes
 		}
 
 		result := make([]data.Felt, len(invocation.Result))
-		for i, r := range invocation.Result {
-			result[i] = data.Felt(r)
+		for i := range invocation.Result {
+			result[i] = data.Felt(invocation.Result[i])
 		}
 		sqdEvents := filterEventsByAddress(events, invocation.TraceAddress)
 		adaptedEvents := make([]data.Event, len(sqdEvents))
-		for i, event := range sqdEvents {
+		for i := range sqdEvents {
+			event := sqdEvents[i]
 			keys := make([]data.Felt, len(event.Keys))
 			eventData := make([]data.Felt, len(event.Data))
 			for j, key := range event.Keys {
@@ -119,7 +124,8 @@ func buildTraceTree(flatInvocations []api.TraceResponse, events []api.Event, mes
 
 		sqdMessages := filterMessagesByAddress(messages, invocation.TraceAddress)
 		adaptedMessages := make([]data.Message, len(sqdMessages))
-		for i, message := range sqdMessages {
+		for i := range sqdMessages {
+			message := sqdMessages[i]
 			payload := make([]data.Felt, len(message.Payload))
 			for j, payloadItem := range message.Payload {
 				payload[j] = data.Felt(payloadItem)

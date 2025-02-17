@@ -191,8 +191,7 @@ func (indexer *Indexer) Close() error {
 		return err
 	}
 
-	err := indexer.receiver.Close()
-	if err != nil {
+	if err := indexer.receiver.Close(); err != nil {
 		return err
 	}
 	close(indexer.rollback)
@@ -339,7 +338,7 @@ func (indexer *Indexer) saveBlocks(ctx context.Context) {
 		case result := <-indexer.receiver.Results():
 			indexer.queue[result.Block.Height] = result
 
-			if indexer.state.Height() == 0 && !zeroBlock {
+			if indexer.state.Height() == 0 && !zeroBlock && indexer.cfg.StartLevel == 0 {
 				if data, ok := indexer.queue[0]; ok {
 					if err := indexer.handleBlock(ctx, data); err != nil {
 						indexer.Log.Err(err).Msg("handle block")
