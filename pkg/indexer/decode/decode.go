@@ -56,23 +56,46 @@ func CalldataForL1Handler(contractAbi abi.Abi, selector []byte, calldata []strin
 
 // Event -
 func Event(contractAbi abi.Abi, keys []string, data []string) (map[string]any, string, error) {
-	var values []string
-	switch len(keys) {
-	case 0:
+	if len(keys) == 0 {
 		return nil, "", nil
-	case 1:
-		values = make([]string, len(data))
-		copy(values, data)
-	default:
-		values = make([]string, len(keys[1:]))
-		copy(values, keys[1:])
-		values = append(values, data...)
 	}
 	selector := encoding.EncodeHex(encoding.MustDecodeHex(keys[0]))
 	event, ok := contractAbi.GetEventBySelector(selector)
 	if !ok {
 		return nil, "", nil
 	}
+	var values []string
+	switch len(keys) {
+	case 1:
+		values = make([]string, len(data))
+		copy(values, data)
+	default:
+		if len(event.Members) == 0 {
+			values = make([]string, len(keys[1:]))
+			copy(values, keys[1:])
+			values = append(values, data...)
+		} else {
+			var dataIdx int
+			var keysIdx = 1
+			for i := range event.Members {
+				switch event.Members[i].Kind {
+				case "data":
+					if len(data) > dataIdx {
+						values = append(values, data[dataIdx])
+						dataIdx++
+					}
+				case "key":
+					if len(keys) > keysIdx {
+						values = append(values, keys[keysIdx])
+						keysIdx++
+					}
+				default:
+					return nil, "", errors.Errorf("unknown event member kind: %s", event.Members[i].Kind)
+				}
+			}
+		}
+	}
+
 	parsed, err := abi.DecodeEventData(values, *event, contractAbi.Structs, contractAbi.Enums)
 	return parsed, event.Name, err
 }

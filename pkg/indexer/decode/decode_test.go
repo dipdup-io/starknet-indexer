@@ -108,6 +108,44 @@ func TestEvent(t *testing.T) {
 				"amount": "595727030606143",
 			},
 			want1: "Transfer",
+		}, {
+			name: "test 3",
+			args: args{
+				contractAbi: abi.Abi{
+					EventsBySelector: map[string]*abi.EventItem{
+						"31f8daa2ac8dacd06ab968bad8f97f98f63c30a86dbfcebdd7625f589d4e7e6": {
+							Type: abi.Type{
+								Name: "hello::HelloStarknet::BalanceIncreased",
+								Type: "event",
+								Kind: "struct",
+							},
+							Members: []abi.Type{
+								{
+									Name: "amount",
+									Type: "core::felt252",
+									Kind: "data",
+								}, {
+									Name: "by",
+									Type: "core::starknet::contract_address::ContractAddress",
+									Kind: "key",
+								},
+							},
+						},
+					},
+				},
+				keys: []string{
+					"0x31f8daa2ac8dacd06ab968bad8f97f98f63c30a86dbfcebdd7625f589d4e7e6",
+					"0x1a62446e05ee60540d94b2e731ed037a1798065f9b8e719e293180b493b91f7",
+				},
+				data: []string{
+					"0x2a",
+				},
+			},
+			want: map[string]any{
+				"by":     "0x1a62446e05ee60540d94b2e731ed037a1798065f9b8e719e293180b493b91f7",
+				"amount": "0x2a",
+			},
+			want1: "hello::HelloStarknet::BalanceIncreased",
 		},
 	}
 	for _, tt := range tests {
