@@ -31,7 +31,7 @@ func NewResult() Result {
 	}
 }
 
-func (r *Result) setBlock(block Block) {
+func (r *Result) SetBlock(block Block) {
 	r.mx.Lock()
 	{
 		r.Block = block
@@ -39,7 +39,7 @@ func (r *Result) setBlock(block Block) {
 	r.mx.Unlock()
 }
 
-func (r *Result) setTraces(traces []starknet.Trace) {
+func (r *Result) SetTraces(traces []starknet.Trace) {
 	r.mx.Lock()
 	{
 		r.Traces = traces
@@ -47,12 +47,22 @@ func (r *Result) setTraces(traces []starknet.Trace) {
 	r.mx.Unlock()
 }
 
-func (r *Result) setStateUpdates(stateUpdate starknetData.StateUpdate) {
+func (r *Result) SetStateUpdates(stateUpdate starknetData.StateUpdate) {
 	r.mx.Lock()
 	{
 		r.StateUpdate = stateUpdate
 	}
 	r.mx.Unlock()
+}
+
+type IReceiver interface {
+	Start(ctx context.Context)
+	Close() error
+	QueueSize() int
+	Head(ctx context.Context) (uint64, error)
+	GetClass(ctx context.Context, hash string) (starknetData.Class, error)
+	GetBlockStatus(ctx context.Context, height uint64) (storage.Status, error)
+	Results() <-chan Result
 }
 
 // Receiver -
@@ -243,7 +253,7 @@ func (r *Receiver) getBlock(ctx context.Context, blockId starknetData.BlockID, r
 			time.Sleep(time.Second)
 			continue
 		}
-		result.setBlock(response)
+		result.SetBlock(response)
 		break
 	}
 }
@@ -272,7 +282,7 @@ func (r *Receiver) traceBlock(ctx context.Context, blockId starknetData.BlockID,
 			time.Sleep(time.Second)
 			continue
 		}
-		result.setTraces(response)
+		result.SetTraces(response)
 		break
 	}
 }
@@ -301,7 +311,7 @@ func (r *Receiver) receiveStateUpdate(ctx context.Context, blockId starknetData.
 			time.Sleep(time.Second)
 			continue
 		}
-		result.setStateUpdates(response)
+		result.SetStateUpdates(response)
 		break
 	}
 }

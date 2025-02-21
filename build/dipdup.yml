@@ -22,6 +22,9 @@ datasources:
   fallback:
     url: ${STARKNET_FALLBACK_NODE_URL}
     rps: ${STARKNET_FALLBACK_NODE_RPS:-1}
+  subsquid:
+    url: ${STARKNET_SUBSQUID_URL}
+    rps: ${STARKNET_SUBSQUID_RPS:-5}
 
 database:
   kind: postgres

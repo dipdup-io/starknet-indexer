@@ -2,7 +2,6 @@ package parser
 
 import (
 	"context"
-
 	starknetData "github.com/dipdup-io/starknet-go-api/pkg/data"
 	"github.com/dipdup-io/starknet-indexer/internal/storage"
 	"github.com/dipdup-io/starknet-indexer/pkg/indexer/cache"
@@ -40,7 +39,7 @@ func createParser(
 // Parse -
 func Parse(
 	ctx context.Context,
-	receiver *receiver.Receiver,
+	receiver receiver.IReceiver,
 	cache *cache.Cache,
 	idGenerator *generator.IdGenerator,
 	blocks storage.IBlock,
