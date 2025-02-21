@@ -918,7 +918,7 @@ Subscription entity. It contains subscription id and subscription&#39;s live not
 <a name="proto-IndexerService"></a>
 
 ### IndexerService
-Desription of server interface
+Description of server interface
 
 | Method Name | Request Type | Response Type | Description |
 | ----------- | ------------ | ------------- | ------------|

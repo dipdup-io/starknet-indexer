@@ -80,7 +80,7 @@ func NewReceiver(cfg config.Config, ds map[string]ddConfig.DataSource) (*Receive
 	case "node":
 		api = NewNode(dsCfg)
 	default:
-		return nil, errors.Errorf("usupported datasource type: %s", cfg.Datasource)
+		return nil, errors.Errorf("unsupported datasource type: %s", cfg.Datasource)
 	}
 
 	receiver := &Receiver{
