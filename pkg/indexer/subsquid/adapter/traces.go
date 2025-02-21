@@ -86,27 +86,16 @@ func buildTraceTree(flatInvocations []api.TraceResponse, events []api.Event, mes
 
 	for invokationIndex := range flatInvocations {
 		invocation := flatInvocations[invokationIndex]
-		calldata := make([]data.Felt, len(invocation.Calldata))
-		for i, cd := range invocation.Calldata {
-			calldata[i] = data.Felt(cd)
-		}
-
-		result := make([]data.Felt, len(invocation.Result))
-		for i := range invocation.Result {
-			result[i] = data.Felt(invocation.Result[i])
-		}
+		calldata := stringSliceToFeltSlice(invocation.Calldata)
+		result := stringSliceToFeltSlice(invocation.Result)
 		sqdEvents := filterEventsByAddress(events, invocation.TraceAddress)
 		adaptedEvents := make([]data.Event, len(sqdEvents))
+
 		for i := range sqdEvents {
 			event := sqdEvents[i]
-			keys := make([]data.Felt, len(event.Keys))
-			eventData := make([]data.Felt, len(event.Data))
-			for j, key := range event.Keys {
-				keys[j] = data.Felt(key)
-			}
-			for j, dt := range event.Data {
-				eventData[j] = data.Felt(dt)
-			}
+			keys := stringSliceToFeltSlice(event.Keys)
+			eventData := stringSliceToFeltSlice(event.Data)
+
 			eventOrder := uint64(event.EvenIndex)
 			switch invocation.InvocationType {
 			case "execute", "constructor":
@@ -126,10 +115,7 @@ func buildTraceTree(flatInvocations []api.TraceResponse, events []api.Event, mes
 		adaptedMessages := make([]data.Message, len(sqdMessages))
 		for i := range sqdMessages {
 			message := sqdMessages[i]
-			payload := make([]data.Felt, len(message.Payload))
-			for j, payloadItem := range message.Payload {
-				payload[j] = data.Felt(payloadItem)
-			}
+			payload := stringSliceToFeltSlice(message.Payload)
 			adaptedMessages[i] = data.Message{
 				Order:       uint64(message.Order),
 				FromAddress: parseString(message.FromAddress),

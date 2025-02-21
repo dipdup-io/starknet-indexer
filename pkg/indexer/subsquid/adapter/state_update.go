@@ -33,10 +33,7 @@ func ConvertStateUpdates(block *api.SqdBlockResponse) (data.StateUpdate, error) 
 		})
 	}
 
-	oldDeclaredContracts := make([]data.Felt, 0)
-	for _, oldDeclaredContract := range block.StateUpdates[0].DeprecatedDeclaredClasses {
-		oldDeclaredContracts = append(oldDeclaredContracts, data.Felt(oldDeclaredContract))
-	}
+	oldDeclaredContracts := stringSliceToFeltSlice(block.StateUpdates[0].DeprecatedDeclaredClasses)
 
 	deployedContracts := make([]data.DeployedContract, 0)
 	for i := range block.StateUpdates[0].DeployedContracts {

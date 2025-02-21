@@ -68,3 +68,11 @@ func parseString(value *string) string {
 	}
 	return *value
 }
+
+func stringSliceToFeltSlice(income []string) []data.Felt {
+	result := make([]data.Felt, len(income))
+	for i := range income {
+		result[i] = data.Felt(income[i])
+	}
+	return result
+}
