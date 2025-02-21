@@ -27,7 +27,7 @@ type Block struct {
 	Version *string   `comment:"The version of the Starknet protocol used when creating this block"`
 
 	TxCount            int `comment:"Transactions count in block"`
-	InvokeCount        int `comment:"Ivokes count in block"`
+	InvokeCount        int `comment:"Invokes count in block"`
 	DeclareCount       int `comment:"Declares count in block"`
 	DeployCount        int `comment:"Deploys count in block"`
 	DeployAccountCount int `comment:"Deploy accounts count in block"`

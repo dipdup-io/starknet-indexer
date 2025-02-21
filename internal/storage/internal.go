@@ -51,7 +51,7 @@ type Internal struct {
 
 	Status         Status         `bun:",type:SMALLINT" comment:"Status in blockchain (unknown - 1 | not received - 2  | received - 3 | pending - 4 | rejected - 5 | accepted on l2 - 6 | accepted on l1 - 7 )"`
 	EntrypointType EntrypointType `bun:",type:SMALLINT" comment:"Entrypoint type (unknown - 1 | external - 2 | constructor - 3 | l1 handler - 4)"`
-	CallType       CallType       `bun:",type:SMALLINT" comment:"Call type (unknwown - 1 | call - 2 | delegate - 3)"`
+	CallType       CallType       `bun:",type:SMALLINT" comment:"Call type (unknown - 1 | call - 2 | delegate - 3)"`
 
 	Hash           []byte         `comment:"Transaction hash"`
 	Selector       []byte         `comment:"Called selector"`
