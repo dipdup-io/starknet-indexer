@@ -232,11 +232,7 @@ func (indexer *Indexer) checkQueue(ctx context.Context) bool {
 	return false
 }
 
-func (indexer *Indexer) getNewBlocks(ctx context.Context) error {
-	commonReceiver, ok := indexer.receiver.(*receiver.Receiver)
-	if !ok {
-		return errors.Errorf("incorrect receiver type")
-	}
+func (indexer *Indexer) getNewBlocks(ctx context.Context, commonReceiver *receiver.Receiver) error {
 	head, err := commonReceiver.Head(ctx)
 	if err != nil {
 		return err
@@ -302,7 +298,12 @@ func (indexer *Indexer) getNewBlocks(ctx context.Context) error {
 }
 
 func (indexer *Indexer) sync(ctx context.Context) {
-	if err := indexer.getNewBlocks(ctx); err != nil {
+	commonReceiver, ok := indexer.receiver.(*receiver.Receiver)
+	if !ok {
+		log.Panic().Msg("incorrect receiver type")
+		return
+	}
+	if err := indexer.getNewBlocks(ctx, commonReceiver); err != nil {
 		indexer.Log.Err(err).Msg("getNewBlocks")
 	}
 
@@ -316,11 +317,11 @@ func (indexer *Indexer) sync(ctx context.Context) {
 		case <-ctx.Done():
 			return
 		case <-ticker.C:
-			if err := indexer.getNewBlocks(ctx); err != nil {
+			if err := indexer.getNewBlocks(ctx, commonReceiver); err != nil {
 				indexer.Log.Err(err).Msg("getNewBlocks")
 			}
 		case <-indexer.rollbackRerun:
-			if err := indexer.getNewBlocks(ctx); err != nil {
+			if err := indexer.getNewBlocks(ctx, commonReceiver); err != nil {
 				indexer.Log.Err(err).Msg("getNewBlocks")
 			}
 		}
