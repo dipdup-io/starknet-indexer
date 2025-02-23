@@ -207,7 +207,7 @@ func (cache *Cache) GetClassForAddress(ctx context.Context, hash []byte) (storag
 		return storage.Class{}, err
 	}
 	class := item.Value().(*storage.Class)
-	return *class, err
+	return *class, nil
 }
 
 // GetAbiByClass -
