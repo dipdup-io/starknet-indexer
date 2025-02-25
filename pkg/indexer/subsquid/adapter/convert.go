@@ -45,7 +45,7 @@ func uint64ToFelt(value *uint64) data.Felt {
 	if value == nil {
 		return ""
 	}
-	return data.Felt(fmt.Sprintf("%x", *value))
+	return data.Felt(fmt.Sprintf("0x%x", *value))
 }
 
 func stringToFelt(value *string) data.Felt {

@@ -87,7 +87,7 @@ func New(cfg config.Config,
 	receiver.CreateOutput(OutputName)
 	receiver.CreateOutput(StopOutput)
 
-	receiver.pool = workerpool.NewPool(receiver.worker, cfg.ThreadsCount)
+	receiver.pool = workerpool.NewPool(receiver.worker, threadsCount)
 	return receiver, nil
 }
 

@@ -81,7 +81,8 @@ func buildTraceTree(flatInvocations []api.TraceResponse, events []api.Event, mes
 	}
 	mapAddressInvocationType := make(map[int]string)
 	sort.Slice(flatInvocations, func(i, j int) bool {
-		return compareTraceAddresses(flatInvocations[i].TraceAddress, flatInvocations[j].TraceAddress)
+		res := compareTraceAddresses(flatInvocations[i].TraceAddress, flatInvocations[j].TraceAddress)
+		return res
 	})
 
 	for invokationIndex := range flatInvocations {

@@ -103,7 +103,7 @@ func New(
 			cfg,
 			datasource,
 			cfg.StartLevel,
-			cfg.ThreadsCount,
+			2,
 			func() uint64 {
 				return indexer.state.Height()
 			},
