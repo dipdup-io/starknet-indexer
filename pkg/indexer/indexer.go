@@ -557,6 +557,7 @@ func (indexer *Indexer) listenStopSubsquid(ctx context.Context) {
 			indexer.receiver = rcvr
 			indexer.statusChecker.SetReceiver(rcvr)
 
+			indexer.Log.Info().Msgf("data source has been replaced with node, starting...")
 			indexer.receiver.Start(indexer.appCtx)
 			indexer.statusChecker.Start(indexer.appCtx)
 			indexer.G.GoCtx(indexer.appCtx, indexer.sync)
