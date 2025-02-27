@@ -8,6 +8,13 @@ import (
 	"sort"
 )
 
+const (
+	Execute     = "execute"
+	Constructor = "constructor"
+	Validate    = "validate"
+	FeeTransfer = "fee_transfer"
+)
+
 func ConvertTraces(block *api.SqdBlockResponse) ([]starknet.Trace, error) {
 	traces := make([]starknet.Trace, 0)
 
@@ -81,8 +88,7 @@ func buildTraceTree(flatInvocations []api.TraceResponse, events []api.Event, mes
 	}
 	mapAddressInvocationType := make(map[int]string)
 	sort.Slice(flatInvocations, func(i, j int) bool {
-		res := compareTraceAddresses(flatInvocations[i].TraceAddress, flatInvocations[j].TraceAddress)
-		return res
+		return compareTraceAddresses(flatInvocations[i].TraceAddress, flatInvocations[j].TraceAddress)
 	})
 
 	for invokationIndex := range flatInvocations {
@@ -99,7 +105,7 @@ func buildTraceTree(flatInvocations []api.TraceResponse, events []api.Event, mes
 
 			eventOrder := uint64(event.EvenIndex)
 			switch invocation.InvocationType {
-			case "execute", "constructor":
+			case Execute, FeeTransfer:
 			default:
 				eventOrder = 0
 			}
@@ -146,11 +152,11 @@ func buildTraceTree(flatInvocations []api.TraceResponse, events []api.Event, mes
 		if level == 1 {
 			mapAddressInvocationType[invocation.TraceAddress[0]] = invocation.InvocationType
 			switch invocation.InvocationType {
-			case "fee_transfer":
+			case FeeTransfer:
 				resultTrace.FeeTransferInvocation = &currentInvocation
-			case "validate":
+			case Validate:
 				resultTrace.ValidateInvocation = &currentInvocation
-			case "execute", "constructor":
+			case Execute, Constructor:
 				if invocation.RevertReason != nil {
 					resultTrace.RevertedError = parseString(invocation.RevertReason)
 				} else {

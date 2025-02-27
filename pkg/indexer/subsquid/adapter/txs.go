@@ -75,12 +75,9 @@ func ConvertTransactions(block *api.SqdBlockResponse) []receiver.Transaction {
 func getDeployContractAddress(block *api.SqdBlockResponse, txIndex uint) data.Felt {
 	for i := range block.Traces {
 		trace := block.Traces[i]
-		if trace.TraceType != data.TransactionTypeDeploy || trace.TraceType != data.TransactionTypeDeployAccount ||
-			trace.TransactionIndex != txIndex {
-			continue
+		if trace.TransactionIndex == txIndex && trace.TraceType == data.TransactionTypeDeploy {
+			return data.Felt(trace.ContractAddress)
 		}
-
-		return data.Felt(trace.ContractAddress)
 	}
 	return ""
 }

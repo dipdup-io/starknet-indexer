@@ -65,7 +65,6 @@ type Indexer struct {
 	rollbackWait  *sync.WaitGroup
 
 	txWriteMutex   *sync.Mutex
-	appCtx         context.Context
 	cancelReceiver context.CancelFunc
 }
 
@@ -74,7 +73,6 @@ func New(
 	cfg config.Config,
 	storage postgres.Storage,
 	datasource map[string]ddConfig.DataSource,
-	ctx context.Context,
 ) (*Indexer, error) {
 	indexer := &Indexer{
 		BaseModule:      modules.New("indexer"),
@@ -100,7 +98,6 @@ func New(
 		rollbackRerun:   make(chan struct{}, 1),
 		txWriteMutex:    new(sync.Mutex),
 		rollbackWait:    new(sync.WaitGroup),
-		appCtx:          ctx,
 	}
 
 	switch cfg.Datasource {
@@ -168,11 +165,12 @@ func New(
 }
 
 // Start -
-func (indexer *Indexer) Start(_ context.Context) {
-	receiverCtx, cancel := context.WithCancel(indexer.appCtx)
-	indexer.cancelReceiver = cancel
+func (indexer *Indexer) Start(ctx context.Context) {
 	indexer.Log.Info().Msg("starting indexer...")
-	if err := indexer.init(receiverCtx); err != nil {
+	receiverCtx, cancel := context.WithCancel(ctx)
+	indexer.cancelReceiver = cancel
+
+	if err := indexer.init(ctx); err != nil {
 		indexer.Log.Err(err).Msg("state initializing error")
 		return
 	}
@@ -182,13 +180,13 @@ func (indexer *Indexer) Start(_ context.Context) {
 
 	switch indexer.cfg.Datasource {
 	case "subsquid":
-		indexer.adapter.Start(indexer.appCtx)
-		indexer.G.GoCtx(indexer.appCtx, indexer.listenStopSubsquid)
+		indexer.adapter.Start(receiverCtx)
+		indexer.G.GoCtx(ctx, indexer.listenStopSubsquid)
 	default:
-		indexer.G.GoCtx(indexer.appCtx, indexer.sync)
+		indexer.G.GoCtx(ctx, indexer.sync)
 	}
 
-	indexer.G.GoCtx(indexer.appCtx, indexer.saveBlocks)
+	indexer.G.GoCtx(ctx, indexer.saveBlocks)
 }
 
 // Name -
@@ -544,6 +542,9 @@ func (indexer *Indexer) listenStopSubsquid(ctx context.Context) {
 			if err := indexer.receiver.Close(); err != nil {
 				return
 			}
+			if err := indexer.adapter.Close(); err != nil {
+				return
+			}
 			if err := indexer.statusChecker.Close(); err != nil {
 				return
 			}
@@ -558,9 +559,9 @@ func (indexer *Indexer) listenStopSubsquid(ctx context.Context) {
 			indexer.statusChecker.SetReceiver(rcvr)
 
 			indexer.Log.Info().Msgf("data source has been replaced with node, starting...")
-			indexer.receiver.Start(indexer.appCtx)
-			indexer.statusChecker.Start(indexer.appCtx)
-			indexer.G.GoCtx(indexer.appCtx, indexer.sync)
+			indexer.receiver.Start(ctx)
+			indexer.statusChecker.Start(ctx)
+			indexer.G.GoCtx(ctx, indexer.sync)
 		}
 	}
 }
