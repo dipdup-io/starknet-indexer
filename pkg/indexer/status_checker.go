@@ -56,6 +56,10 @@ func newStatusChecker(
 	}
 }
 
+func (checker *statusChecker) SetReceiver(receiver receiver.IReceiver) {
+	checker.receiver = receiver
+}
+
 // Start -
 func (checker *statusChecker) Start(ctx context.Context) {
 	checker.g.GoCtx(ctx, checker.start)

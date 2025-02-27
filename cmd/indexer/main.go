@@ -110,7 +110,7 @@ func main() {
 		}
 	}
 
-	indexerModule, err := indexer.New(cfg.Indexer, postgres, cfg.DataSources)
+	indexerModule, err := indexer.New(cfg.Indexer, postgres, cfg.DataSources, ctx)
 	if err != nil {
 		log.Panic().Err(err).Msg("creating indexer module")
 		cancel()

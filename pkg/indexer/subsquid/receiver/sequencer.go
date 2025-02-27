@@ -26,7 +26,7 @@ func (r *Receiver) sequencer(ctx context.Context) {
 
 			b, ok := orderedBlocks[currentBlock]
 			for ok {
-				r.MustOutput(OutputName).Push(b)
+				r.MustOutput(BlocksOutput).Push(b)
 				r.setLevel(currentBlock)
 				delete(orderedBlocks, currentBlock)
 				currentBlock += 1

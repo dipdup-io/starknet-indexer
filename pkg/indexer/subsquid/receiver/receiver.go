@@ -25,8 +25,9 @@ type BlocksToWorker struct {
 type GetIndexerHeight func() uint64
 
 const (
-	OutputName = "blocks"
-	StopOutput = "stop"
+	BlocksOutput = "blocks"
+	HeadOutput   = "head_level"
+	StopOutput   = "stop"
 )
 
 type Receiver struct {
@@ -43,7 +44,6 @@ type Receiver struct {
 	processingMx     *sync.Mutex
 	result           chan rcvr.Result
 	timeout          time.Duration
-	wg               *sync.WaitGroup
 	mx               *sync.RWMutex
 }
 
@@ -76,7 +76,6 @@ func New(cfg config.Config,
 		processing:       make(map[uint64]struct{}),
 		processingMx:     new(sync.Mutex),
 		timeout:          time.Duration(cfg.Timeout) * time.Second,
-		wg:               new(sync.WaitGroup),
 		mx:               new(sync.RWMutex),
 	}
 
@@ -84,7 +83,8 @@ func New(cfg config.Config,
 		receiver.timeout = 10 * time.Second
 	}
 
-	receiver.CreateOutput(OutputName)
+	receiver.CreateOutput(BlocksOutput)
+	receiver.CreateOutput(HeadOutput)
 	receiver.CreateOutput(StopOutput)
 
 	receiver.pool = workerpool.NewPool(receiver.worker, threadsCount)
@@ -109,7 +109,7 @@ func (r *Receiver) Start(ctx context.Context) {
 // Close -
 func (r *Receiver) Close() error {
 	r.Log.Info().Msg("closing...")
-	r.wg.Wait()
+	r.G.Wait()
 
 	if err := r.pool.Close(); err != nil {
 		return err

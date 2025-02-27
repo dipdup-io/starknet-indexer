@@ -8,13 +8,14 @@ import (
 func (a *Adapter) listen(ctx context.Context) {
 	a.Log.Info().Msg("module started")
 
-	input := a.MustInput(InputName)
+	blocksInput := a.MustInput(BlocksInput)
+	headInput := a.MustInput(HeadInput)
 
 	for {
 		select {
 		case <-ctx.Done():
 			return
-		case msg, ok := <-input.Listen():
+		case msg, ok := <-blocksInput.Listen():
 			if !ok {
 				a.Log.Warn().Msg("can't read message from input, it was drained and closed")
 				a.MustOutput(StopOutput).Push(struct{}{})
@@ -37,6 +38,23 @@ func (a *Adapter) listen(ctx context.Context) {
 				continue
 			}
 			a.results <- results
+			if results.Block.Height == a.head {
+				a.MustOutput(HeadAchieved).Push(struct{}{})
+				return
+			}
+
+		case msg, ok := <-headInput.Listen():
+			if !ok {
+				a.Log.Warn().Msg("can't read message from input, it was drained and closed")
+				a.MustOutput(StopOutput).Push(struct{}{})
+				return
+			}
+			head, ok := msg.(uint64)
+			if !ok {
+				a.Log.Warn().Msgf("invalid message type: %T", msg)
+				continue
+			}
+			a.head = head
 		}
 	}
 }

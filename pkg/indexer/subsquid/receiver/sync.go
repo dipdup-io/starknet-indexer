@@ -10,6 +10,7 @@ func (r *Receiver) sync(ctx context.Context) {
 	if err != nil {
 		return
 	}
+	r.MustOutput(HeadOutput).Push(head)
 
 	if head < r.getIndexerHeight() {
 		log.Warn().
@@ -47,7 +48,4 @@ func (r *Receiver) sync(ctx context.Context) {
 			r.AddTask(blockRange)
 		}
 	}
-
-	r.Log.Info().Uint64("height", r.getIndexerHeight()).Msg("synced")
-	return
 }

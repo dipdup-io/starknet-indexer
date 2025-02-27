@@ -9,14 +9,17 @@ import (
 type Adapter struct {
 	modules.BaseModule
 	results chan receiver.Result
+	head    uint64
 }
 
 var _ modules.Module = (*Adapter)(nil)
 
 const (
-	InputName  = "blocks"
-	OutputName = "parsed_blocks"
-	StopOutput = "stop"
+	BlocksInput  = "blocks"
+	HeadInput    = "head"
+	BlocksOutput = "parsed_blocks"
+	StopOutput   = "stop"
+	HeadAchieved = "head_achieved"
 )
 
 func New(resultsChannel chan receiver.Result) *Adapter {
@@ -24,9 +27,11 @@ func New(resultsChannel chan receiver.Result) *Adapter {
 		BaseModule: modules.New("sqd adapter"),
 		results:    resultsChannel,
 	}
-	m.CreateInputWithCapacity(InputName, 128)
-	m.CreateOutput(OutputName)
+	m.CreateInputWithCapacity(BlocksInput, 128)
+	m.CreateInputWithCapacity(HeadInput, 1)
+	m.CreateOutput(BlocksOutput)
 	m.CreateOutput(StopOutput)
+	m.CreateOutput(HeadAchieved)
 
 	return m
 }
