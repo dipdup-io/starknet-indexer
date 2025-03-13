@@ -39,7 +39,7 @@ func (a *Adapter) listen(ctx context.Context) {
 			}
 			a.results <- results
 			if results.Block.Height == a.head {
-				a.MustOutput(HeadAchieved).Push(struct{}{})
+				a.MustOutput(HeadAchieved).Push(a.head)
 				return
 			}
 

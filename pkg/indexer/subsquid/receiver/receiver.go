@@ -210,6 +210,10 @@ func (r *Receiver) GetSqdWorkerRanges(ctx context.Context, fromLevel, height uin
 			To:        lastBlock.Header.Number,
 			WorkerURL: workerUrl,
 		}
+		if workerSegment.To > height {
+			workerSegment.To = height
+		}
+
 		result = append(result, workerSegment)
 
 		if lastBlock.Header.Number >= height {

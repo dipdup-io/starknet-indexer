@@ -530,12 +530,16 @@ func (indexer *Indexer) listenStopSubsquid(ctx context.Context) {
 		select {
 		case <-ctx.Done():
 			return
-		case _, ok := <-input.Listen():
+		case headLevel, ok := <-input.Listen():
 			if !ok {
 				indexer.Log.Warn().Msg("can't read message from input, it was drained and closed")
 				if err := indexer.Close(); err != nil {
 					return
 				}
+			}
+
+			for indexer.state.Height() != headLevel {
+				time.Sleep(time.Millisecond * 10)
 			}
 
 			indexer.cancelReceiver()
