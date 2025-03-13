@@ -29,6 +29,7 @@ type BlockField struct {
 	Status           bool `json:"status,omitempty"`
 	NewRoot          bool `json:"newRoot,omitempty"`
 	SequencerAddress bool `json:"sequencerAddress,omitempty"`
+	StarknetVersion  bool `json:"starknetVersion,omitempty"`
 }
 
 type StateUpdateField struct {
@@ -74,6 +75,7 @@ type TransactionField struct {
 	CompiledClassHash   bool `json:"compiledClassHash"`
 	ContractAddressSalt bool `json:"contractAddressSalt"`
 	ConstructorCalldata bool `json:"constructorCalldata"`
+	ActualFee           bool `json:"actualFee"`
 }
 
 type EventField struct {
@@ -110,6 +112,7 @@ func NewRequest(fromLevel uint64, toLevel uint64) *Request {
 				NewRoot:          true,
 				Timestamp:        true,
 				SequencerAddress: true,
+				StarknetVersion:  true,
 			},
 			StateUpdate: StateUpdateField{
 				NewRoot:                   true,
@@ -151,6 +154,7 @@ func NewRequest(fromLevel uint64, toLevel uint64) *Request {
 				CompiledClassHash:   true,
 				ContractAddressSalt: true,
 				ConstructorCalldata: true,
+				ActualFee:           true,
 			},
 			Event: EventField{
 				Keys:         true,

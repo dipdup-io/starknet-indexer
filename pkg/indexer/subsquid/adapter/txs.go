@@ -36,7 +36,7 @@ func ConvertTransactions(block *api.SqdBlockResponse) []receiver.Transaction {
 		case data.TransactionTypeDeploy:
 			body = &data.Deploy{
 				ContractAddressSalt: parseString(tx.ContractAddressSalt),
-				ConstructorCalldata: parseStringSlice(tx.Calldata),
+				ConstructorCalldata: parseStringSlice(tx.ConstructorCalldata),
 				ClassHash:           stringToFelt(tx.ClassHash),
 				ContractAddress:     getDeployContractAddress(block, tx.TransactionIndex),
 			}
@@ -62,10 +62,11 @@ func ConvertTransactions(block *api.SqdBlockResponse) []receiver.Transaction {
 		}
 
 		resultTxs[i] = receiver.Transaction{
-			Type:    tx.Type,
-			Version: data.Felt(tx.Version),
-			Hash:    data.Felt(tx.TransactionHash),
-			Body:    body,
+			Type:      tx.Type,
+			Version:   data.Felt(tx.Version),
+			Hash:      data.Felt(tx.TransactionHash),
+			ActualFee: data.Felt(tx.ActualFee.Amount),
+			Body:      body,
 		}
 	}
 

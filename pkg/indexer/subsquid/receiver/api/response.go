@@ -18,6 +18,7 @@ type BlockHeader struct {
 	NewRoot          string `example:"0x44529f2c44d9113e0ba4e53cb6e84f425ec186cda27545827b5a72d5540bfdc" json:"newRoot"`
 	Timestamp        int64  `example:"1641950335"                                                        json:"timestamp"`
 	SequencerAddress string `example:"0x44529f2c44d9113e0ba4e53cb6e84f425ec186cda27545827b5a72d5540bfdc" json:"sequencerAddress"`
+	StarknetVersion  string `json:"starknetVersion"`
 }
 
 type Transaction struct {
@@ -36,11 +37,17 @@ type Transaction struct {
 	CompiledClassHash   *string   `json:"compiledClassHash"`
 	ContractAddressSalt *string   `json:"contractAddressSalt"`
 	ConstructorCalldata *[]string `json:"constructorCalldata"`
+	ActualFee           ActualFee `json:"actualFee"`
+}
+
+type ActualFee struct {
+	Amount string `json:"amount"`
+	Unit   string `json:"unit"`
 }
 
 type TraceResponse struct {
-	TransactionIndex   uint     `json:"transaction_index"`
-	TraceAddress       []int    `json:"trace_address"`
+	TransactionIndex   uint     `json:"transactionIndex"`
+	TraceAddress       []int    `json:"traceAddress"`
 	TraceType          string   `json:"traceType"`
 	InvocationType     string   `json:"invocationType"`
 	CallerAddress      string   `json:"callerAddress"`

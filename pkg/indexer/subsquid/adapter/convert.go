@@ -22,6 +22,7 @@ func (a *Adapter) convert(_ context.Context, block *api.SqdBlockResponse) (recei
 		Time:             time.Unix(block.Header.Timestamp, 0).UTC(),
 		SequencerAddress: encoding.MustDecodeHex(block.Header.SequencerAddress),
 		Transactions:     ConvertTransactions(block),
+		Version:          &block.Header.StarknetVersion,
 		Receipts:         nil,
 	}
 	result.SetBlock(b)
