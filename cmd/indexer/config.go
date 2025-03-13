@@ -11,7 +11,7 @@ type Config struct {
 	config.Config `yaml:",inline"`
 	LogLevel      string                `yaml:"log_level" validate:"omitempty,oneof=debug trace info warn error fatal panic"`
 	Indexer       indexerConfig.Config  `yaml:"indexer"`
-	GRPC          *sdkGrpc.ServerConfig `yaml:"grpc" validate:"required"`
+	GRPC          *sdkGrpc.ServerConfig `yaml:"grpc"      validate:"required"`
 }
 
 // Substitute -

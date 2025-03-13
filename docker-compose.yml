@@ -45,7 +45,7 @@ services:
   hasura:
     image: hasura/graphql-engine:v2.28.0
     ports:
-      - 127.0.0.1:8080:8080
+      - "127.0.0.1:8080:8080"
     restart: always
     environment:
       - HASURA_GRAPHQL_DATABASE_URL=postgres://${POSTGRES_USER:-dipdup}:${POSTGRES_PASSWORD:-changeme}@${HASURA_POSTGRES_HOST:-db}:${POSTGRES_PORT:-5432}/${POSTGRES_DB:-starknet}

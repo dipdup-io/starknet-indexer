@@ -2,11 +2,11 @@ package indexer
 
 import (
 	"context"
+	"github.com/dipdup-io/starknet-indexer/pkg/indexer/receiver"
 	"time"
 
 	"github.com/dipdup-io/starknet-indexer/internal/storage"
 	"github.com/dipdup-io/starknet-indexer/internal/storage/postgres"
-	"github.com/dipdup-io/starknet-indexer/pkg/indexer/receiver"
 	"github.com/dipdup-io/workerpool"
 	sdk "github.com/dipdup-net/indexer-sdk/pkg/storage"
 	"github.com/rs/zerolog"
@@ -26,13 +26,13 @@ type statusChecker struct {
 	invoke         storage.IInvoke
 	l1Handlers     storage.IL1Handler
 	transactable   sdk.Transactable
-	receiver       *receiver.Receiver
+	receiver       receiver.IReceiver
 	log            zerolog.Logger
 	g              workerpool.Group
 }
 
 func newStatusChecker(
-	receiver *receiver.Receiver,
+	receiver receiver.IReceiver,
 	blocks storage.IBlock,
 	declares storage.IDeclare,
 	deploys storage.IDeploy,
@@ -54,6 +54,10 @@ func newStatusChecker(
 		log:            log.With().Str("module", "status_checker").Logger(),
 		g:              workerpool.NewGroup(),
 	}
+}
+
+func (checker *statusChecker) SetReceiver(receiver receiver.IReceiver) {
+	checker.receiver = receiver
 }
 
 // Start -
