@@ -66,6 +66,7 @@ type Indexer struct {
 
 	txWriteMutex   *sync.Mutex
 	cancelReceiver context.CancelFunc
+	cancelIndexer  context.CancelFunc
 }
 
 // New - creates new indexer entity
@@ -165,8 +166,10 @@ func New(
 }
 
 // Start -
-func (indexer *Indexer) Start(ctx context.Context) {
+func (indexer *Indexer) Start(mainCtx context.Context) {
 	indexer.Log.Info().Msg("starting indexer...")
+	ctx, indexerCancel := context.WithCancel(mainCtx)
+	indexer.cancelIndexer = indexerCancel
 	receiverCtx, cancel := context.WithCancel(ctx)
 	indexer.cancelReceiver = cancel
 
@@ -492,6 +495,7 @@ func (indexer *Indexer) handleBlock(ctx context.Context, result receiver.Result)
 		parseResult.Context.Addresses(),
 		parseResult.Context.Tokens(),
 	)
+	indexer.checkIndexingLevel(ctx, parseResult.Block.Height)
 	return nil
 }
 
@@ -567,5 +571,16 @@ func (indexer *Indexer) listenStopSubsquid(ctx context.Context) {
 			indexer.statusChecker.Start(ctx)
 			indexer.G.GoCtx(ctx, indexer.sync)
 		}
+	}
+}
+
+func (indexer *Indexer) checkIndexingLevel(_ context.Context, currentLevel uint64) {
+	if indexer.cfg.LimitLevel != 0 && currentLevel == indexer.cfg.LimitLevel {
+		indexer.cancelIndexer()
+		if err := indexer.Close(); err != nil {
+			indexer.Log.Error().Err(err).Msg("error closing indexer...")
+			return
+		}
+		indexer.Log.Info().Uint64("level", currentLevel).Msg("indexer closed on level")
 	}
 }
