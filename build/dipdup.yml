@@ -10,6 +10,7 @@ indexer:
   timeout: ${INDEXER_REQUEST_TIMEOUT:-10}
   class_interfaces_dir: ${INDEXER_CLASS_INTERFACES_DIR:-./interfaces/}
   bridged_tokens_file: ${INDEXER_BRIDGED_TOKENS_FILE:-mainnet.json}
+  limit_level: ${LIMIT_LEVEL:-0}
 
 grpc:
   bind: ${GRPC_BIND:-127.0.0.1:7779}
