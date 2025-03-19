@@ -19,7 +19,7 @@ type Resolver struct {
 	blocks       storage.IBlock
 	addresses    storage.IAddress
 	proxies      storage.IProxy
-	receiver     *receiver.Receiver
+	receiver     receiver.IReceiver
 	cache        *cache.Cache
 	idGenerator  *generator.IdGenerator
 	blockContext *data.BlockContext
@@ -27,7 +27,7 @@ type Resolver struct {
 
 // NewResolver -
 func NewResolver(
-	receiver *receiver.Receiver,
+	receiver receiver.IReceiver,
 	cache *cache.Cache,
 	idGenerator *generator.IdGenerator,
 	blocks storage.IBlock,

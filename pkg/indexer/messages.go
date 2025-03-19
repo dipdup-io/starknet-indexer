@@ -7,6 +7,7 @@ import (
 // topics
 const (
 	OutputBlocks string = "blocks"
+	InputStopSubsquid
 )
 
 // IndexerMessage -

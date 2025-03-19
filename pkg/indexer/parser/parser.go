@@ -2,7 +2,6 @@ package parser
 
 import (
 	"context"
-
 	starknetData "github.com/dipdup-io/starknet-go-api/pkg/data"
 	"github.com/dipdup-io/starknet-indexer/internal/storage"
 	"github.com/dipdup-io/starknet-indexer/pkg/indexer/cache"
@@ -30,7 +29,7 @@ func createParser(
 		"0.10.0", "0.10.1", "0.10.2", "0.10.3",
 		"0.11.0", "0.11.0.2", "0.11.1", "0.11.2",
 		"0.12.0", "0.12.1", "0.12.2", "0.12.3",
-		"0.13.0", "0.13.1", "0.13.1.1", "0.13.2", "0.13.2.1", "0.13.3":
+		"0.13.0", "0.13.1", "0.13.1.1", "0.13.2", "0.13.2.1", "0.13.3", "0.13.4":
 		return v0.New(resolver, cache, blocks), nil
 	default:
 		return nil, errors.Errorf("unknown starknet version: %s", *version)
@@ -40,7 +39,7 @@ func createParser(
 // Parse -
 func Parse(
 	ctx context.Context,
-	receiver *receiver.Receiver,
+	receiver receiver.IReceiver,
 	cache *cache.Cache,
 	idGenerator *generator.IdGenerator,
 	blocks storage.IBlock,

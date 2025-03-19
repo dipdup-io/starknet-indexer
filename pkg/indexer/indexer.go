@@ -3,6 +3,8 @@ package indexer
 import (
 	"bytes"
 	"context"
+	sqdAdapter "github.com/dipdup-io/starknet-indexer/pkg/indexer/subsquid/adapter"
+	sqdRcvr "github.com/dipdup-io/starknet-indexer/pkg/indexer/subsquid/receiver"
 	"runtime"
 	"sync"
 	"time"
@@ -32,8 +34,9 @@ const (
 type Indexer struct {
 	modules.BaseModule
 
-	cfg   config.Config
-	queue map[uint64]receiver.Result
+	cfg        config.Config
+	datasource map[string]ddConfig.DataSource
+	queue      map[uint64]receiver.Result
 
 	address        models.IAddress
 	blocks         models.IBlock
@@ -52,7 +55,8 @@ type Indexer struct {
 
 	state           *state
 	idGenerator     *generator.IdGenerator
-	receiver        *receiver.Receiver
+	receiver        receiver.IReceiver
+	adapter         *sqdAdapter.Adapter
 	statusChecker   *statusChecker
 	rollbackManager models.Rollback
 
@@ -60,7 +64,8 @@ type Indexer struct {
 	rollbackRerun chan struct{}
 	rollbackWait  *sync.WaitGroup
 
-	txWriteMutex *sync.Mutex
+	txWriteMutex   *sync.Mutex
+	cancelReceiver context.CancelFunc
 }
 
 // New - creates new indexer entity
@@ -72,6 +77,7 @@ func New(
 	indexer := &Indexer{
 		BaseModule:      modules.New("indexer"),
 		cfg:             cfg,
+		datasource:      datasource,
 		queue:           make(map[uint64]receiver.Result),
 		stateRepo:       storage.State,
 		address:         storage.Address,
@@ -93,11 +99,43 @@ func New(
 		txWriteMutex:    new(sync.Mutex),
 		rollbackWait:    new(sync.WaitGroup),
 	}
-	rcvr, err := receiver.NewReceiver(cfg, datasource)
-	if err != nil {
-		return nil, err
+
+	switch cfg.Datasource {
+	case "subsquid":
+		sqdReceiver, err := sqdRcvr.New(
+			cfg,
+			datasource,
+			cfg.StartLevel,
+			2,
+			func() uint64 {
+				return indexer.state.Height()
+			},
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		indexer.receiver = sqdReceiver
+		indexer.adapter = sqdAdapter.New(sqdReceiver.GetResults())
+
+		if err = indexer.adapter.AttachTo(sqdReceiver, sqdRcvr.BlocksOutput, sqdAdapter.BlocksInput); err != nil {
+			return nil, errors.Wrap(err, "while attaching adapter to receiver")
+		}
+		if err = indexer.adapter.AttachTo(sqdReceiver, sqdRcvr.HeadOutput, sqdAdapter.HeadInput); err != nil {
+			return nil, errors.Wrap(err, "while attaching adapter to receiver")
+		}
+		indexer.CreateInputWithCapacity(InputStopSubsquid, 1)
+		if err = indexer.AttachTo(indexer.adapter, sqdAdapter.HeadAchieved, InputStopSubsquid); err != nil {
+			return nil, errors.Wrap(err, "while attaching indexer to subsquid done channel")
+		}
+
+	default:
+		rcvr, err := receiver.NewReceiver(cfg, datasource)
+		if err != nil {
+			return nil, err
+		}
+		indexer.receiver = rcvr
 	}
-	indexer.receiver = rcvr
 
 	indexer.CreateOutput(OutputBlocks)
 
@@ -129,17 +167,26 @@ func New(
 // Start -
 func (indexer *Indexer) Start(ctx context.Context) {
 	indexer.Log.Info().Msg("starting indexer...")
+	receiverCtx, cancel := context.WithCancel(ctx)
+	indexer.cancelReceiver = cancel
+
 	if err := indexer.init(ctx); err != nil {
 		indexer.Log.Err(err).Msg("state initializing error")
 		return
 	}
 
-	indexer.receiver.Start(ctx)
+	indexer.receiver.Start(receiverCtx)
+	indexer.statusChecker.Start(receiverCtx)
 
-	indexer.statusChecker.Start(ctx)
+	switch indexer.cfg.Datasource {
+	case "subsquid":
+		indexer.adapter.Start(receiverCtx)
+		indexer.G.GoCtx(ctx, indexer.listenStopSubsquid)
+	default:
+		indexer.G.GoCtx(ctx, indexer.sync)
+	}
 
 	indexer.G.GoCtx(ctx, indexer.saveBlocks)
-	indexer.G.GoCtx(ctx, indexer.sync)
 }
 
 // Name -
@@ -162,7 +209,6 @@ func (indexer *Indexer) Close() error {
 	if err := indexer.receiver.Close(); err != nil {
 		return err
 	}
-
 	close(indexer.rollback)
 	close(indexer.rollbackRerun)
 	return nil
@@ -201,8 +247,8 @@ func (indexer *Indexer) checkQueue(ctx context.Context) bool {
 	return false
 }
 
-func (indexer *Indexer) getNewBlocks(ctx context.Context) error {
-	head, err := indexer.receiver.Head(ctx)
+func (indexer *Indexer) getNewBlocks(ctx context.Context, commonReceiver *receiver.Receiver) error {
+	head, err := commonReceiver.Head(ctx)
 	if err != nil {
 		return err
 	}
@@ -242,7 +288,7 @@ func (indexer *Indexer) getNewBlocks(ctx context.Context) error {
 				if indexer.checkQueue(ctx) {
 					return nil
 				}
-				indexer.receiver.AddTask(height)
+				commonReceiver.AddTask(height)
 			}
 		}
 
@@ -267,7 +313,12 @@ func (indexer *Indexer) getNewBlocks(ctx context.Context) error {
 }
 
 func (indexer *Indexer) sync(ctx context.Context) {
-	if err := indexer.getNewBlocks(ctx); err != nil {
+	commonReceiver, ok := indexer.receiver.(*receiver.Receiver)
+	if !ok {
+		log.Panic().Msg("incorrect receiver type")
+		return
+	}
+	if err := indexer.getNewBlocks(ctx, commonReceiver); err != nil {
 		indexer.Log.Err(err).Msg("getNewBlocks")
 	}
 
@@ -281,11 +332,11 @@ func (indexer *Indexer) sync(ctx context.Context) {
 		case <-ctx.Done():
 			return
 		case <-ticker.C:
-			if err := indexer.getNewBlocks(ctx); err != nil {
+			if err := indexer.getNewBlocks(ctx, commonReceiver); err != nil {
 				indexer.Log.Err(err).Msg("getNewBlocks")
 			}
 		case <-indexer.rollbackRerun:
-			if err := indexer.getNewBlocks(ctx); err != nil {
+			if err := indexer.getNewBlocks(ctx, commonReceiver); err != nil {
 				indexer.Log.Err(err).Msg("getNewBlocks")
 			}
 		}
@@ -303,7 +354,7 @@ func (indexer *Indexer) saveBlocks(ctx context.Context) {
 		case result := <-indexer.receiver.Results():
 			indexer.queue[result.Block.Height] = result
 
-			if indexer.state.Height() == 0 && !zeroBlock {
+			if indexer.state.Height() == 0 && !zeroBlock && indexer.cfg.StartLevel == 0 {
 				if data, ok := indexer.queue[0]; ok {
 					if err := indexer.handleBlock(ctx, data); err != nil {
 						indexer.Log.Err(err).Msg("handle block")
@@ -381,7 +432,11 @@ func (indexer *Indexer) makeRollback(ctx context.Context, height uint64) error {
 		delete(indexer.queue, key)
 	}
 
-	indexer.receiver.Clear()
+	commonReceiver, ok := indexer.receiver.(*receiver.Receiver)
+	if !ok {
+		return errors.Errorf("incorrect receiver type")
+	}
+	commonReceiver.Clear()
 
 	if err := indexer.Rollback(ctx, height-1); err != nil {
 		return errors.Wrap(err, "rollback")
@@ -466,4 +521,51 @@ func (indexer *Indexer) Rollback(ctx context.Context, height uint64) error {
 	indexer.rollback <- struct{}{}
 
 	return indexer.rollbackManager.Rollback(ctx, indexer.Name(), height)
+}
+
+func (indexer *Indexer) listenStopSubsquid(ctx context.Context) {
+	input := indexer.MustInput(InputStopSubsquid)
+
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case headLevel, ok := <-input.Listen():
+			if !ok {
+				indexer.Log.Warn().Msg("can't read message from input, it was drained and closed")
+				if err := indexer.Close(); err != nil {
+					return
+				}
+			}
+
+			for indexer.state.Height() != headLevel {
+				time.Sleep(time.Millisecond * 10)
+			}
+
+			indexer.cancelReceiver()
+			if err := indexer.receiver.Close(); err != nil {
+				return
+			}
+			if err := indexer.adapter.Close(); err != nil {
+				return
+			}
+			if err := indexer.statusChecker.Close(); err != nil {
+				return
+			}
+
+			indexer.cfg.Datasource = "node"
+			rcvr, err := receiver.NewReceiver(indexer.cfg, indexer.datasource)
+			if err != nil {
+				indexer.Log.Error().Msg("can't create node receiver")
+				return
+			}
+			indexer.receiver = rcvr
+			indexer.statusChecker.SetReceiver(rcvr)
+
+			indexer.Log.Info().Msgf("data source has been replaced with node, starting...")
+			indexer.receiver.Start(ctx)
+			indexer.statusChecker.Start(ctx)
+			indexer.G.GoCtx(ctx, indexer.sync)
+		}
+	}
 }
