@@ -1,6 +1,7 @@
 package storage
 
 import (
+	"encoding/json"
 	"time"
 
 	"github.com/dipdup-net/indexer-sdk/pkg/storage"
@@ -20,6 +21,7 @@ type DeclareFilter struct {
 	ID      IntegerFilter
 	Height  IntegerFilter
 	Time    TimeFilter
+	Hash    BytesFilter
 	Status  EnumFilter
 	Version EnumFilter
 }
@@ -28,28 +30,28 @@ type DeclareFilter struct {
 type Declare struct {
 	bun.BaseModel `bun:"declare" comment:"Table with declare transactions" partition:"RANGE(time)"`
 
-	ID         uint64          `bun:"id,type:bigint,pk,notnull,nullzero" comment:"Unique internal identity"`
-	Height     uint64          `comment:"Block height"`
-	ClassID    uint64          `comment:"Declared class id"`
-	Version    uint64          `comment:"Declare transaction version"`
-	Position   int             `comment:"Order in block"`
-	SenderID   *uint64         `comment:"Sender address id"`
-	ContractID *uint64         `comment:"Contract address id"`
-	Time       time.Time       `bun:",pk" comment:"Time of block"`
-	Status     Status          `comment:"Status of block"`
-	Hash       []byte          `comment:"Transaction hash"`
-	MaxFee     decimal.Decimal `bun:",type:numeric" comment:"The maximum fee that the sender is willing to pay for the transaction"`
-	Nonce      decimal.Decimal `bun:",type:numeric" comment:"The transaction nonce"`
-	Error      *string         `bun:"error" comment:"Reverted error"`
+	ID         uint64          `bun:"id,type:bigint,pk,notnull,nullzero" json:"id" comment:"Unique internal identity"`
+	Height     uint64          `json:"height" comment:"Block height"`
+	ClassID    uint64          `json:"class_id" comment:"Declared class id"`
+	Version    uint64          `json:"version" comment:"Declare transaction version"`
+	Position   int             `json:"position" comment:"Order in block"`
+	SenderID   *uint64         `json:"sender_id" comment:"Sender address id"`
+	ContractID *uint64         `json:"contract_id" comment:"Contract address id"`
+	Time       time.Time       `bun:",pk" json:"time" comment:"Time of block"`
+	Status     Status          `json:"status" comment:"Status of block"`
+	Hash       []byte          `json:"hash" comment:"Transaction hash"`
+	MaxFee     decimal.Decimal `bun:",type:numeric" json:"max_fee" comment:"The maximum fee that the sender is willing to pay for the transaction"`
+	Nonce      decimal.Decimal `bun:",type:numeric" json:"nonce" comment:"The transaction nonce"`
+	Error      *string         `bun:"error" json:"error" comment:"Reverted error"`
 
-	Class     Class      `bun:"rel:belongs-to" hasura:"table:class,field:class_id,remote_field:id,type:oto,name:class"`
-	Sender    Address    `bun:"rel:belongs-to" hasura:"table:address,field:sender_id,remote_field:id,type:oto,name:sender"`
-	Contract  Address    `bun:"rel:belongs-to" hasura:"table:address,field:contract_id,remote_field:id,type:oto,name:contract"`
-	Internals []Internal `bun:"rel:has-many"`
-	Messages  []Message  `bun:"rel:has-many"`
-	Events    []Event    `bun:"rel:has-many"`
-	Transfers []Transfer `bun:"rel:has-many"`
-	Fee       *Fee       `bun:"rel:belongs-to"`
+	Class     Class      `bun:"rel:belongs-to" json:"class" hasura:"table:class,field:class_id,remote_field:id,type:oto,name:class"`
+	Sender    Address    `bun:"rel:belongs-to" json:"sender" hasura:"table:address,field:sender_id,remote_field:id,type:oto,name:sender"`
+	Contract  Address    `bun:"rel:belongs-to" json:"contract" hasura:"table:address,field:contract_id,remote_field:id,type:oto,name:contract"`
+	Internals []Internal `bun:"rel:has-many" json:"internals"`
+	Messages  []Message  `bun:"rel:has-many" json:"messages"`
+	Events    []Event    `bun:"rel:has-many" json:"events"`
+	Transfers []Transfer `bun:"rel:has-many" json:"transfers"`
+	Fee       *Fee       `bun:"rel:belongs-to" json:"fee"`
 }
 
 // TableName -
@@ -93,4 +95,16 @@ func (d Declare) Flat() []any {
 		d.Nonce,
 		d.Error,
 	}
+}
+
+func (d Declare) MarshalJSON() ([]byte, error) {
+	type Alias Declare
+
+	return json.Marshal(&struct {
+		Alias
+		Hash string `json:"hash"`
+	}{
+		Alias: Alias(d),
+		Hash:  BytesToFormattedHex(d.Hash),
+	})
 }

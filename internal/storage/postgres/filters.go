@@ -165,6 +165,24 @@ func jsonFilter(q *bun.SelectQuery, name string, fltr map[string]string) *bun.Se
 	return q
 }
 
+func bytesFilter(q *bun.SelectQuery, name string, fltr storage.BytesFilter) *bun.SelectQuery {
+	switch {
+	case len(fltr.Eq) > 0:
+		q.Where("? = ?", bun.Safe(name), fltr.Eq)
+	case len(fltr.In) > 0:
+		var validValues [][]byte
+		for _, val := range fltr.In {
+			if len(val) > 0 {
+				validValues = append(validValues, val)
+			}
+		}
+		if len(validValues) > 0 {
+			q.Where("? IN (?)", bun.Safe(name), bun.In(validValues))
+		}
+	}
+	return q
+}
+
 func addLimit(q *bun.SelectQuery, limit int) *bun.SelectQuery {
 	if limit == 0 {
 		return q

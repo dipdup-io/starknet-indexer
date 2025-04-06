@@ -24,6 +24,7 @@ type DeployAccountFilter struct {
 	Time           TimeFilter
 	Status         EnumFilter
 	Class          BytesFilter
+	Hash           BytesFilter
 	ParsedCalldata map[string]string
 }
 
@@ -31,28 +32,28 @@ type DeployAccountFilter struct {
 type DeployAccount struct {
 	bun.BaseModel `bun:"deploy_account" comment:"table with deploy account transactions" partition:"RANGE(time)"`
 
-	ID                  uint64          `bun:"id,type:bigint,pk,notnull" comment:"Unique internal identity"`
-	Height              uint64          `comment:"Block height"`
-	ClassID             uint64          `comment:"Class id"`
-	ContractID          uint64          `comment:"Contract address id"`
-	Position            int             `comment:"Order in block"`
-	Time                time.Time       `bun:",pk" comment:"Time of block"`
-	Status              Status          ``
-	Hash                []byte          `comment:"Transaction hash"`
-	ContractAddressSalt []byte          `comment:"A random salt that determines the account address"`
-	MaxFee              decimal.Decimal `bun:",type:numeric" comment:"The maximum fee that the sender is willing to pay for the transaction"`
-	Nonce               decimal.Decimal `bun:",type:numeric" comment:"The transaction nonce"`
-	ConstructorCalldata []string        `bun:",array" comment:"Raw constructor calldata"`
-	ParsedCalldata      map[string]any  `bun:",nullzero" comment:"Calldata parsed according to contract ABI"`
-	Error               *string         `bun:"error" comment:"Reverted error"`
+	ID                  uint64          `bun:"id,type:bigint,pk,notnull" json:"id" comment:"Unique internal identity"`
+	Height              uint64          `json:"height" comment:"Block height"`
+	ClassID             uint64          `json:"class_id" comment:"Class id"`
+	ContractID          uint64          `json:"contract_id" comment:"Contract address id"`
+	Position            int             `json:"position" comment:"Order in block"`
+	Time                time.Time       `bun:",pk" json:"time" comment:"Time of block"`
+	Status              Status          `json:"status"`
+	Hash                []byte          `json:"hash" comment:"Transaction hash"`
+	ContractAddressSalt []byte          `json:"contract_address_salt" comment:"A random salt that determines the account address"`
+	MaxFee              decimal.Decimal `bun:",type:numeric" json:"max_fee" comment:"The maximum fee that the sender is willing to pay for the transaction"`
+	Nonce               decimal.Decimal `bun:",type:numeric" json:"nonce" comment:"The transaction nonce"`
+	ConstructorCalldata []string        `bun:",array" json:"constructor_calldata" comment:"Raw constructor calldata"`
+	ParsedCalldata      map[string]any  `bun:",nullzero" json:"parsed_calldata" comment:"Calldata parsed according to contract ABI"`
+	Error               *string         `bun:"error" json:"error" comment:"Reverted error"`
 
-	Class     Class      `bun:"rel:belongs-to" hasura:"table:class,field:class_id,remote_field:id,type:oto,name:class"`
-	Contract  Address    `bun:"rel:belongs-to" hasura:"table:address,field:contract_id,remote_field:id,type:oto,name:contract"`
-	Internals []Internal `bun:"rel:has-many"`
-	Messages  []Message  `bun:"rel:has-many"`
-	Events    []Event    `bun:"rel:has-many"`
-	Transfers []Transfer `bun:"rel:has-many"`
-	Fee       *Fee       `bun:"rel:belongs-to"`
+	Class     Class      `bun:"rel:belongs-to" json:"class" hasura:"table:class,field:class_id,remote_field:id,type:oto,name:class"`
+	Contract  Address    `bun:"rel:belongs-to" json:"contract" hasura:"table:address,field:contract_id,remote_field:id,type:oto,name:contract"`
+	Internals []Internal `bun:"rel:has-many" json:"internals"`
+	Messages  []Message  `bun:"rel:has-many" json:"messages"`
+	Events    []Event    `bun:"rel:has-many" json:"events"`
+	Transfers []Transfer `bun:"rel:has-many" json:"transfers"`
+	Fee       *Fee       `bun:"rel:belongs-to" json:"fee"`
 }
 
 // TableName -
@@ -105,4 +106,18 @@ func (d DeployAccount) Flat() []any {
 		}
 	}
 	return data
+}
+
+func (d DeployAccount) MarshalJSON() ([]byte, error) {
+	type Alias DeployAccount
+
+	return json.Marshal(&struct {
+		Alias
+		Hash                string `json:"hash"`
+		ContractAddressSalt string `json:"contract_address_salt"`
+	}{
+		Alias:               Alias(d),
+		Hash:                BytesToFormattedHex(d.Hash),
+		ContractAddressSalt: BytesToFormattedHex(d.ContractAddressSalt),
+	})
 }

@@ -2,71 +2,55 @@ package main
 
 import (
 	"context"
-	"fmt"
-	"log"
+	"github.com/dipdup-io/starknet-indexer/internal/mcp"
+	"github.com/dipdup-net/go-lib/config"
+	"github.com/rs/zerolog"
+	"github.com/spf13/cobra"
+	"os"
 
-	"github.com/mark3labs/mcp-go/mcp"
-	"github.com/mark3labs/mcp-go/server"
+	"github.com/rs/zerolog/log"
+)
+
+var (
+	rootCmd = &cobra.Command{
+		Use:   "MCP",
+		Short: "DipDup MCP",
+	}
 )
 
 func main() {
-	// Create a new MCP server
-	s := server.NewMCPServer(
-		"Calculator Demo",
-		"1.0.0",
-		server.WithResourceCapabilities(true, true),
-		server.WithLogging(),
-	)
-
-	// Add a calculator tool
-	calculatorTool := mcp.NewTool("calculate",
-		mcp.WithDescription("Perform basic arithmetic operations"),
-		mcp.WithString("operation",
-			mcp.Required(),
-			mcp.Description("The operation to perform (add, subtract, multiply, divide)"),
-			mcp.Enum("add", "subtract", "multiply", "divide"),
-		),
-		mcp.WithNumber("x",
-			mcp.Required(),
-			mcp.Description("First number"),
-		),
-		mcp.WithNumber("y",
-			mcp.Required(),
-			mcp.Description("Second number"),
-		),
-	)
-
-	// Add the calculator handler
-	s.AddTool(calculatorTool, func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-		op := request.Params.Arguments["operation"].(string)
-		x := request.Params.Arguments["x"].(float64)
-		y := request.Params.Arguments["y"].(float64)
-
-		var result float64
-		switch op {
-		case "add":
-			result = x + y
-		case "subtract":
-			result = x - y
-		case "multiply":
-			result = x * y
-		case "divide":
-			if y == 0 {
-				return mcp.NewToolResultError("Cannot divide by zero"), nil
-			}
-			result = x / y
-		}
-
-		return mcp.NewToolResultText(fmt.Sprintf("%.2f", result)), nil
+	log.Logger = log.Output(zerolog.ConsoleWriter{
+		Out:        os.Stdout,
+		TimeFormat: "2006-01-02 15:04:05",
 	})
-
-	sseServer := ServeSSE(s, "localhost:8888")
-	log.Printf("SSE server listening on :8888")
-	if err := sseServer.Start(":8888"); err != nil {
-		log.Fatalf("Server error: %v", err)
+	configPath := rootCmd.PersistentFlags().StringP("config", "c", "dipdup.yml", "path to YAML config file")
+	if err := rootCmd.Execute(); err != nil {
+		log.Panic().Err(err).Msg("command line execute")
+		return
 	}
-}
+	if err := rootCmd.MarkFlagRequired("config"); err != nil {
+		log.Panic().Err(err).Msg("config command line arg is required")
+		return
+	}
 
-func ServeSSE(mcpServer *server.MCPServer, addr string) *server.SSEServer {
-	return server.NewSSEServer(mcpServer, fmt.Sprintf("http://%s", addr))
+	ctx, _ := context.WithCancel(context.Background())
+
+	var cfg mcp.Config
+	if err := config.Parse(*configPath, &cfg); err != nil {
+		log.Panic().Err(err).Msg("parsing config file")
+		return
+	}
+
+	mcpServer, err := mcp.NewMCPServer(ctx, cfg)
+	if err != nil {
+		log.Panic().Err(err)
+		return
+	}
+
+	sseServer := mcpServer.ServeSSE("localhost:8889")
+	log.Printf("SSE server listening on :8889")
+
+	if err := sseServer.Start(":8889"); err != nil {
+		log.Err(err).Msg("Server error: %v")
+	}
 }

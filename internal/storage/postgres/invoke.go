@@ -29,6 +29,7 @@ func (invoke *Invoke) Filter(ctx context.Context, fltr []storage.InvokeFilter, o
 			q1 = q1.WhereGroup(" OR ", func(q *bun.SelectQuery) *bun.SelectQuery {
 				q = integerFilter(q, "invoke.id", fltr[i].ID)
 				q = integerFilter(q, "invoke.height", fltr[i].Height)
+				q = bytesFilter(q, "invoke.hash", fltr[i].Hash)
 				q = timeFilter(q, "invoke.time", fltr[i].Time)
 				q = enumFilter(q, "invoke.status", fltr[i].Status)
 				q = enumFilter(q, "invoke.version", fltr[i].Version)
