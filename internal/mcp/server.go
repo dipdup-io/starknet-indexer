@@ -4,6 +4,9 @@ import (
 	"context"
 	"fmt"
 	"github.com/dipdup-io/starknet-indexer/internal/mcp/tools"
+	"github.com/dipdup-io/starknet-indexer/internal/mcp/tools/address"
+	"github.com/dipdup-io/starknet-indexer/internal/mcp/tools/block"
+	"github.com/dipdup-io/starknet-indexer/internal/mcp/tools/txs"
 	"github.com/dipdup-io/starknet-indexer/internal/storage/postgres"
 	"github.com/dipdup-net/go-lib/config"
 	"github.com/mark3labs/mcp-go/mcp"
@@ -70,7 +73,13 @@ func (s *Server) addTools() {
 			),
 		),
 		func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-			return tools.GetBlockByHeight(s.storage, ctx, req)
+			return block.GetBlockByHeight(s.storage, ctx, req)
+		},
+	)
+	s.Server.AddTool(
+		mcp.NewTool("last_block", mcp.WithDescription("Get last block")),
+		func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+			return block.GetLastBlock(s.storage, ctx, req)
 		},
 	)
 	s.Server.AddTool(
@@ -83,7 +92,20 @@ func (s *Server) addTools() {
 			),
 		),
 		func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-			return tools.GetTxByHash(s.storage, ctx, req)
+			return txs.GetTxByHash(s.storage, ctx, req)
+		},
+	)
+	s.Server.AddTool(
+		mcp.NewTool(
+			"get_address_balances",
+			mcp.WithDescription("Get address token balances"),
+			mcp.WithString("address",
+				mcp.Required(),
+				mcp.Description("Starknet address"),
+			),
+		),
+		func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+			return address.GetAddressBalances(s.storage, ctx, req)
 		},
 	)
 }

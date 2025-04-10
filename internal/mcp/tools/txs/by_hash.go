@@ -1,4 +1,4 @@
-package tools
+package txs
 
 import (
 	"context"
@@ -9,6 +9,7 @@ import (
 	"github.com/pkg/errors"
 )
 
+// GetTxByHash -
 func GetTxByHash(storage postgres.Storage, ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	hash, ok := request.Params.Arguments["hash"].(string)
 	if !ok {

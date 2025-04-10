@@ -1,4 +1,4 @@
-package tools
+package block
 
 import (
 	"context"
@@ -10,6 +10,7 @@ import (
 	"strconv"
 )
 
+// GetBlockByHeight -
 func GetBlockByHeight(storage postgres.Storage, ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	requestHeight, ok := request.Params.Arguments["height"].(string)
 	if !ok {

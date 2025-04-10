@@ -2,12 +2,11 @@ package tools
 
 import (
 	"context"
+	"encoding/json"
 	"github.com/dipdup-io/starknet-indexer/internal/mcp/db"
 	"github.com/dipdup-net/go-lib/config"
-	"github.com/pkg/errors"
-	"strings"
-
 	"github.com/mark3labs/mcp-go/mcp"
+	"github.com/pkg/errors"
 )
 
 func ListTablesTool(dbConfig config.Database, _ context.Context, _ mcp.CallToolRequest) (*mcp.CallToolResult, error) {
@@ -38,5 +37,10 @@ func ListTablesTool(dbConfig config.Database, _ context.Context, _ mcp.CallToolR
 		}
 	}
 
-	return mcp.NewToolResultText(strings.Join(tableNames, "\n")), nil
+	jsonTables, err := json.Marshal(tableNames)
+	if err != nil {
+		return nil, errors.Wrapf(err, "error marshalling table names")
+	}
+
+	return mcp.NewToolResultText(string(jsonTables)), nil
 }
