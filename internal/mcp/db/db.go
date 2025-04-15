@@ -46,11 +46,9 @@ func (d *Database) ExecuteQuery(query string, params map[string]any) ([]map[stri
 	}
 	defer stmt.Close()
 
-	var args []any
-	if params != nil {
-		for _, v := range params {
-			args = append(args, v)
-		}
+	args := make([]any, 0, len(params))
+	for _, v := range params {
+		args = append(args, v)
 	}
 
 	rows, err := stmt.Query(args...)

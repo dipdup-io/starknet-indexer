@@ -268,25 +268,26 @@ func GetAddressActivity(storage postgres.Storage, ctx context.Context, request m
 		contractAddress := models.BytesToFormattedHex(storageContractAddress.Hash)
 
 		txHash := ""
-		if events[i].InvokeID != nil {
+		switch {
+		case events[i].InvokeID != nil:
 			tx, err := storage.Invoke.GetByID(ctx, *events[i].InvokeID)
 			if err != nil {
 				return nil, errors.Wrapf(err, "error fetching invoke with id %d", events[i].InvokeID)
 			}
 			txHash = models.BytesToFormattedHex(tx.Hash)
-		} else if events[i].DeclareID != nil {
+		case events[i].DeclareID != nil:
 			tx, err := storage.Declare.GetByID(ctx, *events[i].DeclareID)
 			if err != nil {
 				return nil, errors.Wrapf(err, "error fetching declare with id %d", events[i].DeclareID)
 			}
 			txHash = models.BytesToFormattedHex(tx.Hash)
-		} else if events[i].DeployID != nil {
+		case events[i].DeployID != nil:
 			tx, err := storage.Deploy.GetByID(ctx, *events[i].DeployID)
 			if err != nil {
 				return nil, errors.Wrapf(err, "error fetching deploy with id %d", events[i].DeployID)
 			}
 			txHash = models.BytesToFormattedHex(tx.Hash)
-		} else if events[i].DeployAccountID != nil {
+		case events[i].DeployAccountID != nil:
 			tx, err := storage.DeployAccount.GetByID(ctx, *events[i].DeployAccountID)
 			if err != nil {
 				return nil, errors.Wrapf(
@@ -296,19 +297,19 @@ func GetAddressActivity(storage postgres.Storage, ctx context.Context, request m
 				)
 			}
 			txHash = models.BytesToFormattedHex(tx.Hash)
-		} else if events[i].L1HandlerID != nil {
+		case events[i].L1HandlerID != nil:
 			tx, err := storage.Deploy.GetByID(ctx, *events[i].L1HandlerID)
 			if err != nil {
 				return nil, errors.Wrapf(err, "error fetching l1_handler with id %d", events[i].L1HandlerID)
 			}
 			txHash = models.BytesToFormattedHex(tx.Hash)
-		} else if events[i].InternalID != nil {
+		case events[i].InternalID != nil:
 			tx, err := storage.Internal.GetByID(ctx, *events[i].InternalID)
 			if err != nil {
 				return nil, errors.Wrapf(err, "error fetching internal tx with id %d", events[i].InternalID)
 			}
 			txHash = models.BytesToFormattedHex(tx.Hash)
-		} else if events[i].FeeID != nil {
+		case events[i].FeeID != nil:
 			fee, err := storage.Fee.GetByID(ctx, *events[i].FeeID)
 			if err != nil {
 				return nil, errors.Wrapf(err, "error fetching fee with id %d", events[i].FeeID)
@@ -329,6 +330,9 @@ func GetAddressActivity(storage postgres.Storage, ctx context.Context, request m
 	activity.Events = eventsList
 
 	deploys, err := storage.Internal.GetDeployedContracts(ctx, addressHash)
+	if err != nil {
+		return nil, errors.Wrapf(err, "error getting deployed contracts")
+	}
 	activity.Deploys = deploys
 
 	jsonResult, err := json.MarshalIndent(activity, "", "  ")
@@ -359,28 +363,29 @@ func parseTransfers(ctx context.Context, storage postgres.Storage, transfers []m
 
 		txHash := ""
 		txType := "unknown"
-		if transfers[i].InvokeID != nil {
+		switch {
+		case transfers[i].InvokeID != nil:
 			txType = "invoke"
 			tx, err := storage.Invoke.GetByID(ctx, *transfers[i].InvokeID)
 			if err != nil {
 				return nil, errors.Wrapf(err, "error fetching invoke with id %d", transfers[i].InvokeID)
 			}
 			txHash = models.BytesToFormattedHex(tx.Hash)
-		} else if transfers[i].DeclareID != nil {
+		case transfers[i].DeclareID != nil:
 			txType = "declare"
 			tx, err := storage.Declare.GetByID(ctx, *transfers[i].DeclareID)
 			if err != nil {
 				return nil, errors.Wrapf(err, "error fetching declare with id %d", transfers[i].DeclareID)
 			}
 			txHash = models.BytesToFormattedHex(tx.Hash)
-		} else if transfers[i].DeployID != nil {
+		case transfers[i].DeployID != nil:
 			txType = "deploy"
 			tx, err := storage.Deploy.GetByID(ctx, *transfers[i].DeployID)
 			if err != nil {
 				return nil, errors.Wrapf(err, "error fetching deploy with id %d", transfers[i].DeployID)
 			}
 			txHash = models.BytesToFormattedHex(tx.Hash)
-		} else if transfers[i].DeployAccountID != nil {
+		case transfers[i].DeployAccountID != nil:
 			txType = "deploy_account"
 			tx, err := storage.DeployAccount.GetByID(ctx, *transfers[i].DeployAccountID)
 			if err != nil {
@@ -391,21 +396,21 @@ func parseTransfers(ctx context.Context, storage postgres.Storage, transfers []m
 				)
 			}
 			txHash = models.BytesToFormattedHex(tx.Hash)
-		} else if transfers[i].L1HandlerID != nil {
+		case transfers[i].L1HandlerID != nil:
 			txType = "l1_handler"
 			tx, err := storage.Deploy.GetByID(ctx, *transfers[i].L1HandlerID)
 			if err != nil {
 				return nil, errors.Wrapf(err, "error fetching l1_handler with id %d", transfers[i].L1HandlerID)
 			}
 			txHash = models.BytesToFormattedHex(tx.Hash)
-		} else if transfers[i].InternalID != nil {
+		case transfers[i].InternalID != nil:
 			txType = "internal"
 			tx, err := storage.Internal.GetByID(ctx, *transfers[i].FeeID)
 			if err != nil {
 				return nil, errors.Wrapf(err, "error fetching internal tx with id %d", transfers[i].InternalID)
 			}
 			txHash = models.BytesToFormattedHex(tx.Hash)
-		} else if transfers[i].FeeID != nil {
+		case transfers[i].FeeID != nil:
 			txType = "fee"
 			fee, err := storage.Fee.GetByID(ctx, *transfers[i].FeeID)
 			if err != nil {

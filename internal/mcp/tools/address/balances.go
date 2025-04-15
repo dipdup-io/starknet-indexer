@@ -23,7 +23,7 @@ func GetAddressBalances(storage postgres.Storage, ctx context.Context, request m
 	if !ok {
 		return nil, errors.Errorf("address must be a string")
 	}
-	contract, ok := request.Params.Arguments["contract"].(string)
+	contract, _ := request.Params.Arguments["contract"].(string)
 
 	addressHash, err := models.HexToBytes(address)
 	if err != nil {

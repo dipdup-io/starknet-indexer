@@ -59,13 +59,13 @@ func (b Block) MarshalJSON() ([]byte, error) {
 	type Alias Block
 
 	return json.Marshal(&struct {
-		Alias
+		*Alias           `json:"-"`
 		Hash             string `json:"hash"`
 		ParentHash       string `json:"parent_hash"`
 		NewRoot          string `json:"new_root"`
 		SequencerAddress string `json:"sequencer_address"`
 	}{
-		Alias:            Alias(b),
+		Alias:            (*Alias)(&b),
 		Hash:             BytesToFormattedHex(b.Hash),
 		ParentHash:       BytesToFormattedHex(b.ParentHash),
 		NewRoot:          BytesToFormattedHex(b.NewRoot),

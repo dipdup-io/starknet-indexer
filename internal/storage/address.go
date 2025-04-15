@@ -55,12 +55,11 @@ func (address Address) GetId() uint64 {
 
 func (address Address) MarshalJSON() ([]byte, error) {
 	type Alias Address
-
 	return json.Marshal(&struct {
-		Alias
-		Hash string `json:"hash"`
+		*Alias `json:"-"`
+		Hash   string `json:"hash"`
 	}{
-		Alias: Alias(address),
+		Alias: (*Alias)(&address),
 		Hash:  BytesToFormattedHex(address.Hash),
 	})
 }

@@ -33,7 +33,8 @@ func main() {
 		return
 	}
 
-	ctx, _ := context.WithCancel(context.Background())
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
 
 	var cfg mcp.Config
 	if err := config.Parse(*configPath, &cfg); err != nil {

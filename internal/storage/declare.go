@@ -101,10 +101,10 @@ func (d Declare) MarshalJSON() ([]byte, error) {
 	type Alias Declare
 
 	return json.Marshal(&struct {
-		Alias
-		Hash string `json:"hash"`
+		*Alias `json:"-"`
+		Hash   string `json:"hash"`
 	}{
-		Alias: Alias(d),
+		Alias: (*Alias)(&d),
 		Hash:  BytesToFormattedHex(d.Hash),
 	})
 }
