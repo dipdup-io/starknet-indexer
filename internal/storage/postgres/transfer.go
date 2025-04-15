@@ -52,3 +52,27 @@ func (t *Transfer) Filter(ctx context.Context, fltr []storage.TransferFilter, op
 		Scan(ctx, &result)
 	return result, err
 }
+
+func (t *Transfer) Count(ctx context.Context, fltr []storage.TransferFilter) (uint64, error) {
+	query := t.DB().NewSelect().Model(&storage.Transfer{})
+	query = query.Column("count(*)").ExcludeColumn("*")
+
+	query = query.WhereGroup(" AND ", func(q1 *bun.SelectQuery) *bun.SelectQuery {
+		for i := range fltr {
+			q1 = q1.WhereGroup(" AND ", func(q *bun.SelectQuery) *bun.SelectQuery {
+				q = integerFilter(q, "transfer.id", fltr[i].ID)
+				q = integerFilter(q, "transfer.height", fltr[i].Height)
+				q = timeFilter(q, "transfer.time", fltr[i].Time)
+				q = addressFilter(q, "hash", fltr[i].Contract, "Contract")
+				q = addressFilter(q, "hash", fltr[i].From, "From")
+				q = addressFilter(q, "hash", fltr[i].To, "To")
+				q = stringFilter(q, "transfer.token_id", fltr[i].TokenId)
+				return q
+			})
+		}
+		return q1
+	})
+
+	count, err := query.Count(ctx)
+	return uint64(count), err
+}

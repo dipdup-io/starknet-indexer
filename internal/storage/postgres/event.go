@@ -59,3 +59,27 @@ func (event *Event) Filter(ctx context.Context, fltr []storage.EventFilter, opts
 	err = q.Scan(ctx, &result)
 	return
 }
+
+func (e *Event) Count(ctx context.Context, fltr []storage.EventFilter) (uint64, error) {
+	query := e.DB().NewSelect().Model(&storage.Event{})
+	query = query.Column("count(*)").ExcludeColumn("*")
+
+	query = query.WhereGroup(" AND ", func(q1 *bun.SelectQuery) *bun.SelectQuery {
+		for i := range fltr {
+			q1 = q1.WhereGroup(" OR ", func(q *bun.SelectQuery) *bun.SelectQuery {
+				q = integerFilter(q, "id", fltr[i].ID)
+				q = integerFilter(q, "height", fltr[i].Height)
+				q = timeFilter(q, "time", fltr[i].Time)
+				q = idFilter(q, "contract_id", fltr[i].Contract)
+				q = idFilter(q, "from_id", fltr[i].From)
+				q = stringFilter(q, "name", fltr[i].Name)
+				q = jsonFilter(q, "parsed_data", fltr[i].ParsedData)
+				return q
+			})
+		}
+		return q1
+	})
+
+	count, err := query.Count(ctx)
+	return uint64(count), err
+}

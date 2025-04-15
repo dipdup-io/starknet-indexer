@@ -2,9 +2,16 @@ package storage
 
 import (
 	"encoding/hex"
+	"encoding/json"
 	"github.com/pkg/errors"
 	"strconv"
 )
+
+type HexBytes []byte
+
+func (h HexBytes) MarshalJSON() ([]byte, error) {
+	return json.Marshal(BytesToFormattedHex(h))
+}
 
 func BytesToFormattedHex(data []byte) string {
 	if len(data) == 0 {

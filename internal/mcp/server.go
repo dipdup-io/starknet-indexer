@@ -85,7 +85,7 @@ func (s *Server) addTools() {
 	s.Server.AddTool(
 		mcp.NewTool(
 			"get_transaction_by_hash",
-			mcp.WithDescription("Get transaction data by hash"),
+			mcp.WithDescription("Get transaction by its hash"),
 			mcp.WithString("hash",
 				mcp.Required(),
 				mcp.Description("Transaction hash"),
@@ -103,9 +103,26 @@ func (s *Server) addTools() {
 				mcp.Required(),
 				mcp.Description("Starknet address"),
 			),
+			mcp.WithString("contract", mcp.Description("Starknet address")),
 		),
 		func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 			return address.GetAddressBalances(s.storage, ctx, req)
+		},
+	)
+
+	s.Server.AddTool(
+		mcp.NewTool(
+			"get_address_activity",
+			mcp.WithDescription("Complex chain activity address data and stats"),
+			mcp.WithString("address",
+				mcp.Required(),
+				mcp.Description("Starknet address"),
+			),
+			mcp.WithString("limit", mcp.Description("Rows limit, default is 20")),
+			mcp.WithString("offset", mcp.Description("Offset, default is 0")),
+		),
+		func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+			return address.GetAddressActivity(s.storage, ctx, req)
 		},
 	)
 }

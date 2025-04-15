@@ -1,6 +1,7 @@
 package storage
 
 import (
+	"context"
 	"time"
 
 	"github.com/dipdup-net/indexer-sdk/pkg/storage"
@@ -13,6 +14,14 @@ import (
 type IInternal interface {
 	storage.Table[*Internal]
 	Filterable[Internal, InternalFilter]
+
+	GetDeployedContracts(context.Context, []byte) ([]DeployedContract, error)
+}
+
+type DeployedContract struct {
+	Time            time.Time `bun:"deploy_time" json:"deploy_time"`
+	ContractAddress HexBytes  `bun:"contract_address" json:"contract_address"`
+	TxHash          HexBytes  `bun:"tx_hash" json:"tx_hash"`
 }
 
 // InternalFilter -
