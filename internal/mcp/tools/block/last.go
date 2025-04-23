@@ -9,7 +9,7 @@ import (
 )
 
 // GetLastBlock -
-func GetLastBlock(storage postgres.Storage, ctx context.Context, _ mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+func GetLastBlock(ctx context.Context, storage postgres.Storage, _ mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	block, err := storage.Blocks.Last(ctx)
 	if err != nil {
 		return nil, errors.Wrapf(err, "error fetching last block")

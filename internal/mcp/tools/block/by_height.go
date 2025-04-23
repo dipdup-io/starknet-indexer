@@ -11,7 +11,7 @@ import (
 )
 
 // GetBlockByHeight -
-func GetBlockByHeight(storage postgres.Storage, ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+func GetBlockByHeight(ctx context.Context, storage postgres.Storage, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	requestHeight, ok := request.Params.Arguments["height"].(string)
 	if !ok {
 		return nil, errors.Errorf("height must be a string")

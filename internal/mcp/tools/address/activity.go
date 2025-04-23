@@ -61,7 +61,7 @@ type Activity struct {
 const LimitMaxValue = 100
 
 // GetAddressActivity - returns complex chain activity address data and stats
-func GetAddressActivity(storage postgres.Storage, ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+func GetAddressActivity(ctx context.Context, storage postgres.Storage, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	var err error
 	address, ok := request.Params.Arguments["address"].(string)
 	if !ok {

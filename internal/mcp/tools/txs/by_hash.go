@@ -27,7 +27,7 @@ type TransactionResult struct {
 }
 
 // GetTxByHash -
-func GetTxByHash(s postgres.Storage, ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+func GetTxByHash(ctx context.Context, s postgres.Storage, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	hash, ok := request.Params.Arguments["hash"].(string)
 	if !ok {
 		return nil, errors.Errorf("hash must be a string")

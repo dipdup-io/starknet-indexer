@@ -26,7 +26,7 @@ type Server struct {
 
 func NewMCPServer(ctx context.Context, cfg Config) (*Server, error) {
 	mcpServer := server.NewMCPServer(
-		"example-server",
+		"starknet-mcp-server",
 		"1.0.0",
 		server.WithResourceCapabilities(true, true),
 		server.WithPromptCapabilities(true),
@@ -60,7 +60,7 @@ func (s *Server) addTools() {
 			mcp.WithDescription("List all tables in the database"),
 		),
 		func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-			return tools.ListTablesTool(s.DbConfig, ctx, req)
+			return tools.ListTablesTool(ctx, s.storage, req)
 		},
 	)
 	s.Server.AddTool(
@@ -73,13 +73,13 @@ func (s *Server) addTools() {
 			),
 		),
 		func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-			return block.GetBlockByHeight(s.storage, ctx, req)
+			return block.GetBlockByHeight(ctx, s.storage, req)
 		},
 	)
 	s.Server.AddTool(
 		mcp.NewTool("last_block", mcp.WithDescription("Get last block")),
 		func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-			return block.GetLastBlock(s.storage, ctx, req)
+			return block.GetLastBlock(ctx, s.storage, req)
 		},
 	)
 	s.Server.AddTool(
@@ -92,7 +92,7 @@ func (s *Server) addTools() {
 			),
 		),
 		func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-			return txs.GetTxByHash(s.storage, ctx, req)
+			return txs.GetTxByHash(ctx, s.storage, req)
 		},
 	)
 	s.Server.AddTool(
@@ -106,7 +106,7 @@ func (s *Server) addTools() {
 			mcp.WithString("contract", mcp.Description("Starknet address")),
 		),
 		func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-			return address.GetAddressBalances(s.storage, ctx, req)
+			return address.GetAddressBalances(ctx, s.storage, req)
 		},
 	)
 
@@ -122,7 +122,7 @@ func (s *Server) addTools() {
 			mcp.WithString("offset", mcp.Description("Offset, default is 0")),
 		),
 		func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-			return address.GetAddressActivity(s.storage, ctx, req)
+			return address.GetAddressActivity(ctx, s.storage, req)
 		},
 	)
 }

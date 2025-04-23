@@ -18,7 +18,7 @@ type TokenBalance struct {
 }
 
 // GetAddressBalances -
-func GetAddressBalances(storage postgres.Storage, ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+func GetAddressBalances(ctx context.Context, storage postgres.Storage, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	address, ok := request.Params.Arguments["address"].(string)
 	if !ok {
 		return nil, errors.Errorf("address must be a string")
