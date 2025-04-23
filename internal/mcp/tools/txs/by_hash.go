@@ -141,7 +141,7 @@ func GetTxByHash(ctx context.Context, s postgres.Storage, request mcp.CallToolRe
 	if errors.Is(err, sql.ErrNoRows) {
 		return nil, errors.Errorf("transaction with hash %x not found", txHashBytes)
 	} else if err != nil {
-		return nil, errors.Errorf("failed to execute query: %w", err)
+		return nil, errors.Wrapf(err, "failed to execute query, tx hash %x", txHashBytes)
 	}
 	jsonTx, err := json.Marshal(result)
 	if err != nil {

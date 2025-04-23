@@ -22,6 +22,9 @@ func ListTablesTool(ctx context.Context, s postgres.Storage, _ mcp.CallToolReque
 
 	var tables []Table
 	err := s.Connection().DB().NewRaw(query).Scan(ctx, &tables)
+	if err != nil {
+		return nil, errors.Wrapf(err, "failed to execute query")
+	}
 
 	tableNames := make([]string, len(tables))
 	for i := range tables {
