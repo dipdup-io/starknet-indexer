@@ -5,6 +5,7 @@
 //
 //	mockgen -source=internal.go -destination=mock/internal.go -package=mock -typed
 //
+
 // Package mock is a generated GoMock package.
 package mock
 
@@ -21,6 +22,7 @@ import (
 type MockIInternal struct {
 	ctrl     *gomock.Controller
 	recorder *MockIInternalMockRecorder
+	isgomock struct{}
 }
 
 // MockIInternalMockRecorder is the mock recorder for MockIInternal.
@@ -50,31 +52,31 @@ func (m *MockIInternal) CursorList(ctx context.Context, id, limit uint64, order 
 }
 
 // CursorList indicates an expected call of CursorList.
-func (mr *MockIInternalMockRecorder) CursorList(ctx, id, limit, order, cmp any) *IInternalCursorListCall {
+func (mr *MockIInternalMockRecorder) CursorList(ctx, id, limit, order, cmp any) *MockIInternalCursorListCall {
 	mr.mock.ctrl.T.Helper()
 	call := mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CursorList", reflect.TypeOf((*MockIInternal)(nil).CursorList), ctx, id, limit, order, cmp)
-	return &IInternalCursorListCall{Call: call}
+	return &MockIInternalCursorListCall{Call: call}
 }
 
-// IInternalCursorListCall wrap *gomock.Call
-type IInternalCursorListCall struct {
+// MockIInternalCursorListCall wrap *gomock.Call
+type MockIInternalCursorListCall struct {
 	*gomock.Call
 }
 
 // Return rewrite *gomock.Call.Return
-func (c *IInternalCursorListCall) Return(arg0 []*storage.Internal, arg1 error) *IInternalCursorListCall {
+func (c *MockIInternalCursorListCall) Return(arg0 []*storage.Internal, arg1 error) *MockIInternalCursorListCall {
 	c.Call = c.Call.Return(arg0, arg1)
 	return c
 }
 
 // Do rewrite *gomock.Call.Do
-func (c *IInternalCursorListCall) Do(f func(context.Context, uint64, uint64, storage0.SortOrder, storage0.Comparator) ([]*storage.Internal, error)) *IInternalCursorListCall {
+func (c *MockIInternalCursorListCall) Do(f func(context.Context, uint64, uint64, storage0.SortOrder, storage0.Comparator) ([]*storage.Internal, error)) *MockIInternalCursorListCall {
 	c.Call = c.Call.Do(f)
 	return c
 }
 
 // DoAndReturn rewrite *gomock.Call.DoAndReturn
-func (c *IInternalCursorListCall) DoAndReturn(f func(context.Context, uint64, uint64, storage0.SortOrder, storage0.Comparator) ([]*storage.Internal, error)) *IInternalCursorListCall {
+func (c *MockIInternalCursorListCall) DoAndReturn(f func(context.Context, uint64, uint64, storage0.SortOrder, storage0.Comparator) ([]*storage.Internal, error)) *MockIInternalCursorListCall {
 	c.Call = c.Call.DoAndReturn(f)
 	return c
 }
@@ -93,32 +95,32 @@ func (m *MockIInternal) Filter(ctx context.Context, flt []storage.InternalFilter
 }
 
 // Filter indicates an expected call of Filter.
-func (mr *MockIInternalMockRecorder) Filter(ctx, flt any, opts ...any) *IInternalFilterCall {
+func (mr *MockIInternalMockRecorder) Filter(ctx, flt any, opts ...any) *MockIInternalFilterCall {
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]any{ctx, flt}, opts...)
 	call := mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Filter", reflect.TypeOf((*MockIInternal)(nil).Filter), varargs...)
-	return &IInternalFilterCall{Call: call}
+	return &MockIInternalFilterCall{Call: call}
 }
 
-// IInternalFilterCall wrap *gomock.Call
-type IInternalFilterCall struct {
+// MockIInternalFilterCall wrap *gomock.Call
+type MockIInternalFilterCall struct {
 	*gomock.Call
 }
 
 // Return rewrite *gomock.Call.Return
-func (c *IInternalFilterCall) Return(arg0 []storage.Internal, arg1 error) *IInternalFilterCall {
+func (c *MockIInternalFilterCall) Return(arg0 []storage.Internal, arg1 error) *MockIInternalFilterCall {
 	c.Call = c.Call.Return(arg0, arg1)
 	return c
 }
 
 // Do rewrite *gomock.Call.Do
-func (c *IInternalFilterCall) Do(f func(context.Context, []storage.InternalFilter, ...storage.FilterOption) ([]storage.Internal, error)) *IInternalFilterCall {
+func (c *MockIInternalFilterCall) Do(f func(context.Context, []storage.InternalFilter, ...storage.FilterOption) ([]storage.Internal, error)) *MockIInternalFilterCall {
 	c.Call = c.Call.Do(f)
 	return c
 }
 
 // DoAndReturn rewrite *gomock.Call.DoAndReturn
-func (c *IInternalFilterCall) DoAndReturn(f func(context.Context, []storage.InternalFilter, ...storage.FilterOption) ([]storage.Internal, error)) *IInternalFilterCall {
+func (c *MockIInternalFilterCall) DoAndReturn(f func(context.Context, []storage.InternalFilter, ...storage.FilterOption) ([]storage.Internal, error)) *MockIInternalFilterCall {
 	c.Call = c.Call.DoAndReturn(f)
 	return c
 }
@@ -133,31 +135,70 @@ func (m *MockIInternal) GetByID(ctx context.Context, id uint64) (*storage.Intern
 }
 
 // GetByID indicates an expected call of GetByID.
-func (mr *MockIInternalMockRecorder) GetByID(ctx, id any) *IInternalGetByIDCall {
+func (mr *MockIInternalMockRecorder) GetByID(ctx, id any) *MockIInternalGetByIDCall {
 	mr.mock.ctrl.T.Helper()
 	call := mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetByID", reflect.TypeOf((*MockIInternal)(nil).GetByID), ctx, id)
-	return &IInternalGetByIDCall{Call: call}
+	return &MockIInternalGetByIDCall{Call: call}
 }
 
-// IInternalGetByIDCall wrap *gomock.Call
-type IInternalGetByIDCall struct {
+// MockIInternalGetByIDCall wrap *gomock.Call
+type MockIInternalGetByIDCall struct {
 	*gomock.Call
 }
 
 // Return rewrite *gomock.Call.Return
-func (c *IInternalGetByIDCall) Return(arg0 *storage.Internal, arg1 error) *IInternalGetByIDCall {
+func (c *MockIInternalGetByIDCall) Return(arg0 *storage.Internal, arg1 error) *MockIInternalGetByIDCall {
 	c.Call = c.Call.Return(arg0, arg1)
 	return c
 }
 
 // Do rewrite *gomock.Call.Do
-func (c *IInternalGetByIDCall) Do(f func(context.Context, uint64) (*storage.Internal, error)) *IInternalGetByIDCall {
+func (c *MockIInternalGetByIDCall) Do(f func(context.Context, uint64) (*storage.Internal, error)) *MockIInternalGetByIDCall {
 	c.Call = c.Call.Do(f)
 	return c
 }
 
 // DoAndReturn rewrite *gomock.Call.DoAndReturn
-func (c *IInternalGetByIDCall) DoAndReturn(f func(context.Context, uint64) (*storage.Internal, error)) *IInternalGetByIDCall {
+func (c *MockIInternalGetByIDCall) DoAndReturn(f func(context.Context, uint64) (*storage.Internal, error)) *MockIInternalGetByIDCall {
+	c.Call = c.Call.DoAndReturn(f)
+	return c
+}
+
+// GetDeployedContracts mocks base method.
+func (m *MockIInternal) GetDeployedContracts(arg0 context.Context, arg1 []byte) ([]storage.DeployedContract, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetDeployedContracts", arg0, arg1)
+	ret0, _ := ret[0].([]storage.DeployedContract)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetDeployedContracts indicates an expected call of GetDeployedContracts.
+func (mr *MockIInternalMockRecorder) GetDeployedContracts(arg0, arg1 any) *MockIInternalGetDeployedContractsCall {
+	mr.mock.ctrl.T.Helper()
+	call := mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDeployedContracts", reflect.TypeOf((*MockIInternal)(nil).GetDeployedContracts), arg0, arg1)
+	return &MockIInternalGetDeployedContractsCall{Call: call}
+}
+
+// MockIInternalGetDeployedContractsCall wrap *gomock.Call
+type MockIInternalGetDeployedContractsCall struct {
+	*gomock.Call
+}
+
+// Return rewrite *gomock.Call.Return
+func (c *MockIInternalGetDeployedContractsCall) Return(arg0 []storage.DeployedContract, arg1 error) *MockIInternalGetDeployedContractsCall {
+	c.Call = c.Call.Return(arg0, arg1)
+	return c
+}
+
+// Do rewrite *gomock.Call.Do
+func (c *MockIInternalGetDeployedContractsCall) Do(f func(context.Context, []byte) ([]storage.DeployedContract, error)) *MockIInternalGetDeployedContractsCall {
+	c.Call = c.Call.Do(f)
+	return c
+}
+
+// DoAndReturn rewrite *gomock.Call.DoAndReturn
+func (c *MockIInternalGetDeployedContractsCall) DoAndReturn(f func(context.Context, []byte) ([]storage.DeployedContract, error)) *MockIInternalGetDeployedContractsCall {
 	c.Call = c.Call.DoAndReturn(f)
 	return c
 }
@@ -171,31 +212,31 @@ func (m *MockIInternal) IsNoRows(err error) bool {
 }
 
 // IsNoRows indicates an expected call of IsNoRows.
-func (mr *MockIInternalMockRecorder) IsNoRows(err any) *IInternalIsNoRowsCall {
+func (mr *MockIInternalMockRecorder) IsNoRows(err any) *MockIInternalIsNoRowsCall {
 	mr.mock.ctrl.T.Helper()
 	call := mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IsNoRows", reflect.TypeOf((*MockIInternal)(nil).IsNoRows), err)
-	return &IInternalIsNoRowsCall{Call: call}
+	return &MockIInternalIsNoRowsCall{Call: call}
 }
 
-// IInternalIsNoRowsCall wrap *gomock.Call
-type IInternalIsNoRowsCall struct {
+// MockIInternalIsNoRowsCall wrap *gomock.Call
+type MockIInternalIsNoRowsCall struct {
 	*gomock.Call
 }
 
 // Return rewrite *gomock.Call.Return
-func (c *IInternalIsNoRowsCall) Return(arg0 bool) *IInternalIsNoRowsCall {
+func (c *MockIInternalIsNoRowsCall) Return(arg0 bool) *MockIInternalIsNoRowsCall {
 	c.Call = c.Call.Return(arg0)
 	return c
 }
 
 // Do rewrite *gomock.Call.Do
-func (c *IInternalIsNoRowsCall) Do(f func(error) bool) *IInternalIsNoRowsCall {
+func (c *MockIInternalIsNoRowsCall) Do(f func(error) bool) *MockIInternalIsNoRowsCall {
 	c.Call = c.Call.Do(f)
 	return c
 }
 
 // DoAndReturn rewrite *gomock.Call.DoAndReturn
-func (c *IInternalIsNoRowsCall) DoAndReturn(f func(error) bool) *IInternalIsNoRowsCall {
+func (c *MockIInternalIsNoRowsCall) DoAndReturn(f func(error) bool) *MockIInternalIsNoRowsCall {
 	c.Call = c.Call.DoAndReturn(f)
 	return c
 }
@@ -210,31 +251,31 @@ func (m *MockIInternal) LastID(ctx context.Context) (uint64, error) {
 }
 
 // LastID indicates an expected call of LastID.
-func (mr *MockIInternalMockRecorder) LastID(ctx any) *IInternalLastIDCall {
+func (mr *MockIInternalMockRecorder) LastID(ctx any) *MockIInternalLastIDCall {
 	mr.mock.ctrl.T.Helper()
 	call := mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "LastID", reflect.TypeOf((*MockIInternal)(nil).LastID), ctx)
-	return &IInternalLastIDCall{Call: call}
+	return &MockIInternalLastIDCall{Call: call}
 }
 
-// IInternalLastIDCall wrap *gomock.Call
-type IInternalLastIDCall struct {
+// MockIInternalLastIDCall wrap *gomock.Call
+type MockIInternalLastIDCall struct {
 	*gomock.Call
 }
 
 // Return rewrite *gomock.Call.Return
-func (c *IInternalLastIDCall) Return(arg0 uint64, arg1 error) *IInternalLastIDCall {
+func (c *MockIInternalLastIDCall) Return(arg0 uint64, arg1 error) *MockIInternalLastIDCall {
 	c.Call = c.Call.Return(arg0, arg1)
 	return c
 }
 
 // Do rewrite *gomock.Call.Do
-func (c *IInternalLastIDCall) Do(f func(context.Context) (uint64, error)) *IInternalLastIDCall {
+func (c *MockIInternalLastIDCall) Do(f func(context.Context) (uint64, error)) *MockIInternalLastIDCall {
 	c.Call = c.Call.Do(f)
 	return c
 }
 
 // DoAndReturn rewrite *gomock.Call.DoAndReturn
-func (c *IInternalLastIDCall) DoAndReturn(f func(context.Context) (uint64, error)) *IInternalLastIDCall {
+func (c *MockIInternalLastIDCall) DoAndReturn(f func(context.Context) (uint64, error)) *MockIInternalLastIDCall {
 	c.Call = c.Call.DoAndReturn(f)
 	return c
 }
@@ -249,31 +290,31 @@ func (m *MockIInternal) List(ctx context.Context, limit, offset uint64, order st
 }
 
 // List indicates an expected call of List.
-func (mr *MockIInternalMockRecorder) List(ctx, limit, offset, order any) *IInternalListCall {
+func (mr *MockIInternalMockRecorder) List(ctx, limit, offset, order any) *MockIInternalListCall {
 	mr.mock.ctrl.T.Helper()
 	call := mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "List", reflect.TypeOf((*MockIInternal)(nil).List), ctx, limit, offset, order)
-	return &IInternalListCall{Call: call}
+	return &MockIInternalListCall{Call: call}
 }
 
-// IInternalListCall wrap *gomock.Call
-type IInternalListCall struct {
+// MockIInternalListCall wrap *gomock.Call
+type MockIInternalListCall struct {
 	*gomock.Call
 }
 
 // Return rewrite *gomock.Call.Return
-func (c *IInternalListCall) Return(arg0 []*storage.Internal, arg1 error) *IInternalListCall {
+func (c *MockIInternalListCall) Return(arg0 []*storage.Internal, arg1 error) *MockIInternalListCall {
 	c.Call = c.Call.Return(arg0, arg1)
 	return c
 }
 
 // Do rewrite *gomock.Call.Do
-func (c *IInternalListCall) Do(f func(context.Context, uint64, uint64, storage0.SortOrder) ([]*storage.Internal, error)) *IInternalListCall {
+func (c *MockIInternalListCall) Do(f func(context.Context, uint64, uint64, storage0.SortOrder) ([]*storage.Internal, error)) *MockIInternalListCall {
 	c.Call = c.Call.Do(f)
 	return c
 }
 
 // DoAndReturn rewrite *gomock.Call.DoAndReturn
-func (c *IInternalListCall) DoAndReturn(f func(context.Context, uint64, uint64, storage0.SortOrder) ([]*storage.Internal, error)) *IInternalListCall {
+func (c *MockIInternalListCall) DoAndReturn(f func(context.Context, uint64, uint64, storage0.SortOrder) ([]*storage.Internal, error)) *MockIInternalListCall {
 	c.Call = c.Call.DoAndReturn(f)
 	return c
 }
@@ -287,31 +328,31 @@ func (m_2 *MockIInternal) Save(ctx context.Context, m *storage.Internal) error {
 }
 
 // Save indicates an expected call of Save.
-func (mr *MockIInternalMockRecorder) Save(ctx, m any) *IInternalSaveCall {
+func (mr *MockIInternalMockRecorder) Save(ctx, m any) *MockIInternalSaveCall {
 	mr.mock.ctrl.T.Helper()
 	call := mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Save", reflect.TypeOf((*MockIInternal)(nil).Save), ctx, m)
-	return &IInternalSaveCall{Call: call}
+	return &MockIInternalSaveCall{Call: call}
 }
 
-// IInternalSaveCall wrap *gomock.Call
-type IInternalSaveCall struct {
+// MockIInternalSaveCall wrap *gomock.Call
+type MockIInternalSaveCall struct {
 	*gomock.Call
 }
 
 // Return rewrite *gomock.Call.Return
-func (c *IInternalSaveCall) Return(arg0 error) *IInternalSaveCall {
+func (c *MockIInternalSaveCall) Return(arg0 error) *MockIInternalSaveCall {
 	c.Call = c.Call.Return(arg0)
 	return c
 }
 
 // Do rewrite *gomock.Call.Do
-func (c *IInternalSaveCall) Do(f func(context.Context, *storage.Internal) error) *IInternalSaveCall {
+func (c *MockIInternalSaveCall) Do(f func(context.Context, *storage.Internal) error) *MockIInternalSaveCall {
 	c.Call = c.Call.Do(f)
 	return c
 }
 
 // DoAndReturn rewrite *gomock.Call.DoAndReturn
-func (c *IInternalSaveCall) DoAndReturn(f func(context.Context, *storage.Internal) error) *IInternalSaveCall {
+func (c *MockIInternalSaveCall) DoAndReturn(f func(context.Context, *storage.Internal) error) *MockIInternalSaveCall {
 	c.Call = c.Call.DoAndReturn(f)
 	return c
 }
@@ -325,31 +366,31 @@ func (m_2 *MockIInternal) Update(ctx context.Context, m *storage.Internal) error
 }
 
 // Update indicates an expected call of Update.
-func (mr *MockIInternalMockRecorder) Update(ctx, m any) *IInternalUpdateCall {
+func (mr *MockIInternalMockRecorder) Update(ctx, m any) *MockIInternalUpdateCall {
 	mr.mock.ctrl.T.Helper()
 	call := mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Update", reflect.TypeOf((*MockIInternal)(nil).Update), ctx, m)
-	return &IInternalUpdateCall{Call: call}
+	return &MockIInternalUpdateCall{Call: call}
 }
 
-// IInternalUpdateCall wrap *gomock.Call
-type IInternalUpdateCall struct {
+// MockIInternalUpdateCall wrap *gomock.Call
+type MockIInternalUpdateCall struct {
 	*gomock.Call
 }
 
 // Return rewrite *gomock.Call.Return
-func (c *IInternalUpdateCall) Return(arg0 error) *IInternalUpdateCall {
+func (c *MockIInternalUpdateCall) Return(arg0 error) *MockIInternalUpdateCall {
 	c.Call = c.Call.Return(arg0)
 	return c
 }
 
 // Do rewrite *gomock.Call.Do
-func (c *IInternalUpdateCall) Do(f func(context.Context, *storage.Internal) error) *IInternalUpdateCall {
+func (c *MockIInternalUpdateCall) Do(f func(context.Context, *storage.Internal) error) *MockIInternalUpdateCall {
 	c.Call = c.Call.Do(f)
 	return c
 }
 
 // DoAndReturn rewrite *gomock.Call.DoAndReturn
-func (c *IInternalUpdateCall) DoAndReturn(f func(context.Context, *storage.Internal) error) *IInternalUpdateCall {
+func (c *MockIInternalUpdateCall) DoAndReturn(f func(context.Context, *storage.Internal) error) *MockIInternalUpdateCall {
 	c.Call = c.Call.DoAndReturn(f)
 	return c
 }

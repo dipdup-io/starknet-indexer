@@ -19,9 +19,8 @@ type Config struct {
 }
 
 type Server struct {
-	Server   *server.MCPServer
-	DbConfig config.Database
-	storage  postgres.Storage
+	Server  *server.MCPServer
+	storage postgres.Storage
 }
 
 func NewMCPServer(ctx context.Context, cfg Config) (*Server, error) {
@@ -38,9 +37,8 @@ func NewMCPServer(ctx context.Context, cfg Config) (*Server, error) {
 	}
 
 	s := &Server{
-		Server:   mcpServer,
-		DbConfig: cfg.Database,
-		storage:  postgresStorage,
+		Server:  mcpServer,
+		storage: postgresStorage,
 	}
 	s.addTools()
 
