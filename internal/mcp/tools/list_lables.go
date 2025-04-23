@@ -3,21 +3,16 @@ package tools
 import (
 	"context"
 	"encoding/json"
-	"github.com/dipdup-io/starknet-indexer/internal/mcp/db"
-	"github.com/dipdup-net/go-lib/config"
+	"github.com/dipdup-io/starknet-indexer/internal/storage/postgres"
 	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/pkg/errors"
 )
 
-func ListTablesTool(dbConfig config.Database, _ context.Context, _ mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-	sqlDB, err := db.CreateDBConnection(dbConfig)
-	if err != nil {
-		return nil, err
-	}
-	defer sqlDB.Close()
+type Table struct {
+	Name string `bun:"table_name" json:"table_name"`
+}
 
-	database := &db.Database{Db: sqlDB}
-
+func ListTablesTool(ctx context.Context, s postgres.Storage, _ mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	query := `
 	   SELECT DISTINCT
 	       regexp_replace(table_name, '_\d{4}_\d{2}$', '') AS table_name
@@ -25,22 +20,17 @@ func ListTablesTool(dbConfig config.Database, _ context.Context, _ mcp.CallToolR
 	   WHERE table_schema = 'public'
 	   ORDER BY table_name`
 
-	results, err := database.ExecuteQuery(query, make(map[string]any))
-	if err != nil {
-		return nil, errors.Wrapf(err, "failed to execute list tables")
+	var tables []Table
+	err := s.Connection().DB().NewRaw(query).Scan(ctx, &tables)
+
+	tableNames := make([]string, len(tables))
+	for i := range tables {
+		tableNames[i] = tables[i].Name
 	}
 
-	var tableNames []string
-	for _, row := range results {
-		if tableName, ok := row["table_name"].(string); ok {
-			tableNames = append(tableNames, tableName)
-		}
-	}
-
-	jsonTables, err := json.Marshal(tableNames)
+	jsonTableNames, err := json.Marshal(tableNames)
 	if err != nil {
 		return nil, errors.Wrapf(err, "error marshalling table names")
 	}
-
-	return mcp.NewToolResultText(string(jsonTables)), nil
+	return mcp.NewToolResultText(string(jsonTableNames)), nil
 }
