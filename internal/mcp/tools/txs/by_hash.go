@@ -35,7 +35,7 @@ func GetTxByHash(storage postgres.Storage, ctx context.Context, request mcp.Call
 		return nil, errors.Wrapf(err, "error during executing filter on invoke")
 	}
 	if len(invokes) == 1 {
-		jsonInvokes, err := json.MarshalIndent(invokes[0], "", "  ")
+		jsonInvokes, err := json.Marshal(invokes[0])
 		if err != nil {
 			return nil, errors.Wrapf(err, "error marshalling invoke")
 		}
@@ -56,7 +56,7 @@ func GetTxByHash(storage postgres.Storage, ctx context.Context, request mcp.Call
 		return nil, errors.Wrapf(err, "error during executing filter on deploy")
 	}
 	if len(deploys) == 1 {
-		jsonDeploys, err := json.MarshalIndent(deploys[0], "", "  ")
+		jsonDeploys, err := json.Marshal(deploys[0])
 		if err != nil {
 			return nil, errors.Wrapf(err, "error marshalling deploy")
 		}
@@ -77,7 +77,7 @@ func GetTxByHash(storage postgres.Storage, ctx context.Context, request mcp.Call
 		return nil, errors.Wrapf(err, "error during executing filter on declare")
 	}
 	if len(declares) == 1 {
-		jsonDeclares, err := json.MarshalIndent(declares[0], "", "  ")
+		jsonDeclares, err := json.Marshal(declares[0])
 		if err != nil {
 			return nil, errors.Wrapf(err, "error marshalling declare")
 		}
@@ -98,7 +98,7 @@ func GetTxByHash(storage postgres.Storage, ctx context.Context, request mcp.Call
 		return nil, errors.Wrapf(err, "error during executing filter on deploy account")
 	}
 	if len(accountDeploys) == 1 {
-		jsonAccountDeploys, err := json.MarshalIndent(accountDeploys[0], "", "  ")
+		jsonAccountDeploys, err := json.Marshal(accountDeploys[0])
 		if err != nil {
 			return nil, errors.Wrapf(err, "error marshalling account deploy")
 		}
@@ -119,7 +119,7 @@ func GetTxByHash(storage postgres.Storage, ctx context.Context, request mcp.Call
 		return nil, errors.Wrapf(err, "error during executing filter on l1_handler")
 	}
 	if len(l1Handlers) == 1 {
-		jsonL1Handlers, err := json.MarshalIndent(l1Handlers[0], "", "  ")
+		jsonL1Handlers, err := json.Marshal(l1Handlers[0])
 		if err != nil {
 			return nil, errors.Wrapf(err, "error marshalling la_handler")
 		}

@@ -26,7 +26,7 @@ func GetBlockByHeight(storage postgres.Storage, ctx context.Context, request mcp
 		return nil, errors.Wrapf(err, "error fetching block with height %d", height)
 	}
 
-	jsonBlock, err := json.MarshalIndent(block, "", "  ")
+	jsonBlock, err := json.Marshal(block)
 	if err != nil {
 		return nil, errors.Wrapf(err, "error marshalling json")
 	}

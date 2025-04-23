@@ -14,7 +14,7 @@ func GetLastBlock(storage postgres.Storage, ctx context.Context, _ mcp.CallToolR
 	if err != nil {
 		return nil, errors.Wrapf(err, "error fetching last block")
 	}
-	jsonBlock, err := json.MarshalIndent(block, "", "  ")
+	jsonBlock, err := json.Marshal(block)
 	if err != nil {
 		return nil, errors.Wrapf(err, "error marshalling json")
 	}

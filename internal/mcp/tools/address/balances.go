@@ -60,7 +60,7 @@ func GetAddressBalances(storage postgres.Storage, ctx context.Context, request m
 		}
 	}
 
-	jsonTokenBalances, err := json.MarshalIndent(resultTokenBalances, "", "  ")
+	jsonTokenBalances, err := json.Marshal(resultTokenBalances)
 	if err != nil {
 		return nil, errors.Wrapf(err, "error marshalling token balances")
 	}

@@ -58,9 +58,10 @@ type Activity struct {
 	TotalCountInfo    map[string]int            `json:"total_count_info"`
 }
 
+const LimitMaxValue = 100
+
 // GetAddressActivity - returns complex chain activity address data and stats
 func GetAddressActivity(storage postgres.Storage, ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-	const LimitMaxValue = 100
 	var err error
 	address, ok := request.Params.Arguments["address"].(string)
 	if !ok {
@@ -139,7 +140,7 @@ func GetAddressActivity(storage postgres.Storage, ctx context.Context, request m
 				},
 			},
 		},
-		models.WithLimitFilter(10),
+		models.WithLimitFilter(limit),
 		models.WithOffsetFilter(offset),
 		models.WithDescSortByIdFilter(),
 	)
@@ -335,7 +336,7 @@ func GetAddressActivity(storage postgres.Storage, ctx context.Context, request m
 	}
 	activity.Deploys = deploys
 
-	jsonResult, err := json.MarshalIndent(activity, "", "  ")
+	jsonResult, err := json.Marshal(activity)
 	if err != nil {
 		return nil, errors.Wrapf(err, "error marshalling address activity data")
 	}
