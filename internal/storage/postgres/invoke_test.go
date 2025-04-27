@@ -15,8 +15,8 @@ import (
 	"github.com/stretchr/testify/suite"
 )
 
-// TransferTestSuite -
-type TransferTestSuite struct {
+// InvokeTestSuite -
+type InvokeTestSuite struct {
 	suite.Suite
 	psqlContainer *database.PostgreSQLContainer
 	storage       Storage
@@ -24,7 +24,7 @@ type TransferTestSuite struct {
 }
 
 // SetupSuite -
-func (s *TransferTestSuite) SetupSuite() {
+func (s *InvokeTestSuite) SetupSuite() {
 	ctx, ctxCancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer ctxCancel()
 
@@ -50,9 +50,9 @@ func (s *TransferTestSuite) SetupSuite() {
 	s.storage = store
 
 	s.pm = database.NewPartitionManager(s.storage.Connection(), database.PartitionByYear)
-	currentTime, err := time.Parse(time.RFC3339, "2021-11-16T10:00:35+00:00")
+	currentTime, err := time.Parse(time.RFC3339, "2021-11-20T13:00:35+00:00")
 	s.Require().NoError(err)
-	err = s.pm.CreatePartition(ctx, currentTime, storage.Transfer{}.TableName())
+	err = s.pm.CreatePartition(ctx, currentTime, storage.Invoke{}.TableName())
 	s.Require().NoError(err)
 
 	db, err := sql.Open("postgres", s.psqlContainer.GetDSN())
@@ -62,7 +62,7 @@ func (s *TransferTestSuite) SetupSuite() {
 		testfixtures.Database(db),
 		testfixtures.Dialect("postgres"),
 		testfixtures.Files(
-			"fixtures/transfer.yml",
+			"fixtures/invoke.yml",
 			"fixtures/address.yml",
 		),
 	)
@@ -72,7 +72,7 @@ func (s *TransferTestSuite) SetupSuite() {
 }
 
 // TearDownSuite -
-func (s *TransferTestSuite) TearDownSuite() {
+func (s *InvokeTestSuite) TearDownSuite() {
 	ctx, ctxCancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer ctxCancel()
 
@@ -80,39 +80,27 @@ func (s *TransferTestSuite) TearDownSuite() {
 	s.Require().NoError(s.psqlContainer.Terminate(ctx))
 }
 
-func (s *TransferTestSuite) TestFilterByHeight() {
+// TestCountByContract -
+func (s *InvokeTestSuite) TestCountByContract() {
 	ctx, ctxCancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer ctxCancel()
 
-	transfers, err := s.storage.Transfer.Filter(ctx, []storage.TransferFilter{
-		{
-			Height: storage.IntegerFilter{
-				Eq: 1,
+	address, err := types.HexFromString("0x0327d34747122d7a40f4670265b098757270a449ec80c4871450fffdab7c2fa8")
+	s.Require().NoError(err)
+
+	invocationsCount, err := s.storage.Invoke.Count(ctx,
+		[]storage.InvokeFilter{
+			{
+				Contract: storage.BytesFilter{
+					Eq: address,
+				},
 			},
 		},
-	}, storage.WithLimitFilter(3))
+	)
 	s.Require().NoError(err)
-	s.Require().Len(transfers, 1)
+	s.Require().EqualValues(int(invocationsCount), 1)
 }
 
-func (s *TransferTestSuite) TestCountByFromAddress() {
-	ctx, ctxCancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer ctxCancel()
-
-	fromAddress, err := types.HexFromString("0x000000000000000000000000c84dd7fd43a7defb5b7a15c4fbbe11cbba6db1ba")
-	s.Require().NoError(err)
-
-	transfersCount, err := s.storage.Transfer.Count(ctx, []storage.TransferFilter{
-		{
-			From: storage.BytesFilter{
-				Eq: fromAddress,
-			},
-		},
-	})
-	s.Require().NoError(err)
-	s.Require().EqualValues(int(transfersCount), 1)
-}
-
-func TestSuiteTransfer_Run(t *testing.T) {
-	suite.Run(t, new(TransferTestSuite))
+func TestSuiteInvoke_Run(t *testing.T) {
+	suite.Run(t, new(InvokeTestSuite))
 }
