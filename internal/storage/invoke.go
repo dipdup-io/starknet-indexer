@@ -1,6 +1,7 @@
 package storage
 
 import (
+	"github.com/dipdup-io/starknet-indexer/pkg/types"
 	"time"
 
 	"github.com/dipdup-net/indexer-sdk/pkg/storage"
@@ -40,11 +41,11 @@ type Invoke struct {
 	Height             uint64          `json:"height" comment:"Block height"`
 	Time               time.Time       `bun:",pk" json:"time" comment:"Time of block"`
 	Status             Status          `json:"status" comment:"Status in blockchain (unknown - 1 | not received - 2  | received - 3 | pending - 4 | rejected - 5 | accepted on l2 - 6 | accepted on l1 - 7 )"`
-	Hash               []byte          `json:"hash" comment:"Transaction hash"`
+	Hash               types.Hex       `json:"hash" comment:"Transaction hash"`
 	Version            uint64          `json:"version" comment:"Version of invoke transaction"`
 	Position           int             `json:"position" comment:"Order in block"`
 	ContractID         uint64          `json:"contract_id" comment:"Contract address id"`
-	EntrypointSelector []byte          `json:"entrypoint_selector" comment:"Called selector"`
+	EntrypointSelector types.Hex       `json:"entrypoint_selector" comment:"Called selector"`
 	Entrypoint         string          `json:"entrypoint" comment:"Entrypoint name"`
 	MaxFee             decimal.Decimal `bun:",type:numeric" json:"max_fee" comment:"The maximum fee that the sender is willing to pay for the transaction"`
 	Nonce              decimal.Decimal `bun:",type:numeric" json:"nonce" comment:"The transaction nonce"`
@@ -114,16 +115,16 @@ func (i Invoke) Flat() []any {
 	return data
 }
 
-func (i Invoke) MarshalJSON() ([]byte, error) {
-	type Alias Invoke
-
-	return json.Marshal(&struct {
-		Alias
-		Hash               string `json:"hash"`
-		EntrypointSelector string `json:"entrypoint_selector"`
-	}{
-		Alias:              Alias(i),
-		Hash:               BytesToFormattedHex(i.Hash),
-		EntrypointSelector: BytesToFormattedHex(i.EntrypointSelector),
-	})
-}
+//func (i Invoke) MarshalJSON() ([]byte, error) {
+//	type Alias Invoke
+//
+//	return json.Marshal(&struct {
+//		Alias
+//		Hash               string `json:"hash"`
+//		EntrypointSelector string `json:"entrypoint_selector"`
+//	}{
+//		Alias:              Alias(i),
+//		Hash:               BytesToFormattedHex(i.Hash),
+//		EntrypointSelector: BytesToFormattedHex(i.EntrypointSelector),
+//	})
+//}

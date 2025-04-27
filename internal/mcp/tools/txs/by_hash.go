@@ -4,8 +4,8 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
-	models "github.com/dipdup-io/starknet-indexer/internal/storage"
 	"github.com/dipdup-io/starknet-indexer/internal/storage/postgres"
+	"github.com/dipdup-io/starknet-indexer/pkg/types"
 	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/pkg/errors"
 	"time"
@@ -13,12 +13,12 @@ import (
 
 type TransactionResult struct {
 	TxType              string           `bun:"tx_type" json:"tx_type"`
-	Hash                models.HexBytes  `bun:"hash" json:"hash"`
+	Hash                types.Hex        `bun:"hash" json:"hash"`
 	BlockHeight         int64            `bun:"block_height" json:"block_height"`
 	Timestamp           time.Time        `bun:"timestamp" json:"timestamp"`
 	Status              int64            `bun:"status" json:"status"`
 	Entrypoint          *string          `bun:"entrypoint" json:"entrypoint,omitempty"`
-	Contract            models.HexBytes  `bun:"contract" json:"contract"`
+	Contract            types.Hex        `bun:"contract" json:"contract"`
 	MaxFee              *string          `bun:"max_fee" json:"max_fee,omitempty"`
 	ClassID             *int64           `bun:"class_id" json:"class_id,omitempty"`
 	ContractAddressSalt *string          `bun:"contract_address_salt" json:"contract_address_salt,omitempty"`
@@ -33,7 +33,7 @@ func GetTxByHash(ctx context.Context, s postgres.Storage, request mcp.CallToolRe
 		return nil, errors.Errorf("hash must be a string")
 	}
 
-	txHashBytes, err := models.HexToBytes(hash)
+	txHashBytes, err := types.HexFromString(hash)
 	if err != nil {
 		return nil, err
 	}

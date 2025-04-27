@@ -2,6 +2,7 @@ package storage
 
 import (
 	"context"
+	"github.com/dipdup-io/starknet-indexer/pkg/types"
 	"time"
 
 	"github.com/dipdup-net/indexer-sdk/pkg/storage"
@@ -20,8 +21,8 @@ type IInternal interface {
 
 type DeployedContract struct {
 	Time            time.Time `bun:"deploy_time" json:"deploy_time"`
-	ContractAddress HexBytes  `bun:"contract_address" json:"contract_address"`
-	TxHash          HexBytes  `bun:"tx_hash" json:"tx_hash"`
+	ContractAddress types.Hex `bun:"contract_address" json:"contract_address"`
+	TxHash          types.Hex `bun:"tx_hash" json:"tx_hash"`
 }
 
 // InternalFilter -

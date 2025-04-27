@@ -1,6 +1,7 @@
 package storage
 
 import (
+	"github.com/dipdup-io/starknet-indexer/pkg/types"
 	"time"
 
 	"github.com/dipdup-net/indexer-sdk/pkg/storage"
@@ -38,10 +39,10 @@ type L1Handler struct {
 	Height         uint64          `json:"height" comment:"Block height"`
 	Time           time.Time       `bun:",pk" json:"time" comment:"Time of block"`
 	Status         Status          `json:"status" comment:"Status in blockchain (unknown - 1 | not received - 2  | received - 3 | pending - 4 | rejected - 5 | accepted on l2 - 6 | accepted on l1 - 7 | reverted - 8)"`
-	Hash           []byte          `json:"hash" comment:"Transaction hash"`
+	Hash           types.Hex       `json:"hash" comment:"Transaction hash"`
 	ContractID     uint64          `json:"contract_id" comment:"Contract address id"`
 	Position       int             `json:"position" comment:"Order in block"`
-	Selector       []byte          `json:"selector" comment:"Called selector"`
+	Selector       types.Hex       `json:"selector" comment:"Called selector"`
 	Entrypoint     string          `json:"entrypoint" comment:"Entrypoint name"`
 	MaxFee         decimal.Decimal `bun:",type:numeric" json:"max_fee" comment:"The maximum fee that the sender is willing to pay for the transaction"`
 	Nonce          decimal.Decimal `bun:",type:numeric" json:"nonce" comment:"The transaction nonce"`
@@ -109,16 +110,16 @@ func (l1 L1Handler) Flat() []any {
 	return data
 }
 
-func (h L1Handler) MarshalJSON() ([]byte, error) {
-	type Alias L1Handler
-
-	return json.Marshal(&struct {
-		Alias
-		Hash     string `json:"hash"`
-		Selector string `json:"selector"`
-	}{
-		Alias:    Alias(h),
-		Hash:     BytesToFormattedHex(h.Hash),
-		Selector: BytesToFormattedHex(h.Selector),
-	})
-}
+//func (h L1Handler) MarshalJSON() ([]byte, error) {
+//	type Alias L1Handler
+//
+//	return json.Marshal(&struct {
+//		Alias
+//		Hash     string `json:"hash"`
+//		Selector string `json:"selector"`
+//	}{
+//		Alias:    Alias(h),
+//		Hash:     BytesToFormattedHex(h.Hash),
+//		Selector: BytesToFormattedHex(h.Selector),
+//	})
+//}

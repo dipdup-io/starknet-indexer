@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	models "github.com/dipdup-io/starknet-indexer/internal/storage"
 	"github.com/dipdup-io/starknet-indexer/internal/storage/postgres"
+	"github.com/dipdup-io/starknet-indexer/pkg/types"
 	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/pkg/errors"
 	"strconv"
@@ -12,44 +13,44 @@ import (
 )
 
 type TransferInfo struct {
-	TxHash          string    `json:"tx_hash"`
+	TxHash          types.Hex `json:"tx_hash"`
 	Height          int64     `json:"block_height"`
 	Time            time.Time `json:"timestamp"`
-	FromAddress     string    `json:"from_address"`
-	ToAddress       string    `json:"to_address"`
-	ContractAddress string    `json:"contract_address"`
+	FromAddress     types.Hex `json:"from_address"`
+	ToAddress       types.Hex `json:"to_address"`
+	ContractAddress types.Hex `json:"contract_address"`
 	TokenID         string    `json:"token_id,omitempty"`
 	Amount          string    `json:"amount"`
 	Type            string    `json:"tx_type"`
 }
 
 type InvocationInfo struct {
-	TxHash          string    `json:"tx_hash"`
+	TxHash          types.Hex `json:"tx_hash"`
 	Height          uint64    `json:"block_height"`
 	Time            time.Time `json:"timestamp"`
-	ContractAddress string    `json:"contract_address"`
+	ContractAddress types.Hex `json:"contract_address"`
 	Entrypoint      string    `json:"entrypoint"`
 	Status          string    `json:"status"`
 	Error           string    `json:"error,omitempty"`
 }
 
 type EventInfo struct {
-	TxHash          string    `json:"tx_hash"`
+	TxHash          types.Hex `json:"tx_hash"`
 	Height          uint64    `json:"block_height"`
 	Time            time.Time `json:"timestamp"`
-	ContractAddress string    `json:"contract_address"`
+	ContractAddress types.Hex `json:"contract_address"`
 }
 
 type DeployInfo struct {
-	TxHash          string    `json:"tx_hash"`
+	TxHash          types.Hex `json:"tx_hash"`
 	Height          int64     `json:"block_height"`
 	Time            time.Time `json:"timestamp"`
-	ContractAddress string    `json:"contract_address"`
-	ClassHash       string    `json:"class_hash"`
+	ContractAddress types.Hex `json:"contract_address"`
+	ClassHash       types.Hex `json:"class_hash"`
 }
 
 type Activity struct {
-	Address           string                    `json:"address"`
+	Address           types.Hex                 `json:"address"`
 	OutgoingTransfers []*TransferInfo           `json:"outgoing_transfers"`
 	IncomingTransfers []*TransferInfo           `json:"incoming_transfers"`
 	Invocations       []*InvocationInfo         `json:"invocations"`
@@ -87,13 +88,13 @@ func GetAddressActivity(ctx context.Context, storage postgres.Storage, request m
 		}
 	}
 
-	addressHash, err := models.HexToBytes(address)
+	addressHash, err := types.HexFromString(address)
 	if err != nil {
 		return nil, errors.Wrapf(err, "error converting address to bytes: %s", address)
 	}
 
 	activity := Activity{
-		Address:        address,
+		Address:        addressHash,
 		TotalCountInfo: make(map[string]int),
 	}
 
@@ -204,18 +205,17 @@ func GetAddressActivity(ctx context.Context, storage postgres.Storage, request m
 		if err != nil {
 			return nil, errors.Wrapf(err, "can't get address by id %d", invocations[i].ContractID)
 		}
-		contractAddress := models.BytesToFormattedHex(storageContractAddress.Hash)
 
-		txHash := ""
+		txHash := make([]byte, 0)
 		if invocations[i].Hash != nil {
-			txHash = models.BytesToFormattedHex(invocations[i].Hash)
+			txHash = invocations[i].Hash
 		}
 
 		parsedInvocations[i] = &InvocationInfo{
 			TxHash:          txHash,
 			Height:          invocations[i].Height,
 			Time:            invocations[i].Time,
-			ContractAddress: contractAddress,
+			ContractAddress: storageContractAddress.Hash,
 			Entrypoint:      invocations[i].Entrypoint,
 			Status:          statusToString(invocations[i].Status),
 		}
@@ -266,28 +266,28 @@ func GetAddressActivity(ctx context.Context, storage postgres.Storage, request m
 		if err != nil {
 			return nil, errors.Wrapf(err, "can't get address by id %d", event.ContractID)
 		}
-		contractAddress := models.BytesToFormattedHex(storageContractAddress.Hash)
+		contractAddress := storageContractAddress.Hash
 
-		txHash := ""
+		txHash := make([]byte, 0)
 		switch {
 		case events[i].InvokeID != nil:
 			tx, err := storage.Invoke.GetByID(ctx, *events[i].InvokeID)
 			if err != nil {
 				return nil, errors.Wrapf(err, "error fetching invoke with id %d", events[i].InvokeID)
 			}
-			txHash = models.BytesToFormattedHex(tx.Hash)
+			txHash = tx.Hash
 		case events[i].DeclareID != nil:
 			tx, err := storage.Declare.GetByID(ctx, *events[i].DeclareID)
 			if err != nil {
 				return nil, errors.Wrapf(err, "error fetching declare with id %d", events[i].DeclareID)
 			}
-			txHash = models.BytesToFormattedHex(tx.Hash)
+			txHash = tx.Hash
 		case events[i].DeployID != nil:
 			tx, err := storage.Deploy.GetByID(ctx, *events[i].DeployID)
 			if err != nil {
 				return nil, errors.Wrapf(err, "error fetching deploy with id %d", events[i].DeployID)
 			}
-			txHash = models.BytesToFormattedHex(tx.Hash)
+			txHash = tx.Hash
 		case events[i].DeployAccountID != nil:
 			tx, err := storage.DeployAccount.GetByID(ctx, *events[i].DeployAccountID)
 			if err != nil {
@@ -297,19 +297,19 @@ func GetAddressActivity(ctx context.Context, storage postgres.Storage, request m
 					events[i].DeployAccountID,
 				)
 			}
-			txHash = models.BytesToFormattedHex(tx.Hash)
+			txHash = tx.Hash
 		case events[i].L1HandlerID != nil:
 			tx, err := storage.Deploy.GetByID(ctx, *events[i].L1HandlerID)
 			if err != nil {
 				return nil, errors.Wrapf(err, "error fetching l1_handler with id %d", events[i].L1HandlerID)
 			}
-			txHash = models.BytesToFormattedHex(tx.Hash)
+			txHash = tx.Hash
 		case events[i].InternalID != nil:
 			tx, err := storage.Internal.GetByID(ctx, *events[i].InternalID)
 			if err != nil {
 				return nil, errors.Wrapf(err, "error fetching internal tx with id %d", events[i].InternalID)
 			}
-			txHash = models.BytesToFormattedHex(tx.Hash)
+			txHash = tx.Hash
 		case events[i].FeeID != nil:
 			fee, err := storage.Fee.GetByID(ctx, *events[i].FeeID)
 			if err != nil {
@@ -347,22 +347,11 @@ func GetAddressActivity(ctx context.Context, storage postgres.Storage, request m
 func parseTransfers(ctx context.Context, storage postgres.Storage, transfers []models.Transfer) ([]*TransferInfo, error) {
 	resultTransfers := make([]*TransferInfo, len(transfers))
 	for i := range transfers {
-		contractAddress := ""
-		if transfers[i].Contract.Hash != nil {
-			contractAddress = models.BytesToFormattedHex(transfers[i].Contract.Hash)
-		}
+		contractAddress := transfers[i].Contract.Hash
+		fromAddress := transfers[i].From.Hash
+		toAddress := transfers[i].To.Hash
 
-		fromAddress := ""
-		if transfers[i].From.Hash != nil {
-			fromAddress = models.BytesToFormattedHex(transfers[i].From.Hash)
-		}
-
-		toAddress := ""
-		if transfers[i].To.Hash != nil {
-			toAddress = models.BytesToFormattedHex(transfers[i].To.Hash)
-		}
-
-		txHash := ""
+		txHash := make([]byte, 0)
 		txType := "unknown"
 		switch {
 		case transfers[i].InvokeID != nil:
@@ -371,21 +360,21 @@ func parseTransfers(ctx context.Context, storage postgres.Storage, transfers []m
 			if err != nil {
 				return nil, errors.Wrapf(err, "error fetching invoke with id %d", transfers[i].InvokeID)
 			}
-			txHash = models.BytesToFormattedHex(tx.Hash)
+			txHash = tx.Hash
 		case transfers[i].DeclareID != nil:
 			txType = "declare"
 			tx, err := storage.Declare.GetByID(ctx, *transfers[i].DeclareID)
 			if err != nil {
 				return nil, errors.Wrapf(err, "error fetching declare with id %d", transfers[i].DeclareID)
 			}
-			txHash = models.BytesToFormattedHex(tx.Hash)
+			txHash = tx.Hash
 		case transfers[i].DeployID != nil:
 			txType = "deploy"
 			tx, err := storage.Deploy.GetByID(ctx, *transfers[i].DeployID)
 			if err != nil {
 				return nil, errors.Wrapf(err, "error fetching deploy with id %d", transfers[i].DeployID)
 			}
-			txHash = models.BytesToFormattedHex(tx.Hash)
+			txHash = tx.Hash
 		case transfers[i].DeployAccountID != nil:
 			txType = "deploy_account"
 			tx, err := storage.DeployAccount.GetByID(ctx, *transfers[i].DeployAccountID)
@@ -396,21 +385,21 @@ func parseTransfers(ctx context.Context, storage postgres.Storage, transfers []m
 					transfers[i].DeployAccountID,
 				)
 			}
-			txHash = models.BytesToFormattedHex(tx.Hash)
+			txHash = tx.Hash
 		case transfers[i].L1HandlerID != nil:
 			txType = "l1_handler"
 			tx, err := storage.Deploy.GetByID(ctx, *transfers[i].L1HandlerID)
 			if err != nil {
 				return nil, errors.Wrapf(err, "error fetching l1_handler with id %d", transfers[i].L1HandlerID)
 			}
-			txHash = models.BytesToFormattedHex(tx.Hash)
+			txHash = tx.Hash
 		case transfers[i].InternalID != nil:
 			txType = "internal"
 			tx, err := storage.Internal.GetByID(ctx, *transfers[i].InternalID)
 			if err != nil {
 				return nil, errors.Wrapf(err, "error fetching internal tx with id %d", transfers[i].InternalID)
 			}
-			txHash = models.BytesToFormattedHex(tx.Hash)
+			txHash = tx.Hash
 		case transfers[i].FeeID != nil:
 			txType = "fee"
 			fee, err := storage.Fee.GetByID(ctx, *transfers[i].FeeID)
@@ -438,14 +427,13 @@ func parseTransfers(ctx context.Context, storage postgres.Storage, transfers []m
 	return resultTransfers, nil
 }
 
-func getTxHashFromFee(ctx context.Context, storage *postgres.Storage, feeID uint64) (string, error) {
+func getTxHashFromFee(ctx context.Context, storage *postgres.Storage, feeID uint64) (types.Hex, error) {
+	txHash := make([]byte, 0)
+	var txErr error
 	fee, err := storage.Fee.GetByID(ctx, feeID)
 	if err != nil {
-		return "", errors.Wrapf(err, "error fetching fee with id %d", feeID)
+		return txHash, errors.Wrapf(err, "error fetching fee with id %d", feeID)
 	}
-
-	var txHash string
-	var txErr error
 
 	switch {
 	case fee.InvokeID != nil:
@@ -453,46 +441,46 @@ func getTxHashFromFee(ctx context.Context, storage *postgres.Storage, feeID uint
 		if err != nil {
 			txErr = errors.Wrapf(err, "error fetching invoke with id %d", *fee.InvokeID)
 		} else {
-			txHash = models.BytesToFormattedHex(invoke.Hash)
+			txHash = invoke.Hash
 		}
 	case fee.DeclareID != nil:
 		declare, err := storage.Declare.GetByID(ctx, *fee.DeclareID)
 		if err != nil {
 			txErr = errors.Wrapf(err, "error fetching declare with id %d", *fee.DeclareID)
 		} else {
-			txHash = models.BytesToFormattedHex(declare.Hash)
+			txHash = declare.Hash
 		}
 	case fee.DeployID != nil:
 		deploy, err := storage.Deploy.GetByID(ctx, *fee.DeployID)
 		if err != nil {
 			txErr = errors.Wrapf(err, "error fetching deploy with id %d", *fee.DeployID)
 		} else {
-			txHash = models.BytesToFormattedHex(deploy.Hash)
+			txHash = deploy.Hash
 		}
 	case fee.DeployAccountID != nil:
 		deployAccount, err := storage.DeployAccount.GetByID(ctx, *fee.DeployAccountID)
 		if err != nil {
 			txErr = errors.Wrapf(err, "error fetching deploy account with id %d", *fee.DeployAccountID)
 		} else {
-			txHash = models.BytesToFormattedHex(deployAccount.Hash)
+			txHash = deployAccount.Hash
 		}
 	case fee.L1HandlerID != nil:
 		l1Handler, err := storage.L1Handler.GetByID(ctx, *fee.L1HandlerID)
 		if err != nil {
 			txErr = errors.Wrapf(err, "error fetching l1 handler with id %d", *fee.L1HandlerID)
 		} else {
-			txHash = models.BytesToFormattedHex(l1Handler.Hash)
+			txHash = l1Handler.Hash
 		}
 	default:
-		return "", errors.Errorf("fee does not have any associated transaction ID")
+		return txHash, errors.Errorf("fee does not have any associated transaction ID")
 	}
 
 	if txErr != nil {
-		return "", txErr
+		return txHash, txErr
 	}
 
-	if txHash == "" {
-		return "", errors.Errorf("transaction hash not found")
+	if len(txHash) == 0 {
+		return txHash, errors.Errorf("transaction hash not found")
 	}
 
 	return txHash, nil

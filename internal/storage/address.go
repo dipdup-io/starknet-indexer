@@ -2,7 +2,7 @@ package storage
 
 import (
 	"context"
-	"encoding/json"
+	"github.com/dipdup-io/starknet-indexer/pkg/types"
 
 	"github.com/dipdup-net/indexer-sdk/pkg/storage"
 	"github.com/uptrace/bun"
@@ -30,10 +30,10 @@ type AddressFilter struct {
 type Address struct {
 	bun.BaseModel `bun:"address" comment:"Table with starknet and ethereum addresses."`
 
-	ID      uint64  `bun:"id,type:bigint,pk,notnull" json:"id" comment:"Unique internal identity"`
-	ClassID *uint64 `bun:"class_id" json:"class_id" comment:"Class identity. It is NULL for ethereum addresses."`
-	Height  uint64  `json:"height" comment:"Block number of the first address occurrence."`
-	Hash    []byte  `bun:",unique:address_hash" json:"hash" comment:"Address hash."`
+	ID      uint64    `bun:"id,type:bigint,pk,notnull" json:"id" comment:"Unique internal identity"`
+	ClassID *uint64   `bun:"class_id" json:"class_id" comment:"Class identity. It is NULL for ethereum addresses."`
+	Height  uint64    `json:"height" comment:"Block number of the first address occurrence."`
+	Hash    types.Hex `bun:",unique:address_hash" json:"hash" comment:"Address hash."`
 
 	Class Class `bun:"rel:belongs-to,join:class_id=id" json:"class" hasura:"table:class,field:class_id,remote_field:id,type:oto,name:class"`
 }
@@ -53,13 +53,13 @@ func (address Address) GetId() uint64 {
 	return address.ID
 }
 
-func (address Address) MarshalJSON() ([]byte, error) {
-	type Alias Address
-	return json.Marshal(&struct {
-		*Alias `json:"-"`
-		Hash   string `json:"hash"`
-	}{
-		Alias: (*Alias)(&address),
-		Hash:  BytesToFormattedHex(address.Hash),
-	})
-}
+//func (address Address) MarshalJSON() ([]byte, error) {
+//	type Alias Address
+//	return json.Marshal(&struct {
+//		*Alias `json:"-"`
+//		Hash   string `json:"hash"`
+//	}{
+//		Alias: (*Alias)(&address),
+//		Hash:  BytesToFormattedHex(address.Hash),
+//	})
+//}

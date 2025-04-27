@@ -2,7 +2,7 @@ package storage
 
 import (
 	"context"
-	"encoding/json"
+	"github.com/dipdup-io/starknet-indexer/pkg/types"
 	"time"
 
 	"github.com/dipdup-net/indexer-sdk/pkg/storage"
@@ -35,11 +35,11 @@ type Block struct {
 	L1HandlerCount     int `bun:"l1_handler_count" json:"l1_handler_count" comment:"L1 handlers count in block"`
 	StorageDiffCount   int `json:"storage_diff_count" comment:"Storage diffs count in block"`
 
-	Status           Status `json:"status" comment:"Block status"`
-	Hash             []byte `json:"hash" comment:"Block hash"`
-	ParentHash       []byte `json:"parent_hash" comment:"The hash of this block's parent"`
-	NewRoot          []byte `json:"new_root" comment:"The state commitment after this block"`
-	SequencerAddress []byte `json:"sequencer_address" comment:"The Starknet address of the sequencer who created this block"`
+	Status           Status    `json:"status" comment:"Block status"`
+	Hash             types.Hex `json:"hash" comment:"Block hash"`
+	ParentHash       types.Hex `json:"parent_hash" comment:"The hash of this block's parent"`
+	NewRoot          types.Hex `json:"new_root" comment:"The state commitment after this block"`
+	SequencerAddress types.Hex `json:"sequencer_address" comment:"The Starknet address of the sequencer who created this block"`
 
 	Invoke        []Invoke        `bun:"rel:has-many" json:"invoke,omitempty"`
 	Declare       []Declare       `bun:"rel:has-many" json:"declare,omitempty"`
@@ -55,20 +55,20 @@ func (Block) TableName() string {
 	return "block"
 }
 
-func (b Block) MarshalJSON() ([]byte, error) {
-	type Alias Block
-
-	return json.Marshal(&struct {
-		*Alias           `json:"-"`
-		Hash             string `json:"hash"`
-		ParentHash       string `json:"parent_hash"`
-		NewRoot          string `json:"new_root"`
-		SequencerAddress string `json:"sequencer_address"`
-	}{
-		Alias:            (*Alias)(&b),
-		Hash:             BytesToFormattedHex(b.Hash),
-		ParentHash:       BytesToFormattedHex(b.ParentHash),
-		NewRoot:          BytesToFormattedHex(b.NewRoot),
-		SequencerAddress: BytesToFormattedHex(b.SequencerAddress),
-	})
-}
+//func (b Block) MarshalJSON() ([]byte, error) {
+//	type Alias Block
+//
+//	return json.Marshal(&struct {
+//		*Alias           `json:"-"`
+//		Hash             string `json:"hash"`
+//		ParentHash       string `json:"parent_hash"`
+//		NewRoot          string `json:"new_root"`
+//		SequencerAddress string `json:"sequencer_address"`
+//	}{
+//		Alias:            (*Alias)(&b),
+//		Hash:             BytesToFormattedHex(b.Hash),
+//		ParentHash:       BytesToFormattedHex(b.ParentHash),
+//		NewRoot:          BytesToFormattedHex(b.NewRoot),
+//		SequencerAddress: BytesToFormattedHex(b.SequencerAddress),
+//	})
+//}

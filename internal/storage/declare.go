@@ -1,7 +1,7 @@
 package storage
 
 import (
-	"encoding/json"
+	"github.com/dipdup-io/starknet-indexer/pkg/types"
 	"time"
 
 	"github.com/dipdup-net/indexer-sdk/pkg/storage"
@@ -39,7 +39,7 @@ type Declare struct {
 	ContractID *uint64         `json:"contract_id" comment:"Contract address id"`
 	Time       time.Time       `bun:",pk" json:"time" comment:"Time of block"`
 	Status     Status          `json:"status" comment:"Status of block"`
-	Hash       []byte          `json:"hash" comment:"Transaction hash"`
+	Hash       types.Hex       `json:"hash" comment:"Transaction hash"`
 	MaxFee     decimal.Decimal `bun:",type:numeric" json:"max_fee" comment:"The maximum fee that the sender is willing to pay for the transaction"`
 	Nonce      decimal.Decimal `bun:",type:numeric" json:"nonce" comment:"The transaction nonce"`
 	Error      *string         `bun:"error" json:"error" comment:"Reverted error"`
@@ -97,14 +97,14 @@ func (d Declare) Flat() []any {
 	}
 }
 
-func (d Declare) MarshalJSON() ([]byte, error) {
-	type Alias Declare
-
-	return json.Marshal(&struct {
-		*Alias `json:"-"`
-		Hash   string `json:"hash"`
-	}{
-		Alias: (*Alias)(&d),
-		Hash:  BytesToFormattedHex(d.Hash),
-	})
-}
+//func (d Declare) MarshalJSON() ([]byte, error) {
+//	type Alias Declare
+//
+//	return json.Marshal(&struct {
+//		*Alias `json:"-"`
+//		Hash   string `json:"hash"`
+//	}{
+//		Alias: (*Alias)(&d),
+//		Hash:  BytesToFormattedHex(d.Hash),
+//	})
+//}

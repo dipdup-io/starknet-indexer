@@ -1,6 +1,7 @@
 package storage
 
 import (
+	"github.com/dipdup-io/starknet-indexer/pkg/types"
 	"time"
 
 	"github.com/dipdup-net/indexer-sdk/pkg/storage"
@@ -38,8 +39,8 @@ type Deploy struct {
 	Position            int            `json:"position" comment:"Order in block"`
 	Time                time.Time      `bun:",pk" json:"time" comment:"Time of block"`
 	Status              Status         `json:"status"`
-	Hash                []byte         `json:"hash" comment:"Transaction hash"`
-	ContractAddressSalt []byte         `json:"contract_address_salt" comment:"A random salt that determines the account address"`
+	Hash                types.Hex      `json:"hash" comment:"Transaction hash"`
+	ContractAddressSalt types.Hex      `json:"contract_address_salt" comment:"A random salt that determines the account address"`
 	ConstructorCalldata []string       `bun:",array" json:"constructor_calldata" comment:"Raw constructor calldata"`
 	ParsedCalldata      map[string]any `bun:",nullzero" json:"parsed_calldata" comment:"Calldata parsed according to contract ABI"`
 	Error               *string        `bun:"error" json:"error" comment:"Reverted error"`
@@ -104,16 +105,16 @@ func (d Deploy) Flat() []any {
 	return data
 }
 
-func (d Deploy) MarshalJSON() ([]byte, error) {
-	type Alias Deploy
-
-	return json.Marshal(&struct {
-		Alias
-		Hash                string `json:"hash"`
-		ContractAddressSalt string `json:"contract_address_salt"`
-	}{
-		Alias:               Alias(d),
-		Hash:                BytesToFormattedHex(d.Hash),
-		ContractAddressSalt: BytesToFormattedHex(d.ContractAddressSalt),
-	})
-}
+//func (d Deploy) MarshalJSON() ([]byte, error) {
+//	type Alias Deploy
+//
+//	return json.Marshal(&struct {
+//		Alias
+//		Hash                string `json:"hash"`
+//		ContractAddressSalt string `json:"contract_address_salt"`
+//	}{
+//		Alias:               Alias(d),
+//		Hash:                BytesToFormattedHex(d.Hash),
+//		ContractAddressSalt: BytesToFormattedHex(d.ContractAddressSalt),
+//	})
+//}

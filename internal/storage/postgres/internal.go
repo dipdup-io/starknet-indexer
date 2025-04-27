@@ -53,18 +53,18 @@ func (d *Internal) Filter(ctx context.Context, fltr []storage.InternalFilter, op
 func (i *Internal) GetDeployedContracts(ctx context.Context, deployerBytes []byte) ([]storage.DeployedContract, error) {
 	var contracts []storage.DeployedContract
 	err := i.DB().NewRaw(`
-        SELECT 
-            d.time as deploy_time,
-            deployed.hash as contract_address,
-            d.hash as tx_hash
-        FROM internal_tx it
-        JOIN deploy d ON it.deploy_id = d.id
-        JOIN address deployer ON it.caller_id = deployer.id
-        JOIN address deployed ON d.contract_id = deployed.id
-        WHERE it.deploy_id IS NOT NULL
-        AND deployer.hash = ?
-        ORDER BY d.time DESC
-    `, deployerBytes).Scan(ctx, &contracts)
+		SELECT DISTINCT ON (d.hash)
+			d.time as deploy_time,
+			deployed.hash as contract_address,
+			d.hash as tx_hash
+		FROM internal_tx it
+		JOIN deploy d ON it.deploy_id = d.id
+		JOIN address deployer ON it.caller_id = deployer.id
+		JOIN address deployed ON d.contract_id = deployed.id
+		WHERE it.deploy_id IS NOT NULL
+		AND deployer.hash = ?
+		ORDER BY d.hash, d.time DESC
+	`, deployerBytes).Scan(ctx, &contracts)
 
 	return contracts, err
 }

@@ -1,6 +1,7 @@
 package storage
 
 import (
+	"github.com/dipdup-io/starknet-indexer/pkg/types"
 	"time"
 
 	"github.com/dipdup-net/indexer-sdk/pkg/storage"
@@ -39,8 +40,8 @@ type DeployAccount struct {
 	Position            int             `json:"position" comment:"Order in block"`
 	Time                time.Time       `bun:",pk" json:"time" comment:"Time of block"`
 	Status              Status          `json:"status"`
-	Hash                []byte          `json:"hash" comment:"Transaction hash"`
-	ContractAddressSalt []byte          `json:"contract_address_salt" comment:"A random salt that determines the account address"`
+	Hash                types.Hex       `json:"hash" comment:"Transaction hash"`
+	ContractAddressSalt types.Hex       `json:"contract_address_salt" comment:"A random salt that determines the account address"`
 	MaxFee              decimal.Decimal `bun:",type:numeric" json:"max_fee" comment:"The maximum fee that the sender is willing to pay for the transaction"`
 	Nonce               decimal.Decimal `bun:",type:numeric" json:"nonce" comment:"The transaction nonce"`
 	ConstructorCalldata []string        `bun:",array" json:"constructor_calldata" comment:"Raw constructor calldata"`
@@ -108,16 +109,16 @@ func (d DeployAccount) Flat() []any {
 	return data
 }
 
-func (d DeployAccount) MarshalJSON() ([]byte, error) {
-	type Alias DeployAccount
-
-	return json.Marshal(&struct {
-		Alias
-		Hash                string `json:"hash"`
-		ContractAddressSalt string `json:"contract_address_salt"`
-	}{
-		Alias:               Alias(d),
-		Hash:                BytesToFormattedHex(d.Hash),
-		ContractAddressSalt: BytesToFormattedHex(d.ContractAddressSalt),
-	})
-}
+//func (d DeployAccount) MarshalJSON() ([]byte, error) {
+//	type Alias DeployAccount
+//
+//	return json.Marshal(&struct {
+//		Alias
+//		Hash                string `json:"hash"`
+//		ContractAddressSalt string `json:"contract_address_salt"`
+//	}{
+//		Alias:               Alias(d),
+//		Hash:                BytesToFormattedHex(d.Hash),
+//		ContractAddressSalt: BytesToFormattedHex(d.ContractAddressSalt),
+//	})
+//}

@@ -5,14 +5,15 @@ import (
 	"encoding/json"
 	models "github.com/dipdup-io/starknet-indexer/internal/storage"
 	"github.com/dipdup-io/starknet-indexer/internal/storage/postgres"
+	"github.com/dipdup-io/starknet-indexer/pkg/types"
 	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/pkg/errors"
 	"github.com/shopspring/decimal"
 )
 
 type TokenBalance struct {
-	OwnerAddress models.HexBytes `json:"owner_address"`
-	ContractHash models.HexBytes `json:"contract_hash"`
+	OwnerAddress types.Hex       `json:"owner_address"`
+	ContractHash types.Hex       `json:"contract_hash"`
 	TokenId      decimal.Decimal `json:"token_id"`
 	Balance      decimal.Decimal `json:"balance"`
 }
@@ -25,11 +26,11 @@ func GetAddressBalances(ctx context.Context, storage postgres.Storage, request m
 	}
 	contract, _ := request.Params.Arguments["contract"].(string)
 
-	addressHash, err := models.HexToBytes(address)
+	addressHash, err := types.HexFromString(address)
 	if err != nil {
 		return nil, err
 	}
-	contractHash, err := models.HexToBytes(contract)
+	contractHash, err := types.HexFromString(contract)
 	if err != nil {
 		return nil, err
 	}
