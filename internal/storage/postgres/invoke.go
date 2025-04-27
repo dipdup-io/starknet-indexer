@@ -64,7 +64,6 @@ func (invoke *Invoke) HashByHeight(ctx context.Context, height uint64) (hash []b
 
 func (d *Invoke) Count(ctx context.Context, fltr []storage.InvokeFilter) (uint64, error) {
 	query := d.DB().NewSelect().Model(&storage.Invoke{})
-	query = query.Column("count(*)").ExcludeColumn("*")
 
 	query = query.WhereGroup(" AND ", func(q1 *bun.SelectQuery) *bun.SelectQuery {
 		for i := range fltr {

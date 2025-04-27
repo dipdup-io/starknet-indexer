@@ -62,7 +62,6 @@ func (event *Event) Filter(ctx context.Context, fltr []storage.EventFilter, opts
 
 func (e *Event) Count(ctx context.Context, fltr []storage.EventFilter) (uint64, error) {
 	query := e.DB().NewSelect().Model(&storage.Event{})
-	query = query.Column("count(*)").ExcludeColumn("*")
 
 	query = query.WhereGroup(" AND ", func(q1 *bun.SelectQuery) *bun.SelectQuery {
 		for i := range fltr {

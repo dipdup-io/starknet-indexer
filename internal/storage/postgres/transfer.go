@@ -55,7 +55,6 @@ func (t *Transfer) Filter(ctx context.Context, fltr []storage.TransferFilter, op
 
 func (t *Transfer) Count(ctx context.Context, fltr []storage.TransferFilter) (uint64, error) {
 	query := t.DB().NewSelect().Model(&storage.Transfer{})
-	query = query.Column("count(*)").ExcludeColumn("*")
 
 	query = query.WhereGroup(" AND ", func(q1 *bun.SelectQuery) *bun.SelectQuery {
 		for i := range fltr {
