@@ -52,14 +52,3 @@ func (address Address) GetHeight() uint64 {
 func (address Address) GetId() uint64 {
 	return address.ID
 }
-
-//func (address Address) MarshalJSON() ([]byte, error) {
-//	type Alias Address
-//	return json.Marshal(&struct {
-//		*Alias `json:"-"`
-//		Hash   string `json:"hash"`
-//	}{
-//		Alias: (*Alias)(&address),
-//		Hash:  BytesToFormattedHex(address.Hash),
-//	})
-//}

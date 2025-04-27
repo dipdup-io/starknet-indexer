@@ -114,17 +114,3 @@ func (i Invoke) Flat() []any {
 
 	return data
 }
-
-//func (i Invoke) MarshalJSON() ([]byte, error) {
-//	type Alias Invoke
-//
-//	return json.Marshal(&struct {
-//		Alias
-//		Hash               string `json:"hash"`
-//		EntrypointSelector string `json:"entrypoint_selector"`
-//	}{
-//		Alias:              Alias(i),
-//		Hash:               BytesToFormattedHex(i.Hash),
-//		EntrypointSelector: BytesToFormattedHex(i.EntrypointSelector),
-//	})
-//}

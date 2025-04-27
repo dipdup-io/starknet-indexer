@@ -96,15 +96,3 @@ func (d Declare) Flat() []any {
 		d.Error,
 	}
 }
-
-//func (d Declare) MarshalJSON() ([]byte, error) {
-//	type Alias Declare
-//
-//	return json.Marshal(&struct {
-//		*Alias `json:"-"`
-//		Hash   string `json:"hash"`
-//	}{
-//		Alias: (*Alias)(&d),
-//		Hash:  BytesToFormattedHex(d.Hash),
-//	})
-//}

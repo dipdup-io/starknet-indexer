@@ -2,7 +2,6 @@ package block
 
 import (
 	"context"
-	"encoding/json"
 	"github.com/dipdup-io/starknet-indexer/internal/storage/postgres"
 
 	"github.com/mark3labs/mcp-go/mcp"
@@ -26,7 +25,7 @@ func GetBlockByHeight(ctx context.Context, storage postgres.Storage, request mcp
 		return nil, errors.Wrapf(err, "error fetching block with height %d", height)
 	}
 
-	jsonBlock, err := json.Marshal(block)
+	jsonBlock, err := marshalBlock(block)
 	if err != nil {
 		return nil, errors.Wrapf(err, "error marshalling json")
 	}

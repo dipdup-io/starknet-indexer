@@ -109,17 +109,3 @@ func (l1 L1Handler) Flat() []any {
 	}
 	return data
 }
-
-//func (h L1Handler) MarshalJSON() ([]byte, error) {
-//	type Alias L1Handler
-//
-//	return json.Marshal(&struct {
-//		Alias
-//		Hash     string `json:"hash"`
-//		Selector string `json:"selector"`
-//	}{
-//		Alias:    Alias(h),
-//		Hash:     BytesToFormattedHex(h.Hash),
-//		Selector: BytesToFormattedHex(h.Selector),
-//	})
-//}

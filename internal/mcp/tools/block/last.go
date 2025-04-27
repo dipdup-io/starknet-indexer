@@ -2,11 +2,13 @@ package block
 
 import (
 	"context"
-	"encoding/json"
 	"github.com/dipdup-io/starknet-indexer/internal/storage/postgres"
 	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/pkg/errors"
 )
+
+type Response struct {
+}
 
 // GetLastBlock -
 func GetLastBlock(ctx context.Context, storage postgres.Storage, _ mcp.CallToolRequest) (*mcp.CallToolResult, error) {
@@ -14,7 +16,7 @@ func GetLastBlock(ctx context.Context, storage postgres.Storage, _ mcp.CallToolR
 	if err != nil {
 		return nil, errors.Wrapf(err, "error fetching last block")
 	}
-	jsonBlock, err := json.Marshal(block)
+	jsonBlock, err := marshalBlock(block)
 	if err != nil {
 		return nil, errors.Wrapf(err, "error marshalling json")
 	}

@@ -104,17 +104,3 @@ func (d Deploy) Flat() []any {
 	}
 	return data
 }
-
-//func (d Deploy) MarshalJSON() ([]byte, error) {
-//	type Alias Deploy
-//
-//	return json.Marshal(&struct {
-//		Alias
-//		Hash                string `json:"hash"`
-//		ContractAddressSalt string `json:"contract_address_salt"`
-//	}{
-//		Alias:               Alias(d),
-//		Hash:                BytesToFormattedHex(d.Hash),
-//		ContractAddressSalt: BytesToFormattedHex(d.ContractAddressSalt),
-//	})
-//}

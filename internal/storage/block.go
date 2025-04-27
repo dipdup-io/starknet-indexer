@@ -20,7 +20,7 @@ type IBlock interface {
 
 // Block -
 type Block struct {
-	bun.BaseModel `bun:"block" comment:"Block table"`
+	bun.BaseModel `bun:"block" json:"-" comment:"Block table"`
 
 	ID      uint64    `bun:",pk,autoincrement" json:"id" comment:"Unique internal identity"`
 	Height  uint64    `json:"height" comment:"The number (height) of this block"`
@@ -54,21 +54,3 @@ type Block struct {
 func (Block) TableName() string {
 	return "block"
 }
-
-//func (b Block) MarshalJSON() ([]byte, error) {
-//	type Alias Block
-//
-//	return json.Marshal(&struct {
-//		*Alias           `json:"-"`
-//		Hash             string `json:"hash"`
-//		ParentHash       string `json:"parent_hash"`
-//		NewRoot          string `json:"new_root"`
-//		SequencerAddress string `json:"sequencer_address"`
-//	}{
-//		Alias:            (*Alias)(&b),
-//		Hash:             BytesToFormattedHex(b.Hash),
-//		ParentHash:       BytesToFormattedHex(b.ParentHash),
-//		NewRoot:          BytesToFormattedHex(b.NewRoot),
-//		SequencerAddress: BytesToFormattedHex(b.SequencerAddress),
-//	})
-//}
