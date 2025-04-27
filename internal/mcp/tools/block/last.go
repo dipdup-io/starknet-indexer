@@ -7,9 +7,6 @@ import (
 	"github.com/pkg/errors"
 )
 
-type Response struct {
-}
-
 // GetLastBlock -
 func GetLastBlock(ctx context.Context, storage postgres.Storage, _ mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	block, err := storage.Blocks.Last(ctx)
