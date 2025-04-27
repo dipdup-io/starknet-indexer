@@ -63,10 +63,14 @@ func (h *Hex) UnmarshalJSON(data []byte) error {
 
 func (h Hex) MarshalJSON() ([]byte, error) {
 	if len(h) == 0 {
-		return []byte(`""`), nil
+		return []byte(nullBytes), nil
 	}
 	hexStr := hex.EncodeToString(h)
-	return []byte(`"0x` + hexStr + `"`), nil
+	if len(hexStr) > 0 && hexStr[0] == '0' {
+		hexStr = hexStr[1:]
+	}
+
+	return []byte(strconv.Quote("0x" + hexStr)), nil
 }
 
 func (h *Hex) Scan(src interface{}) (err error) {
