@@ -13,7 +13,7 @@ import (
 
 type TokenBalance struct {
 	OwnerAddress types.Hex       `json:"owner_address"`
-	ContractHash types.Hex       `json:"contract_hash"`
+	ContractHash types.Hex       `json:"contract"`
 	TokenId      decimal.Decimal `json:"token_id"`
 	Balance      decimal.Decimal `json:"balance"`
 }

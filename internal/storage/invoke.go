@@ -37,28 +37,28 @@ type InvokeFilter struct {
 type Invoke struct {
 	bun.BaseModel `bun:"invoke" comment:"Table with invokes" partition:"RANGE(time)"`
 
-	ID                 uint64          `bun:"id,type:bigint,pk,notnull" json:"id" comment:"Unique internal identity"`
-	Height             uint64          `json:"height" comment:"Block height"`
-	Time               time.Time       `bun:",pk" json:"time" comment:"Time of block"`
-	Status             Status          `json:"status" comment:"Status in blockchain (unknown - 1 | not received - 2  | received - 3 | pending - 4 | rejected - 5 | accepted on l2 - 6 | accepted on l1 - 7 )"`
-	Hash               types.Hex       `json:"hash" comment:"Transaction hash"`
-	Version            uint64          `json:"version" comment:"Version of invoke transaction"`
-	Position           int             `json:"position" comment:"Order in block"`
-	ContractID         uint64          `json:"contract_id" comment:"Contract address id"`
-	EntrypointSelector types.Hex       `json:"entrypoint_selector" comment:"Called selector"`
-	Entrypoint         string          `json:"entrypoint" comment:"Entrypoint name"`
-	MaxFee             decimal.Decimal `bun:",type:numeric" json:"max_fee" comment:"The maximum fee that the sender is willing to pay for the transaction"`
-	Nonce              decimal.Decimal `bun:",type:numeric" json:"nonce" comment:"The transaction nonce"`
-	CallData           []string        `bun:",array" json:"call_data" comment:"Raw calldata"`
-	ParsedCalldata     map[string]any  `bun:",nullzero" json:"parsed_calldata" comment:"Calldata parsed according to contract ABI"`
-	Error              *string         `bun:"error" json:"error" comment:"Reverted error"`
+	ID                 uint64          `bun:"id,type:bigint,pk,notnull" comment:"Unique internal identity"`
+	Height             uint64          `comment:"Block height"`
+	Time               time.Time       `bun:",pk" comment:"Time of block"`
+	Status             Status          `comment:"Status in blockchain (unknown - 1 | not received - 2  | received - 3 | pending - 4 | rejected - 5 | accepted on l2 - 6 | accepted on l1 - 7 )"`
+	Hash               types.Hex       `comment:"Transaction hash"`
+	Version            uint64          `comment:"Version of invoke transaction"`
+	Position           int             `comment:"Order in block"`
+	ContractID         uint64          `comment:"Contract address id"`
+	EntrypointSelector types.Hex       `comment:"Called selector"`
+	Entrypoint         string          `comment:"Entrypoint name"`
+	MaxFee             decimal.Decimal `bun:",type:numeric" comment:"The maximum fee that the sender is willing to pay for the transaction"`
+	Nonce              decimal.Decimal `bun:",type:numeric" comment:"The transaction nonce"`
+	CallData           []string        `bun:",array" comment:"Raw calldata"`
+	ParsedCalldata     map[string]any  `bun:",nullzero" comment:"Calldata parsed according to contract ABI"`
+	Error              *string         `bun:"error" comment:"Reverted error"`
 
-	Contract  Address    `bun:"rel:belongs-to" json:"contract" hasura:"table:address,field:contract_id,remote_field:id,type:oto,name:contract"`
-	Internals []Internal `bun:"rel:has-many" json:"internals"`
-	Messages  []Message  `bun:"rel:has-many" json:"messages"`
-	Events    []Event    `bun:"rel:has-many" json:"events"`
-	Transfers []Transfer `bun:"rel:has-many" json:"transfers"`
-	Fee       *Fee       `bun:"rel:belongs-to" json:"fee"`
+	Contract  Address    `bun:"rel:belongs-to" hasura:"table:address,field:contract_id,remote_field:id,type:oto,name:contract"`
+	Internals []Internal `bun:"rel:has-many"`
+	Messages  []Message  `bun:"rel:has-many"`
+	Events    []Event    `bun:"rel:has-many"`
+	Transfers []Transfer `bun:"rel:has-many"`
+	Fee       *Fee       `bun:"rel:belongs-to"`
 }
 
 // TableName -
