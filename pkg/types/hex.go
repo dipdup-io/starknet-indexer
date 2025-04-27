@@ -4,10 +4,8 @@ import (
 	"bytes"
 	"database/sql/driver"
 	"encoding/hex"
-	"strconv"
-	"strings"
-
 	"github.com/pkg/errors"
+	"strconv"
 )
 
 type Hex []byte
@@ -97,5 +95,9 @@ func (h Hex) Bytes() []byte {
 }
 
 func (h Hex) String() string {
-	return strings.ToUpper(hex.EncodeToString([]byte(h)))
+	if len(h) == 0 {
+		return ""
+	}
+	hexStr := hex.EncodeToString(h)
+	return "0x" + hexStr
 }

@@ -3,6 +3,7 @@ package postgres
 import (
 	"context"
 	"database/sql"
+	"github.com/dipdup-io/starknet-indexer/pkg/types"
 	"testing"
 	"time"
 
@@ -98,7 +99,7 @@ func (s *TransactionTest) TestAddresses() {
 	s.Require().EqualValues(1, response[0].ID)
 	s.Require().EqualValues(100, response[0].Height)
 	s.Require().Nil(response[0].ClassID)
-	s.Require().Equal([]byte{0, 2, 3, 45}, response[0].Hash)
+	s.Require().Equal(types.Hex{0, 2, 3, 45}, response[0].Hash)
 	s.Require().NotNil(response[1].ClassID)
 }
 

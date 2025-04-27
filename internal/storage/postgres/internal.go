@@ -3,6 +3,7 @@ package postgres
 import (
 	"context"
 	"github.com/dipdup-io/starknet-indexer/internal/storage"
+	"github.com/dipdup-io/starknet-indexer/pkg/types"
 	"github.com/dipdup-net/go-lib/database"
 	"github.com/dipdup-net/indexer-sdk/pkg/storage/postgres"
 	"github.com/uptrace/bun"
@@ -50,7 +51,7 @@ func (d *Internal) Filter(ctx context.Context, fltr []storage.InternalFilter, op
 	return
 }
 
-func (i *Internal) GetDeployedContracts(ctx context.Context, deployerBytes []byte) ([]storage.DeployedContract, error) {
+func (i *Internal) GetDeployedContracts(ctx context.Context, deployerBytes types.Hex) ([]storage.DeployedContract, error) {
 	var contracts []storage.DeployedContract
 	err := i.DB().NewRaw(`
 		SELECT DISTINCT ON (d.hash)

@@ -16,7 +16,7 @@ type IInternal interface {
 	storage.Table[*Internal]
 	Filterable[Internal, InternalFilter]
 
-	GetDeployedContracts(context.Context, []byte) ([]DeployedContract, error)
+	GetDeployedContracts(context.Context, types.Hex) ([]DeployedContract, error)
 }
 
 type DeployedContract struct {
