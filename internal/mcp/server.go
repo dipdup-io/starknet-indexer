@@ -27,8 +27,6 @@ func NewMCPServer(ctx context.Context, cfg Config) (*Server, error) {
 	mcpServer := server.NewMCPServer(
 		"starknet-mcp-server",
 		"1.0.0",
-		server.WithResourceCapabilities(true, true),
-		server.WithPromptCapabilities(true),
 		server.WithToolCapabilities(true),
 	)
 	postgresStorage, err := postgres.Create(ctx, cfg.Database)
