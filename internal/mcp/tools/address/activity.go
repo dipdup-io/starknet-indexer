@@ -406,7 +406,7 @@ func parseTransfers(ctx context.Context, storage postgres.Storage, transfers []m
 			txHash = models.BytesToFormattedHex(tx.Hash)
 		case transfers[i].InternalID != nil:
 			txType = "internal"
-			tx, err := storage.Internal.GetByID(ctx, *transfers[i].FeeID)
+			tx, err := storage.Internal.GetByID(ctx, *transfers[i].InternalID)
 			if err != nil {
 				return nil, errors.Wrapf(err, "error fetching internal tx with id %d", transfers[i].InternalID)
 			}
