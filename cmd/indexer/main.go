@@ -80,7 +80,7 @@ func main() {
 
 	ctx, cancel := context.WithCancel(context.Background())
 
-	postgres, err := postgres.Create(ctx, cfg.Database)
+	postgres, err := postgres.Create(ctx, cfg.Database, true)
 	if err != nil {
 		log.Panic().Err(err).Msg("postgres connection")
 		return

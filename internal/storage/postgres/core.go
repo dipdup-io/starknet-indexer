@@ -44,8 +44,12 @@ type Storage struct {
 }
 
 // Create -
-func Create(ctx context.Context, cfg config.Database) (Storage, error) {
-	strg, err := postgres.Create(ctx, cfg, initDatabase)
+func Create(ctx context.Context, cfg config.Database, needDbInit bool) (Storage, error) {
+	init := initDatabase
+	if !needDbInit {
+		init = nil
+	}
+	strg, err := postgres.Create(ctx, cfg, init)
 	if err != nil {
 		return Storage{}, err
 	}

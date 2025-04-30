@@ -3,9 +3,10 @@ package postgres
 import (
 	"context"
 	"database/sql"
-	"github.com/dipdup-io/starknet-indexer/pkg/types"
 	"testing"
 	"time"
+
+	"github.com/dipdup-io/starknet-indexer/pkg/types"
 
 	"github.com/dipdup-io/starknet-indexer/internal/storage"
 	"github.com/dipdup-net/go-lib/config"
@@ -45,7 +46,7 @@ func (s *InvokeTestSuite) SetupSuite() {
 		Password: s.psqlContainer.Config.Password,
 		Host:     s.psqlContainer.Config.Host,
 		Port:     s.psqlContainer.MappedPort().Int(),
-	})
+	}, true)
 	s.Require().NoError(err)
 	s.storage = store
 

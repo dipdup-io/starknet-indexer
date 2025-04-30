@@ -40,7 +40,7 @@ func NewMCPServer(ctx context.Context, cfg Config) (*Server, error) {
 		"1.0.0",
 		server.WithToolCapabilities(true),
 	)
-	postgresStorage, err := postgres.Create(ctx, cfg.Database)
+	postgresStorage, err := postgres.Create(ctx, cfg.Database, false)
 	if err != nil {
 		return nil, errors.Wrapf(err, "postgres connection")
 	}

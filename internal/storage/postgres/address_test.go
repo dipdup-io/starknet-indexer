@@ -44,7 +44,7 @@ func (s *AddressTestSuite) SetupSuite() {
 		Password: s.psqlContainer.Config.Password,
 		Host:     s.psqlContainer.Config.Host,
 		Port:     s.psqlContainer.MappedPort().Int(),
-	})
+	}, true)
 	s.Require().NoError(err)
 	s.storage = storage
 }

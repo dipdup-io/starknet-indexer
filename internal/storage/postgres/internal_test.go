@@ -3,14 +3,15 @@ package postgres
 import (
 	"context"
 	"database/sql"
+	"testing"
+	"time"
+
 	"github.com/dipdup-io/starknet-indexer/internal/storage"
 	"github.com/dipdup-io/starknet-indexer/pkg/types"
 	"github.com/dipdup-net/go-lib/config"
 	"github.com/dipdup-net/go-lib/database"
 	"github.com/go-testfixtures/testfixtures/v3"
 	"github.com/stretchr/testify/suite"
-	"testing"
-	"time"
 )
 
 // InternalTestSuite -
@@ -44,7 +45,7 @@ func (s *InternalTestSuite) SetupSuite() {
 		Password: s.psqlContainer.Config.Password,
 		Host:     s.psqlContainer.Config.Host,
 		Port:     s.psqlContainer.MappedPort().Int(),
-	})
+	}, true)
 	s.Require().NoError(err)
 	s.storage = store
 
