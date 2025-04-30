@@ -58,6 +58,7 @@ func NewMCPServer(ctx context.Context, cfg Config) (*Server, error) {
 func (s *Server) ServeSSE() *server.SSEServer {
 	return server.NewSSEServer(s.Server,
 		server.WithBaseURL(fmt.Sprintf("http://%s", s.bind)),
+		server.WithUseFullURLForMessageEndpoint(false),
 	)
 }
 

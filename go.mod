@@ -11,7 +11,7 @@ require (
 	github.com/goccy/go-json v0.10.2
 	github.com/karlseguin/ccache/v2 v2.0.8
 	github.com/lib/pq v1.10.9
-	github.com/mark3labs/mcp-go v0.18.0
+	github.com/mark3labs/mcp-go v0.24.1
 	github.com/opus-domini/fast-shot v1.1.4
 	github.com/pkg/errors v0.9.1
 	github.com/rs/zerolog v1.34.0
@@ -61,6 +61,7 @@ require (
 	github.com/planetscale/vtprotobuf v0.6.1-0.20240319094008-0393e58bdf10 // indirect
 	github.com/power-devops/perfstat v0.0.0-20210106213030-5aafc221ea8c // indirect
 	github.com/shirou/gopsutil/v4 v4.25.1 // indirect
+	github.com/spf13/cast v1.7.1 // indirect
 	github.com/tklauser/go-sysconf v0.3.12 // indirect
 	github.com/tklauser/numcpus v0.6.1 // indirect
 	github.com/yosida95/uritemplate/v3 v3.0.2 // indirect

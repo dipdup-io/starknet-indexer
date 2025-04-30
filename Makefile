@@ -4,6 +4,9 @@ export $(shell sed 's/=.*//' .env)
 indexer:
 	cd cmd/indexer && go run . -c ../../build/dipdup.yml
 
+mcp:
+	cd cmd/mcp && go run . -c ../../build/dipdup.yml
+
 tester:
 	cd cmd/tester && go run . -c dipdup.yml
 
