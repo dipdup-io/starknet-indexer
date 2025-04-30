@@ -1,6 +1,7 @@
 package storage
 
 import (
+	"github.com/dipdup-io/starknet-indexer/pkg/types"
 	"time"
 
 	"github.com/dipdup-net/indexer-sdk/pkg/storage"
@@ -24,6 +25,7 @@ type L1HandlerFilter struct {
 	Time           TimeFilter
 	Status         EnumFilter
 	Contract       BytesFilter
+	Hash           BytesFilter
 	Selector       EqualityFilter
 	Entrypoint     StringFilter
 	ParsedCalldata map[string]string
@@ -37,10 +39,10 @@ type L1Handler struct {
 	Height         uint64          `comment:"Block height"`
 	Time           time.Time       `bun:",pk" comment:"Time of block"`
 	Status         Status          `comment:"Status in blockchain (unknown - 1 | not received - 2  | received - 3 | pending - 4 | rejected - 5 | accepted on l2 - 6 | accepted on l1 - 7 | reverted - 8)"`
-	Hash           []byte          `comment:"Transaction hash"`
+	Hash           types.Hex       `comment:"Transaction hash"`
 	ContractID     uint64          `comment:"Contract address id"`
 	Position       int             `comment:"Order in block"`
-	Selector       []byte          `comment:"Called selector"`
+	Selector       types.Hex       `comment:"Called selector"`
 	Entrypoint     string          `comment:"Entrypoint name"`
 	MaxFee         decimal.Decimal `bun:",type:numeric" comment:"The maximum fee that the sender is willing to pay for the transaction"`
 	Nonce          decimal.Decimal `bun:",type:numeric" comment:"The transaction nonce"`

@@ -32,6 +32,7 @@ func (l1 *L1Handler) Filter(ctx context.Context, fltr []storage.L1HandlerFilter,
 				q = timeFilter(q, "l1_handler.time", fltr[i].Time)
 				q = enumFilter(q, "l1_handler.status", fltr[i].Status)
 				q = addressFilter(q, "hash", fltr[i].Contract, "Contract")
+				q = bytesFilter(q, "l1_handler.hash", fltr[i].Hash)
 				q = equalityFilter(q, "l1_handler.selector", fltr[i].Selector)
 				q = stringFilter(q, "l1_handler.entrypoint", fltr[i].Entrypoint)
 				q = jsonFilter(q, "l1_handler.parsed_calldata", fltr[i].ParsedCalldata)

@@ -12,6 +12,7 @@ import (
 type ITransfer interface {
 	storage.Table[*Transfer]
 	Filterable[Transfer, TransferFilter]
+	Countable[TransferFilter]
 }
 
 // TransferFilter -

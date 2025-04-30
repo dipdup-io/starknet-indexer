@@ -13,6 +13,7 @@ import (
 type IEvent interface {
 	storage.Table[*Event]
 	Filterable[Event, EventFilter]
+	Countable[EventFilter]
 }
 
 // EventFilter -

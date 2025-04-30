@@ -2,7 +2,7 @@ package storage
 
 import (
 	"context"
-
+	"github.com/dipdup-io/starknet-indexer/pkg/types"
 	"github.com/dipdup-net/indexer-sdk/pkg/storage"
 	"github.com/uptrace/bun"
 )
@@ -29,10 +29,10 @@ type AddressFilter struct {
 type Address struct {
 	bun.BaseModel `bun:"address" comment:"Table with starknet and ethereum addresses."`
 
-	ID      uint64  `bun:"id,type:bigint,pk,notnull" comment:"Unique internal identity"`
-	ClassID *uint64 `bun:"class_id" comment:"Class identity. It is NULL for ethereum addresses."`
-	Height  uint64  `comment:"Block number of the first address occurrence."`
-	Hash    []byte  `bun:",unique:address_hash" comment:"Address hash."`
+	ID      uint64    `bun:"id,type:bigint,pk,notnull" comment:"Unique internal identity"`
+	ClassID *uint64   `bun:"class_id" comment:"Class identity. It is NULL for ethereum addresses."`
+	Height  uint64    `comment:"Block number of the first address occurrence."`
+	Hash    types.Hex `bun:",unique:address_hash" comment:"Address hash."`
 
 	Class Class `bun:"rel:belongs-to,join:class_id=id" hasura:"table:class,field:class_id,remote_field:id,type:oto,name:class"`
 }

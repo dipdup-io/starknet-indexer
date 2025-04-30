@@ -34,6 +34,11 @@ type Filterable[M storage.Model, F any] interface {
 	Filter(ctx context.Context, flt []F, opts ...FilterOption) ([]M, error)
 }
 
+// Countable -
+type Countable[F any] interface {
+	Count(ctx context.Context, flt []F) (uint64, error)
+}
+
 // FilterOptions -
 type FilterOptions struct {
 	Limit  int

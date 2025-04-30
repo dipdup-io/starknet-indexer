@@ -2,6 +2,7 @@ package storage
 
 import (
 	"context"
+	"github.com/dipdup-io/starknet-indexer/pkg/types"
 	"time"
 
 	"github.com/dipdup-net/indexer-sdk/pkg/storage"
@@ -34,11 +35,11 @@ type Block struct {
 	L1HandlerCount     int `bun:"l1_handler_count" comment:"L1 handlers count in block"`
 	StorageDiffCount   int `comment:"Storage diffs count in block"`
 
-	Status           Status `comment:"Block status"`
-	Hash             []byte `comment:"Block hash"`
-	ParentHash       []byte `comment:"The hash of this block’s parent"`
-	NewRoot          []byte `comment:"The state commitment after this block"`
-	SequencerAddress []byte `comment:"The Starknet address of the sequencer who created this block"`
+	Status           Status    `comment:"Block status"`
+	Hash             types.Hex `comment:"Block hash"`
+	ParentHash       types.Hex `comment:"The hash of this block’s parent"`
+	NewRoot          types.Hex `comment:"The state commitment after this block"`
+	SequencerAddress types.Hex `comment:"The Starknet address of the sequencer who created this block"`
 
 	Invoke        []Invoke        `bun:"rel:has-many"`
 	Declare       []Declare       `bun:"rel:has-many"`

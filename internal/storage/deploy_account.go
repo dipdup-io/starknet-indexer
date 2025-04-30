@@ -1,6 +1,7 @@
 package storage
 
 import (
+	"github.com/dipdup-io/starknet-indexer/pkg/types"
 	"time"
 
 	"github.com/dipdup-net/indexer-sdk/pkg/storage"
@@ -24,6 +25,7 @@ type DeployAccountFilter struct {
 	Time           TimeFilter
 	Status         EnumFilter
 	Class          BytesFilter
+	Hash           BytesFilter
 	ParsedCalldata map[string]string
 }
 
@@ -38,8 +40,8 @@ type DeployAccount struct {
 	Position            int             `comment:"Order in block"`
 	Time                time.Time       `bun:",pk" comment:"Time of block"`
 	Status              Status          ``
-	Hash                []byte          `comment:"Transaction hash"`
-	ContractAddressSalt []byte          `comment:"A random salt that determines the account address"`
+	Hash                types.Hex       `comment:"Transaction hash"`
+	ContractAddressSalt types.Hex       `comment:"A random salt that determines the account address"`
 	MaxFee              decimal.Decimal `bun:",type:numeric" comment:"The maximum fee that the sender is willing to pay for the transaction"`
 	Nonce               decimal.Decimal `bun:",type:numeric" comment:"The transaction nonce"`
 	ConstructorCalldata []string        `bun:",array" comment:"Raw constructor calldata"`

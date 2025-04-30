@@ -1,6 +1,7 @@
 package storage
 
 import (
+	"github.com/dipdup-io/starknet-indexer/pkg/types"
 	"time"
 
 	"github.com/dipdup-net/indexer-sdk/pkg/storage"
@@ -14,12 +15,14 @@ import (
 type IInvoke interface {
 	storage.Table[*Invoke]
 	Filterable[Invoke, InvokeFilter]
+	Countable[InvokeFilter]
 	HashByHeight
 }
 
 // InvokeFilter -
 type InvokeFilter struct {
 	ID             IntegerFilter
+	Hash           BytesFilter
 	Height         IntegerFilter
 	Time           TimeFilter
 	Status         EnumFilter
@@ -38,11 +41,11 @@ type Invoke struct {
 	Height             uint64          `comment:"Block height"`
 	Time               time.Time       `bun:",pk" comment:"Time of block"`
 	Status             Status          `comment:"Status in blockchain (unknown - 1 | not received - 2  | received - 3 | pending - 4 | rejected - 5 | accepted on l2 - 6 | accepted on l1 - 7 )"`
-	Hash               []byte          `comment:"Transaction hash"`
+	Hash               types.Hex       `comment:"Transaction hash"`
 	Version            uint64          `comment:"Version of invoke transaction"`
 	Position           int             `comment:"Order in block"`
 	ContractID         uint64          `comment:"Contract address id"`
-	EntrypointSelector []byte          `comment:"Called selector"`
+	EntrypointSelector types.Hex       `comment:"Called selector"`
 	Entrypoint         string          `comment:"Entrypoint name"`
 	MaxFee             decimal.Decimal `bun:",type:numeric" comment:"The maximum fee that the sender is willing to pay for the transaction"`
 	Nonce              decimal.Decimal `bun:",type:numeric" comment:"The transaction nonce"`

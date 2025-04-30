@@ -32,6 +32,7 @@ func (d *DeployAccount) Filter(ctx context.Context, fltr []storage.DeployAccount
 				q = timeFilter(q, "deploy_account.time", fltr[i].Time)
 				q = enumFilter(q, "deploy_account.status", fltr[i].Status)
 				q = addressFilter(q, "hash", fltr[i].Class, "Class")
+				q = bytesFilter(q, "deploy_account.hash", fltr[i].Hash)
 				q = jsonFilter(q, "deploy_account.parsed_calldata", fltr[i].ParsedCalldata)
 				return q
 			})

@@ -31,6 +31,7 @@ func (d *Declare) Filter(ctx context.Context, fltr []storage.DeclareFilter, opts
 				q = integerFilter(q, "declare.id", fltr[i].ID)
 				q = integerFilter(q, "declare.height", fltr[i].Height)
 				q = timeFilter(q, "declare.time", fltr[i].Time)
+				q = bytesFilter(q, "declare.hash", fltr[i].Hash)
 				q = enumFilter(q, "declare.status", fltr[i].Status)
 				return enumFilter(q, "declare.version", fltr[i].Version)
 			})

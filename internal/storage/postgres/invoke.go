@@ -29,6 +29,7 @@ func (invoke *Invoke) Filter(ctx context.Context, fltr []storage.InvokeFilter, o
 			q1 = q1.WhereGroup(" OR ", func(q *bun.SelectQuery) *bun.SelectQuery {
 				q = integerFilter(q, "invoke.id", fltr[i].ID)
 				q = integerFilter(q, "invoke.height", fltr[i].Height)
+				q = bytesFilter(q, "invoke.hash", fltr[i].Hash)
 				q = timeFilter(q, "invoke.time", fltr[i].Time)
 				q = enumFilter(q, "invoke.status", fltr[i].Status)
 				q = enumFilter(q, "invoke.version", fltr[i].Version)
@@ -59,4 +60,30 @@ func (invoke *Invoke) HashByHeight(ctx context.Context, height uint64) (hash []b
 		Limit(1).
 		Scan(ctx, &hash)
 	return
+}
+
+func (d *Invoke) Count(ctx context.Context, fltr []storage.InvokeFilter) (uint64, error) {
+	query := d.DB().NewSelect().Model(&storage.Invoke{})
+
+	query = query.WhereGroup(" AND ", func(q1 *bun.SelectQuery) *bun.SelectQuery {
+		for i := range fltr {
+			q1 = q1.WhereGroup(" OR ", func(q *bun.SelectQuery) *bun.SelectQuery {
+				q = integerFilter(q, "invoke.id", fltr[i].ID)
+				q = integerFilter(q, "invoke.height", fltr[i].Height)
+				q = bytesFilter(q, "invoke.hash", fltr[i].Hash)
+				q = timeFilter(q, "invoke.time", fltr[i].Time)
+				q = enumFilter(q, "invoke.status", fltr[i].Status)
+				q = enumFilter(q, "invoke.version", fltr[i].Version)
+				q = addressFilter(q, "hash", fltr[i].Contract, "Contract")
+				q = equalityFilter(q, "invoke.selector", fltr[i].Selector)
+				q = stringFilter(q, "invoke.entrypoint", fltr[i].Entrypoint)
+				q = jsonFilter(q, "invoke.parsed_calldata", fltr[i].ParsedCalldata)
+				return q
+			})
+		}
+		return q1
+	})
+
+	count, err := query.Count(ctx)
+	return uint64(count), err
 }

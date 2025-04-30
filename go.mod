@@ -11,6 +11,7 @@ require (
 	github.com/goccy/go-json v0.10.2
 	github.com/karlseguin/ccache/v2 v2.0.8
 	github.com/lib/pq v1.10.9
+	github.com/mark3labs/mcp-go v0.18.0
 	github.com/opus-domini/fast-shot v1.1.4
 	github.com/pkg/errors v0.9.1
 	github.com/rs/zerolog v1.30.0
@@ -32,6 +33,7 @@ require (
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/jackc/puddle/v2 v2.2.1 // indirect
 	github.com/moby/sys/user v0.1.0 // indirect
+	github.com/yosida95/uritemplate/v3 v3.0.2 // indirect
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.45.0 // indirect
 	go.opentelemetry.io/otel/metric v1.19.0 // indirect
 	golang.org/x/sync v0.10.0 // indirect
@@ -64,7 +66,7 @@ require (
 	github.com/go-sql-driver/mysql v1.7.1 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang/protobuf v1.5.3 // indirect
-	github.com/google/uuid v1.3.0 // indirect
+	github.com/google/uuid v1.6.0 // indirect
 	github.com/grpc-ecosystem/go-grpc-middleware/providers/prometheus v1.0.0-rc.0 // indirect
 	github.com/grpc-ecosystem/go-grpc-middleware/v2 v2.0.0-rc.5 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect

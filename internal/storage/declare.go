@@ -1,6 +1,7 @@
 package storage
 
 import (
+	"github.com/dipdup-io/starknet-indexer/pkg/types"
 	"time"
 
 	"github.com/dipdup-net/indexer-sdk/pkg/storage"
@@ -20,6 +21,7 @@ type DeclareFilter struct {
 	ID      IntegerFilter
 	Height  IntegerFilter
 	Time    TimeFilter
+	Hash    BytesFilter
 	Status  EnumFilter
 	Version EnumFilter
 }
@@ -37,7 +39,7 @@ type Declare struct {
 	ContractID *uint64         `comment:"Contract address id"`
 	Time       time.Time       `bun:",pk" comment:"Time of block"`
 	Status     Status          `comment:"Status of block"`
-	Hash       []byte          `comment:"Transaction hash"`
+	Hash       types.Hex       `comment:"Transaction hash"`
 	MaxFee     decimal.Decimal `bun:",type:numeric" comment:"The maximum fee that the sender is willing to pay for the transaction"`
 	Nonce      decimal.Decimal `bun:",type:numeric" comment:"The transaction nonce"`
 	Error      *string         `bun:"error" comment:"Reverted error"`
