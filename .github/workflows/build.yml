@@ -39,12 +39,12 @@ jobs:
 
       - name: Indexer image tags & labels
         id: meta-indexer
-        uses: docker/metadata-action@v3
+        uses: docker/metadata-action@v5
         with:
           images: ${{ env.DOCKER_REGISTRY }}/${{ env.DOCKER_IMAGE_BASE }}
 
       - name: Indexer image build & push
-        uses: docker/build-push-action@v2
+        uses: docker/build-push-action@v5
         with:
           context: .
           file: build/Dockerfile

@@ -2,11 +2,12 @@ package main
 
 import (
 	"context"
+	"os"
+
 	"github.com/dipdup-io/starknet-indexer/internal/mcp"
 	"github.com/dipdup-net/go-lib/config"
 	"github.com/rs/zerolog"
 	"github.com/spf13/cobra"
-	"os"
 
 	"github.com/rs/zerolog/log"
 )
@@ -48,7 +49,7 @@ func main() {
 		return
 	}
 
-	sseServer := mcpServer.ServeSSE("localhost:8889")
+	sseServer := mcpServer.ServeSSE()
 	log.Printf("SSE server listening on :8889")
 
 	if err := sseServer.Start(":8889"); err != nil {

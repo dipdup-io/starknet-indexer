@@ -45,3 +45,6 @@ hasura:
     use_prepared_statements: true
     isolation_level: read-committed
   rest: true
+
+mcp:
+  bind: ${MCP_BIND:-0.0.0.0:8889}

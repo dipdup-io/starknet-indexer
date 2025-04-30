@@ -3,6 +3,7 @@ package mcp
 import (
 	"context"
 	"fmt"
+
 	"github.com/dipdup-io/starknet-indexer/internal/mcp/tools"
 	"github.com/dipdup-io/starknet-indexer/internal/mcp/tools/address"
 	"github.com/dipdup-io/starknet-indexer/internal/mcp/tools/block"
@@ -16,14 +17,24 @@ import (
 
 type Config struct {
 	config.Config `yaml:",inline"`
+
+	Mcp *ServerConfig `yaml:"mcp"`
+}
+
+type ServerConfig struct {
+	Bind string `validate:"required,hostname_port" yaml:"bind"`
 }
 
 type Server struct {
 	Server  *server.MCPServer
 	storage postgres.Storage
+	bind    string
 }
 
 func NewMCPServer(ctx context.Context, cfg Config) (*Server, error) {
+	if cfg.Mcp == nil {
+		return nil, errors.New("config 'mcp' section is absent")
+	}
 	mcpServer := server.NewMCPServer(
 		"starknet-mcp-server",
 		"1.0.0",
@@ -37,15 +48,16 @@ func NewMCPServer(ctx context.Context, cfg Config) (*Server, error) {
 	s := &Server{
 		Server:  mcpServer,
 		storage: postgresStorage,
+		bind:    cfg.Mcp.Bind,
 	}
 	s.addTools()
 
 	return s, nil
 }
 
-func (s *Server) ServeSSE(addr string) *server.SSEServer {
+func (s *Server) ServeSSE() *server.SSEServer {
 	return server.NewSSEServer(s.Server,
-		server.WithBaseURL(fmt.Sprintf("http://%s", addr)),
+		server.WithBaseURL(fmt.Sprintf("http://%s", s.bind)),
 	)
 }
 
