@@ -60,7 +60,7 @@ jobs:
         id: meta-mcp
         uses: docker/metadata-action@v5
         with:
-          images: ${{ env.DOCKER_REGISTRY }}/${{ env.DOCKER_IMAGE_BASE }}
+          images: ${{ env.DOCKER_REGISTRY }}/${{ env.DOCKER_IMAGE_BASE }}-mcp
 
       - name: MCP image build & push
         uses: docker/build-push-action@v5
