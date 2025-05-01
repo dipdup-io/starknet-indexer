@@ -3,13 +3,14 @@ package address
 import (
 	"context"
 	"encoding/json"
+	"strconv"
+	"time"
+
 	models "github.com/dipdup-io/starknet-indexer/internal/storage"
 	"github.com/dipdup-io/starknet-indexer/internal/storage/postgres"
 	"github.com/dipdup-io/starknet-indexer/pkg/types"
 	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/pkg/errors"
-	"strconv"
-	"time"
 )
 
 type TransferInfo struct {
@@ -56,7 +57,6 @@ type Activity struct {
 	Invocations       []*InvocationInfo         `json:"invocations"`
 	Events            []*EventInfo              `json:"events"`
 	Deploys           []models.DeployedContract `json:"deploys"`
-	TotalCountInfo    map[string]int            `json:"total_count_info"`
 }
 
 const LimitMaxValue = 100
@@ -94,8 +94,7 @@ func GetAddressActivity(ctx context.Context, storage postgres.Storage, request m
 	}
 
 	activity := Activity{
-		Address:        addressHash,
-		TotalCountInfo: make(map[string]int),
+		Address: addressHash,
 	}
 
 	outTransfers, err := storage.Transfer.Filter(ctx,
@@ -114,19 +113,6 @@ func GetAddressActivity(ctx context.Context, storage postgres.Storage, request m
 		return nil, errors.Wrapf(err, "error filtering outgoing transfers")
 	}
 
-	totalOutTransfersCount, err := storage.Transfer.Count(ctx,
-		[]models.TransferFilter{
-			{
-				From: models.BytesFilter{
-					Eq: addressHash,
-				},
-			},
-		},
-	)
-	if err != nil {
-		return nil, errors.Wrapf(err, "error counting outgoing transfers")
-	}
-	activity.TotalCountInfo["outgoing_transfers"] = int(totalOutTransfersCount)
 	parsedTransfers, err := parseTransfers(ctx, storage, outTransfers)
 	if err != nil {
 		return nil, err
@@ -149,19 +135,6 @@ func GetAddressActivity(ctx context.Context, storage postgres.Storage, request m
 		return nil, errors.Wrapf(err, "error filtering incoming transfers")
 	}
 
-	totalInTransfersCount, err := storage.Transfer.Count(ctx,
-		[]models.TransferFilter{
-			{
-				To: models.BytesFilter{
-					Eq: addressHash,
-				},
-			},
-		},
-	)
-	if err != nil {
-		return nil, errors.Wrapf(err, "error counting incoming transfers")
-	}
-	activity.TotalCountInfo["incoming_transfers"] = int(totalInTransfersCount)
 	parsedTransfers, err = parseTransfers(ctx, storage, inTransfers)
 	if err != nil {
 		return nil, err
@@ -183,21 +156,6 @@ func GetAddressActivity(ctx context.Context, storage postgres.Storage, request m
 	if err != nil {
 		return nil, errors.Wrapf(err, "error filtering invocations")
 	}
-
-	invocationsCount, err := storage.Invoke.Count(ctx,
-		[]models.InvokeFilter{
-			{
-				Contract: models.BytesFilter{
-					Eq: addressHash,
-				},
-			},
-		},
-	)
-	if err != nil {
-		return nil, errors.Wrapf(err, "error counting invocations")
-	}
-
-	activity.TotalCountInfo["invocations"] = int(invocationsCount)
 
 	parsedInvocations := make([]*InvocationInfo, len(invocations))
 	for i := range invocations {
@@ -245,20 +203,6 @@ func GetAddressActivity(ctx context.Context, storage postgres.Storage, request m
 	if err != nil {
 		return nil, errors.Wrapf(err, "error filtering events with address %s", address)
 	}
-
-	eventsCount, err := storage.Event.Count(ctx,
-		[]models.EventFilter{
-			{
-				Contract: models.IdFilter{
-					Eq: storageAddress.ID,
-				},
-			},
-		},
-	)
-	if err != nil {
-		return nil, errors.Wrapf(err, "error counting events with address %s", address)
-	}
-	activity.TotalCountInfo["events"] = int(eventsCount)
 
 	eventsList := make([]*EventInfo, len(events))
 	for i, event := range events {
