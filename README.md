@@ -184,4 +184,3 @@ DipDup Vertical for Starknet is a federated API including the following services
 - [x] NFT metadata resolver
 
 Project is supported by Starkware and Starknet Foundation via [OnlyDust platform](https://app.onlydust.com/p/dipdup)
-
